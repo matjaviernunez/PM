@@ -217,6 +217,52 @@ a:hover { color: var(--dorado-claro); text-decoration: underline; }
   color: var(--gris);
 }
 
+/* ── Perfil ───────────────────────────────────────────────────── */
+.perfil-info {
+  background: rgba(255,255,255,.04);
+  border: 1px solid rgba(255,255,255,.07);
+  border-radius: var(--radius);
+  padding: 1rem;
+  margin-bottom: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: .6rem;
+}
+
+.perfil-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: .9rem;
+}
+
+.perfil-label {
+  color: var(--gris);
+  font-size: .8rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: .5px;
+}
+
+.btn-logout {
+  display: block;
+  text-align: center;
+  background: transparent;
+  border: 1px solid var(--rojo);
+  color: var(--rojo);
+  border-radius: 10px;
+  padding: .75rem;
+  font-weight: 700;
+  font-size: .95rem;
+  transition: all .2s;
+  text-decoration: none;
+}
+.btn-logout:hover {
+  background: var(--rojo);
+  color: var(--blanco);
+  text-decoration: none;
+}
+
 /* ── Responsive ───────────────────────────────────────────────── */
 @media (max-width: 600px) {
   .form-row { grid-template-columns: 1fr; }

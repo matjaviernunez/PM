@@ -40,7 +40,8 @@
       <span class="nav-label">Admin</span>
     </a>
     {% endif %}
-    <a href="{{ url_for('auth.logout') }}" class="nav-item">
+    <a href="{{ url_for('auth.perfil') }}"
+       class="nav-item {% if request.endpoint == 'auth.perfil' %}active{% endif %}">
       <span class="nav-icon">👤</span>
       <span class="nav-label">{{ current_user.nickname[:8] }}</span>
     </a>

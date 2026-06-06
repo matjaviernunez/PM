@@ -107,6 +107,14 @@ def login():
     return render_template("auth/login.html")
 
 
+# ── Perfil ─────────────────────────────────────────────────────────────────
+
+@auth_bp.route("/perfil")
+@login_required
+def perfil():
+    return render_template("auth/perfil.html")
+
+
 # ── Logout ─────────────────────────────────────────────────────────────────
 
 @auth_bp.route("/logout")

@@ -3,6 +3,27 @@
 // ── Estado de filtros ────────────────────────────────────────────
 let grupoActivo  = "todos";
 let estadoActivo = "todos";
+let diaActivo    = "todos";
+
+// Calcular fechas futuras con partidos abiertos (orden cronológico)
+function getFechasProximas() {
+  const hoy = new Date().toISOString().slice(0, 10);
+  const secciones = [...document.querySelectorAll(".dia-section")];
+  return secciones
+    .map(s => s.dataset.fecha)
+    .filter(f => f >= hoy)
+    .sort();
+}
+
+// ── Filtro por día ───────────────────────────────────────────────
+document.querySelectorAll(".filtro-dia-btn").forEach(btn => {
+  btn.addEventListener("click", () => {
+    document.querySelectorAll(".filtro-dia-btn").forEach(b => b.classList.remove("active"));
+    btn.classList.add("active");
+    diaActivo = btn.dataset.dia;
+    aplicarFiltros();
+  });
+});
 
 // ── Filtro por grupo ─────────────────────────────────────────────
 document.querySelectorAll(".filtro-grupo").forEach(btn => {
@@ -26,20 +47,34 @@ document.querySelectorAll(".filtro-estado-btn").forEach(btn => {
 
 // ── Aplicar filtros ──────────────────────────────────────────────
 function aplicarFiltros() {
-  document.querySelectorAll(".partido-card").forEach(card => {
-    const grupoCard  = card.dataset.grupo;
-    const estadoCard = card.dataset.estado;
+  // Calcular qué fechas mostrar según filtro de día
+  let fechasPermitidas = null;
+  if (diaActivo !== "todos") {
+    const proximas = getFechasProximas();
+    const idx = parseInt(diaActivo) - 1;
+    if (idx < proximas.length) {
+      fechasPermitidas = new Set([proximas[idx]]);
+    }
+  }
 
-    const pasaGrupo  = grupoActivo  === "todos" || grupoCard  === grupoActivo;
-    const pasaEstado = estadoActivo === "todos" || estadoCard === estadoActivo;
-
-    card.style.display = (pasaGrupo && pasaEstado) ? "" : "none";
-  });
-
-  // Ocultar secciones de día si no tienen cards visibles
   document.querySelectorAll(".dia-section").forEach(section => {
-    const visibles = [...section.querySelectorAll(".partido-card")]
-      .filter(c => c.style.display !== "none");
+    const fecha = section.dataset.fecha;
+
+    // Filtro de día
+    if (fechasPermitidas && !fechasPermitidas.has(fecha)) {
+      section.style.display = "none";
+      return;
+    }
+
+    // Filtrar cards dentro de la sección
+    const cards = section.querySelectorAll(".partido-card");
+    cards.forEach(card => {
+      const pasaGrupo  = grupoActivo  === "todos" || card.dataset.grupo  === grupoActivo;
+      const pasaEstado = estadoActivo === "todos" || card.dataset.estado === estadoActivo;
+      card.style.display = (pasaGrupo && pasaEstado) ? "" : "none";
+    });
+
+    const visibles = [...cards].filter(c => c.style.display !== "none");
     section.style.display = visibles.length > 0 ? "" : "none";
   });
 }

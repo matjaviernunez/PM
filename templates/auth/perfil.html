@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+{% block title %}Mi perfil — {{ current_user.nickname }}{% endblock %}
+
+{% block content %}
+<div class="auth-wrapper">
+  <div class="auth-card">
+
+    <div class="auth-logo">
+      <span class="auth-logo-icon">👤</span>
+      <h1>{{ current_user.nickname }}</h1>
+      <p style="color:var(--gris);font-size:.85rem">{{ current_user.codigo }}</p>
+    </div>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% for category, message in messages %}
+        <div class="alert alert-{{ category }}">{{ message }}</div>
+      {% endfor %}
+    {% endwith %}
+
+    <div class="perfil-info">
+      <div class="perfil-row">
+        <span class="perfil-label">Usuario</span>
+        <span>{{ current_user.username }}</span>
+      </div>
+      {% if current_user.edad %}
+      <div class="perfil-row">
+        <span class="perfil-label">Edad</span>
+        <span>{{ current_user.edad }} años</span>
+      </div>
+      {% endif %}
+      {% if current_user.equipo_favorito %}
+      <div class="perfil-row">
+        <span class="perfil-label">Equipo favorito</span>
+        <span>{{ current_user.equipo_favorito }}</span>
+      </div>
+      {% endif %}
+      {% if current_user.jugador_favorito %}
+      <div class="perfil-row">
+        <span class="perfil-label">Jugador favorito</span>
+        <span>{{ current_user.jugador_favorito }}</span>
+      </div>
+      {% endif %}
+      {% if current_user.campeon_favorito %}
+      <div class="perfil-row">
+        <span class="perfil-label">Campeón favorito</span>
+        <span>{{ current_user.campeon_favorito }}</span>
+      </div>
+      {% endif %}
+    </div>
+
+    <a href="{{ url_for('auth.logout') }}" class="btn-logout">
+      Cerrar sesión
+    </a>
+
+  </div>
+</div>
+{% endblock %}

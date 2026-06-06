@@ -52,6 +52,35 @@
 .filtro-pill.active { background: var(--dorado); border-color: var(--dorado);
                       color: var(--azul-oscuro); }
 
+/* Pills de día */
+.filtros-dias {
+  display: flex;
+  gap: .4rem;
+  padding: 0 1rem .2rem;
+  max-width: 680px;
+  margin: 0 auto;
+}
+
+.filtro-dia-btn {
+  flex: 1;
+  padding: .28rem .5rem;
+  border-radius: 20px;
+  border: 1px solid rgba(255,255,255,.1);
+  background: transparent;
+  color: var(--gris);
+  font-size: .75rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all .18s;
+  text-align: center;
+}
+.filtro-dia-btn:hover  { color: var(--blanco); }
+.filtro-dia-btn.active {
+  background: var(--rojo);
+  border-color: var(--rojo);
+  color: var(--blanco);
+}
+
 /* Pills de estado */
 .filtros-estado {
   display: flex;
