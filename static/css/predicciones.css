@@ -29,8 +29,7 @@
 }
 
 .filtro-pill {
-  flex: 1;
-  min-width: 2rem;
+  flex: 0 0 calc(10% - .35rem);  /* ancho fijo — 10 por fila */
   text-align: center;
   white-space: nowrap;
   overflow: hidden;
