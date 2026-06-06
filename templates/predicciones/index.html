@@ -7,7 +7,15 @@
   <!-- ── Barra de filtros (sticky) ───────────────────────────────── -->
   <div class="filtros-wrapper">
 
-    <!-- Filtro por grupo -->
+    <!-- 1. Filtro por día -->
+    <div class="filtros-dias">
+      <button class="filtro-dia-btn active" data-dia="todos">Todos</button>
+      <button class="filtro-dia-btn" data-dia="1">Sig. día</button>
+      <button class="filtro-dia-btn" data-dia="2">Sig. 2 días</button>
+      <button class="filtro-dia-btn" data-dia="3">Sig. 3 días</button>
+    </div>
+
+    <!-- 2. Filtro por grupo -->
     <div class="filtros-scroll">
       <button class="filtro-pill filtro-grupo active" data-grupo="todos">All</button>
       {% for g in grupos %}
@@ -15,15 +23,7 @@
       {% endfor %}
     </div>
 
-    <!-- Filtro por día -->
-    <div class="filtros-dias">
-      <button class="filtro-dia-btn active" data-dia="todos">Todas las fechas</button>
-      <button class="filtro-dia-btn" data-dia="1">Día 1</button>
-      <button class="filtro-dia-btn" data-dia="2">Día 2</button>
-      <button class="filtro-dia-btn" data-dia="3">Día 3</button>
-    </div>
-
-    <!-- Filtro por estado -->
+    <!-- 3. Filtro por estado -->
     <div class="filtros-estado">
       <button class="filtro-estado-btn active" data-estado="todos">Todos</button>
       <button class="filtro-estado-btn" data-estado="pendiente">Pendientes</button>

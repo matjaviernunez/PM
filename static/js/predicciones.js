@@ -47,14 +47,12 @@ document.querySelectorAll(".filtro-estado-btn").forEach(btn => {
 
 // ── Aplicar filtros ──────────────────────────────────────────────
 function aplicarFiltros() {
-  // Calcular qué fechas mostrar según filtro de día
+  // Calcular qué fechas mostrar según filtro de día (acumulativo)
   let fechasPermitidas = null;
   if (diaActivo !== "todos") {
     const proximas = getFechasProximas();
-    const idx = parseInt(diaActivo) - 1;
-    if (idx < proximas.length) {
-      fechasPermitidas = new Set([proximas[idx]]);
-    }
+    const n = parseInt(diaActivo);
+    fechasPermitidas = new Set(proximas.slice(0, n));
   }
 
   document.querySelectorAll(".dia-section").forEach(section => {

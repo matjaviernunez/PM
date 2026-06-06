@@ -91,7 +91,9 @@
 }
 
 .filtro-estado-btn {
-  padding: .28rem .7rem;
+  flex: 1;
+  text-align: center;
+  padding: .28rem .5rem;
   border-radius: 20px;
   border: 1px solid rgba(255,255,255,.1);
   background: transparent;
