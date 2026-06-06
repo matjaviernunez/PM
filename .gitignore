@@ -1,0 +1,17 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+.env
+
+# Base de datos local (Railway usa su propio volumen)
+data/mundial2026.db
+data/mundial2026.db-journal
+
+# Venv
+venv/
+.venv/
+
+# IDE
+.vscode/
+.idea/

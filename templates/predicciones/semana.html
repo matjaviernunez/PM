@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+{% block title %}Esta semana — Predicciones{% endblock %}
+
+{% block content %}
+<div class="pred-page">
+
+  <div class="grupo-header">
+    <h2>📅 Esta semana</h2>
+    <p class="grupo-hint">Partidos abiertos en los próximos 7 días.</p>
+  </div>
+
+  {% if not por_fecha %}
+    <div class="empty-state">
+      <span>🏖️</span>
+      <p>No hay partidos abiertos esta semana.</p>
+    </div>
+  {% endif %}
+
+  {% for fecha, partidos in por_fecha.items() %}
+    <div class="fecha-section">
+      <div class="fecha-header">{{ fecha }}</div>
+
+      {% for partido in partidos %}
+        {% set pred = predicciones.get(partido.id) %}
+
+        <div class="partido-card" data-partido-id="{{ partido.id }}">
+          <div class="partido-meta">
+            <span>🕐 {{ partido.hora }}</span>
+            <span class="tag-grupo">Grupo {{ partido.grupo }}</span>
+            <span class="tag-abierto">Abierto</span>
+          </div>
+
+          <div class="partido-row">
+            <div class="equipo equipo--local">
+              <span class="equipo-nombre">{{ partido.equipo_local }}</span>
+            </div>
+
+            <div class="marcador">
+              <input type="number" min="0" max="20"
+                     class="gol-input gol-local"
+                     value="{{ pred.goles_local if pred else '' }}"
+                     placeholder="–"
+                     data-partido="{{ partido.id }}"
+                     data-lado="local">
+              <span class="marcador-sep">:</span>
+              <input type="number" min="0" max="20"
+                     class="gol-input gol-visita"
+                     value="{{ pred.goles_visita if pred else '' }}"
+                     placeholder="–"
+                     data-partido="{{ partido.id }}"
+                     data-lado="visita">
+            </div>
+
+            <div class="equipo equipo--visita">
+              <span class="equipo-nombre">{{ partido.equipo_visita }}</span>
+            </div>
+          </div>
+
+          <div class="partido-status" id="status-{{ partido.id }}">
+            {% if pred %}
+              <span class="status-guardado">✓ Guardado</span>
+            {% else %}
+              <span class="status-pendiente">Pendiente</span>
+            {% endif %}
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  {% endfor %}
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/predicciones.js') }}"></script>
+{% endblock %}

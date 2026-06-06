@@ -1,0 +1,144 @@
+/* ranking.css — Mobile-first */
+
+.ranking-page {
+  max-width: 680px;
+  margin: 0 auto;
+  padding: 0 0 6rem;
+}
+
+.ranking-header {
+  padding: 1rem 1rem .25rem;
+}
+.ranking-header h1 {
+  font-size: 1.4rem;
+  font-weight: 800;
+}
+
+/* ── Cards de jugador ─────────────────────────────────────────── */
+.ranking-lista {
+  display: flex;
+  flex-direction: column;
+  gap: .5rem;
+  padding: .5rem .75rem;
+}
+
+.ranking-card {
+  background: var(--azul-medio);
+  border: 1px solid rgba(255,255,255,.07);
+  border-radius: 14px;
+  padding: .9rem 1rem;
+  display: grid;
+  grid-template-columns: 2.5rem 1fr auto;
+  grid-template-rows: auto auto;
+  gap: .3rem .75rem;
+  align-items: center;
+}
+
+.ranking-card--oro   { border-color: #f39c12; background: rgba(243,156,18,.08); }
+.ranking-card--plata { border-color: #bdc3c7; background: rgba(189,195,199,.06); }
+.ranking-card--bronce{ border-color: #cd6133; background: rgba(205,97,51,.06); }
+
+/* Posición */
+.ranking-pos {
+  font-size: 1.6rem;
+  text-align: center;
+  grid-row: span 2;
+}
+.pos-num {
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: var(--gris);
+}
+
+/* Info */
+.ranking-info { grid-column: 2; }
+.ranking-nickname {
+  font-size: 1rem;
+  font-weight: 800;
+}
+.ranking-codigo {
+  font-size: .72rem;
+  color: var(--gris);
+  letter-spacing: .5px;
+}
+.ranking-campeon {
+  font-size: .72rem;
+  color: var(--dorado);
+  margin-top: .1rem;
+}
+
+/* Puntos totales */
+.ranking-total {
+  text-align: right;
+  grid-row: span 2;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+}
+.ranking-pts {
+  font-size: 1.8rem;
+  font-weight: 900;
+  color: var(--blanco);
+  line-height: 1;
+}
+.ranking-pts-label {
+  font-size: .7rem;
+  color: var(--gris);
+  font-weight: 600;
+}
+
+/* Barras de fases */
+.ranking-fases {
+  grid-column: 2;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.fase-bar-wrap {
+  height: 4px;
+  background: rgba(255,255,255,.06);
+  border-radius: 2px;
+  overflow: hidden;
+}
+.fase-bar {
+  height: 100%;
+  border-radius: 2px;
+  min-width: 4px;
+  transition: width .4s ease;
+}
+.fase-bar--grupos   { background: #3498db; }
+.fase-bar--16avos   { background: #2ecc71; }
+.fase-bar--octavos  { background: #f39c12; }
+.fase-bar--cuartos  { background: #e67e22; }
+.fase-bar--semis    { background: #e74c3c; }
+.fase-bar--final    { background: #9b59b6; }
+
+/* Leyenda */
+.ranking-leyenda {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .5rem 1rem;
+  padding: .5rem 1rem 1rem;
+  font-size: .72rem;
+  color: var(--gris);
+}
+.leyenda-item { display: flex; align-items: center; gap: .3rem; }
+.dot {
+  width: 10px; height: 10px;
+  border-radius: 2px;
+  display: inline-block;
+}
+.dot--grupos   { background: #3498db; }
+.dot--16avos   { background: #2ecc71; }
+.dot--octavos  { background: #f39c12; }
+.dot--cuartos  { background: #e67e22; }
+.dot--semis    { background: #e74c3c; }
+.dot--final    { background: #9b59b6; }
+
+/* Empty state */
+.empty-state {
+  text-align: center;
+  padding: 4rem 1rem;
+  color: var(--gris);
+}
+.empty-state span { font-size: 3rem; display: block; margin-bottom: 1rem; }

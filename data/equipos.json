@@ -1,0 +1,76 @@
+{
+  "grupos": {
+    "A": [
+      { "nombre": "México",        "codigo": "MEX", "confederacion": "CONCACAF", "iso": "mx" },
+      { "nombre": "Sudáfrica",     "codigo": "RSA", "confederacion": "CAF",      "iso": "za" },
+      { "nombre": "Corea del Sur", "codigo": "KOR", "confederacion": "AFC",      "iso": "kr" },
+      { "nombre": "Rep. Checa",    "codigo": "CZE", "confederacion": "UEFA",     "iso": "cz" }
+    ],
+    "B": [
+      { "nombre": "Canadá",        "codigo": "CAN", "confederacion": "CONCACAF", "iso": "ca" },
+      { "nombre": "Bosnia-Herz.",  "codigo": "BIH", "confederacion": "UEFA",     "iso": "ba" },
+      { "nombre": "Qatar",         "codigo": "QAT", "confederacion": "AFC",      "iso": "qa" },
+      { "nombre": "Suiza",         "codigo": "SUI", "confederacion": "UEFA",     "iso": "ch" }
+    ],
+    "C": [
+      { "nombre": "Brasil",        "codigo": "BRA", "confederacion": "CONMEBOL", "iso": "br" },
+      { "nombre": "Marruecos",     "codigo": "MAR", "confederacion": "CAF",      "iso": "ma" },
+      { "nombre": "Haití",         "codigo": "HAI", "confederacion": "CONCACAF", "iso": "ht" },
+      { "nombre": "Escocia",       "codigo": "SCO", "confederacion": "UEFA",     "iso": "gb-sct" }
+    ],
+    "D": [
+      { "nombre": "Estados Unidos","codigo": "USA", "confederacion": "CONCACAF", "iso": "us" },
+      { "nombre": "Paraguay",      "codigo": "PAR", "confederacion": "CONMEBOL", "iso": "py" },
+      { "nombre": "Australia",     "codigo": "AUS", "confederacion": "AFC",      "iso": "au" },
+      { "nombre": "Turquía",       "codigo": "TUR", "confederacion": "UEFA",     "iso": "tr" }
+    ],
+    "E": [
+      { "nombre": "Alemania",       "codigo": "GER", "confederacion": "UEFA",     "iso": "de" },
+      { "nombre": "Curazao",        "codigo": "CUW", "confederacion": "CONCACAF", "iso": "cw" },
+      { "nombre": "Costa de Marfil","codigo": "CIV", "confederacion": "CAF",      "iso": "ci" },
+      { "nombre": "Ecuador",        "codigo": "ECU", "confederacion": "CONMEBOL", "iso": "ec" }
+    ],
+    "F": [
+      { "nombre": "Países Bajos",  "codigo": "NED", "confederacion": "UEFA",     "iso": "nl" },
+      { "nombre": "Japón",         "codigo": "JPN", "confederacion": "AFC",      "iso": "jp" },
+      { "nombre": "Suecia",        "codigo": "SWE", "confederacion": "UEFA",     "iso": "se" },
+      { "nombre": "Túnez",         "codigo": "TUN", "confederacion": "CAF",      "iso": "tn" }
+    ],
+    "G": [
+      { "nombre": "Bélgica",       "codigo": "BEL", "confederacion": "UEFA",     "iso": "be" },
+      { "nombre": "Egipto",        "codigo": "EGY", "confederacion": "CAF",      "iso": "eg" },
+      { "nombre": "Irán",          "codigo": "IRN", "confederacion": "AFC",      "iso": "ir" },
+      { "nombre": "Nueva Zelanda", "codigo": "NZL", "confederacion": "OFC",      "iso": "nz" }
+    ],
+    "H": [
+      { "nombre": "España",        "codigo": "ESP", "confederacion": "UEFA",     "iso": "es" },
+      { "nombre": "Cabo Verde",    "codigo": "CPV", "confederacion": "CAF",      "iso": "cv" },
+      { "nombre": "Arabia Saudita","codigo": "KSA", "confederacion": "AFC",      "iso": "sa" },
+      { "nombre": "Uruguay",       "codigo": "URU", "confederacion": "CONMEBOL", "iso": "uy" }
+    ],
+    "I": [
+      { "nombre": "Francia",       "codigo": "FRA", "confederacion": "UEFA",     "iso": "fr" },
+      { "nombre": "Senegal",       "codigo": "SEN", "confederacion": "CAF",      "iso": "sn" },
+      { "nombre": "Irak",          "codigo": "IRQ", "confederacion": "AFC",      "iso": "iq" },
+      { "nombre": "Noruega",       "codigo": "NOR", "confederacion": "UEFA",     "iso": "no" }
+    ],
+    "J": [
+      { "nombre": "Argentina",     "codigo": "ARG", "confederacion": "CONMEBOL", "iso": "ar" },
+      { "nombre": "Argelia",       "codigo": "ALG", "confederacion": "CAF",      "iso": "dz" },
+      { "nombre": "Austria",       "codigo": "AUT", "confederacion": "UEFA",     "iso": "at" },
+      { "nombre": "Jordania",      "codigo": "JOR", "confederacion": "AFC",      "iso": "jo" }
+    ],
+    "K": [
+      { "nombre": "Portugal",      "codigo": "POR", "confederacion": "UEFA",     "iso": "pt" },
+      { "nombre": "RD Congo",      "codigo": "COD", "confederacion": "CAF",      "iso": "cd" },
+      { "nombre": "Uzbekistán",    "codigo": "UZB", "confederacion": "AFC",      "iso": "uz" },
+      { "nombre": "Colombia",      "codigo": "COL", "confederacion": "CONMEBOL", "iso": "co" }
+    ],
+    "L": [
+      { "nombre": "Inglaterra",    "codigo": "ENG", "confederacion": "UEFA",     "iso": "gb-eng" },
+      { "nombre": "Croacia",       "codigo": "CRO", "confederacion": "UEFA",     "iso": "hr" },
+      { "nombre": "Ghana",         "codigo": "GHA", "confederacion": "CAF",      "iso": "gh" },
+      { "nombre": "Panamá",        "codigo": "PAN", "confederacion": "CONCACAF", "iso": "pa" }
+    ]
+  }
+}

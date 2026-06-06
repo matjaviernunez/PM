@@ -1,0 +1,207 @@
+/* admin.css — Panel de administrador */
+
+/* ── Tabla de predicciones dentro del admin ───────────────────── */
+.pred-lista {
+  margin-top: .75rem;
+  border-top: 1px solid rgba(255,255,255,.08);
+  padding-top: .75rem;
+}
+
+.pred-tabla {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: .82rem;
+}
+.pred-tabla th {
+  text-align: left;
+  padding: .35rem .5rem;
+  color: var(--gris);
+  font-size: .72rem;
+  text-transform: uppercase;
+  border-bottom: 1px solid rgba(255,255,255,.08);
+}
+.pred-tabla td {
+  padding: .4rem .5rem;
+  border-bottom: 1px solid rgba(255,255,255,.04);
+}
+
+.upreds-container {
+  padding: .75rem;
+  background: rgba(0,0,0,.2);
+  border-radius: 8px;
+}
+
+
+.admin-page {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 1rem 1rem 6rem;
+}
+
+.admin-header h1 {
+  font-size: 1.4rem;
+  font-weight: 800;
+  margin-bottom: 1.5rem;
+  padding-top: .5rem;
+}
+
+.admin-section {
+  margin-bottom: 2rem;
+}
+.admin-section h2 {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--dorado);
+  text-transform: uppercase;
+  letter-spacing: .8px;
+  margin-bottom: .75rem;
+  border-left: 3px solid var(--dorado);
+  padding-left: .6rem;
+}
+
+.admin-empty { color: var(--gris); font-size: .9rem; }
+
+/* ── Cards de partido ──────────────────────────────────────────── */
+.admin-card {
+  background: var(--azul-medio);
+  border: 1px solid rgba(255,255,255,.07);
+  border-radius: 12px;
+  padding: .9rem 1rem;
+  margin-bottom: .6rem;
+}
+.admin-card--done {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+  font-size: .88rem;
+  opacity: .75;
+}
+
+.admin-card-meta {
+  display: flex;
+  align-items: center;
+  gap: .6rem;
+  font-size: .75rem;
+  color: var(--gris);
+  margin-bottom: .7rem;
+  flex-wrap: wrap;
+}
+
+.admin-resultado-row {
+  display: flex;
+  align-items: center;
+  gap: .75rem;
+  flex-wrap: wrap;
+}
+
+.admin-equipo {
+  display: flex;
+  align-items: center;
+  gap: .4rem;
+  font-weight: 700;
+  font-size: .95rem;
+  flex: 1;
+  min-width: 80px;
+}
+.admin-equipo--visita { justify-content: flex-end; }
+
+.admin-flag {
+  width: 28px;
+  height: auto;
+  border-radius: 3px;
+  box-shadow: 0 1px 4px rgba(0,0,0,.4);
+}
+
+.admin-inputs {
+  display: flex;
+  align-items: center;
+  gap: .35rem;
+}
+
+.admin-status {
+  margin-top: .5rem;
+  font-size: .78rem;
+  text-align: center;
+}
+
+/* ── Botones ───────────────────────────────────────────────────── */
+.btn-sm {
+  padding: .25rem .65rem;
+  border-radius: 6px;
+  border: 1px solid rgba(255,255,255,.2);
+  background: transparent;
+  color: var(--blanco);
+  font-size: .75rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all .15s;
+}
+.btn-sm:hover    { background: rgba(255,255,255,.1); }
+.btn-sm.btn-rojo { border-color: var(--rojo); color: var(--rojo); }
+.btn-sm.btn-rojo:hover { background: rgba(192,57,43,.15); }
+
+.btn-guardar-resultado {
+  background: var(--verde);
+  color: var(--blanco);
+  border: none;
+  border-radius: 8px;
+  padding: .5rem 1rem;
+  font-weight: 700;
+  font-size: .85rem;
+  cursor: pointer;
+  transition: all .2s;
+}
+.btn-guardar-resultado:hover { background: #27ae60; transform: translateY(-1px); }
+
+/* ── Tabla de usuarios ─────────────────────────────────────────── */
+.admin-table-wrapper { overflow-x: auto; }
+.admin-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: .88rem;
+}
+.admin-table th {
+  text-align: left;
+  padding: .5rem .75rem;
+  color: var(--gris);
+  font-size: .75rem;
+  text-transform: uppercase;
+  letter-spacing: .5px;
+  border-bottom: 1px solid rgba(255,255,255,.08);
+}
+.admin-table td {
+  padding: .6rem .75rem;
+  border-bottom: 1px solid rgba(255,255,255,.05);
+}
+
+/* ── Ligas ─────────────────────────────────────────────────────── */
+.admin-lista {
+  list-style: none;
+  margin-bottom: 1rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: .4rem;
+}
+.admin-lista li {
+  background: var(--azul-claro);
+  border-radius: 20px;
+  padding: .3rem .8rem;
+  font-size: .85rem;
+}
+
+.admin-form {
+  display: flex;
+  gap: .5rem;
+  flex-wrap: wrap;
+}
+.admin-form input {
+  flex: 1;
+  min-width: 180px;
+  background: var(--azul-oscuro);
+  border: 1px solid rgba(255,255,255,.15);
+  border-radius: 8px;
+  color: var(--blanco);
+  padding: .6rem .9rem;
+  font-size: .9rem;
+}
+.admin-form input:focus { outline: none; border-color: var(--dorado); }

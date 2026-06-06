@@ -1,0 +1,46 @@
+/* ── Bottom Navigation (mobile-first) ───────────────────────── */
+.bottom-nav {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 100;
+  background: var(--azul-medio);
+  border-top: 1px solid rgba(255,255,255,.1);
+  display: flex;
+  justify-content: space-around;
+  padding: .5rem 0 calc(.5rem + env(safe-area-inset-bottom));
+}
+
+.nav-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: .2rem;
+  text-decoration: none;
+  color: var(--gris);
+  flex: 1;
+  padding: .3rem 0;
+  transition: color .2s;
+}
+.nav-item:hover { color: var(--blanco); text-decoration: none; }
+.nav-item.active { color: var(--dorado); }
+
+.nav-icon  { font-size: 1.3rem; line-height: 1; }
+.nav-label { font-size: .65rem; font-weight: 600; text-transform: uppercase;
+             letter-spacing: .5px; }
+
+/* ── Desktop: convertir en top bar ───────────────────────────── */
+@media (min-width: 768px) {
+  .bottom-nav {
+    top: 0;
+    bottom: auto;
+    border-top: none;
+    border-bottom: 1px solid rgba(255,255,255,.1);
+    padding: .75rem 2rem;
+    justify-content: flex-end;
+    gap: 1rem;
+  }
+  .nav-item { flex-direction: row; gap: .4rem; flex: none; }
+  .nav-label { font-size: .8rem; }
+}

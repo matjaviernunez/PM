@@ -1,0 +1,248 @@
+/* ═══════════════════════════════════════════════════════════════
+   predicciones.css — Mobile-first
+   ═══════════════════════════════════════════════════════════════ */
+
+.pred-page {
+  max-width: 680px;
+  margin: 0 auto;
+  padding: 0 0 6rem;
+}
+
+/* ── Barra de filtros (sticky) ────────────────────────────────── */
+.filtros-wrapper {
+  position: sticky;
+  top: 48px;           /* altura del navbar fijo en desktop */
+  z-index: 20;
+  background: var(--azul-oscuro);
+  border-bottom: 1px solid rgba(255,255,255,.08);
+  padding: .6rem 0 .4rem;
+}
+
+/* Pills de grupo */
+.filtros-scroll {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .35rem;
+  padding: 0 1rem .4rem;
+  max-width: 680px;
+  margin: 0 auto;
+}
+
+.filtro-pill {
+  flex: 1;
+  min-width: 2rem;
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  padding: .35rem .3rem;
+  border-radius: 20px;
+  border: 1px solid rgba(255,255,255,.15);
+  background: transparent;
+  color: var(--gris);
+  font-size: .75rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all .18s;
+}
+.filtro-pill:hover  { border-color: var(--dorado); color: var(--blanco); }
+.filtro-pill.active { background: var(--dorado); border-color: var(--dorado);
+                      color: var(--azul-oscuro); }
+
+/* Pills de estado */
+.filtros-estado {
+  display: flex;
+  gap: .4rem;
+  padding: 0 1rem;
+  max-width: 680px;
+  margin: 0 auto;
+}
+
+.filtro-estado-btn {
+  padding: .28rem .7rem;
+  border-radius: 20px;
+  border: 1px solid rgba(255,255,255,.1);
+  background: transparent;
+  color: var(--gris);
+  font-size: .75rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all .18s;
+}
+.filtro-estado-btn:hover  { color: var(--blanco); }
+.filtro-estado-btn.active { background: var(--azul-claro);
+                            border-color: var(--azul-claro); color: var(--blanco); }
+
+/* ── Sección por día ──────────────────────────────────────────── */
+.dia-section { margin-bottom: .5rem; }
+
+.dia-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: .75rem 1rem .4rem;
+}
+.dia-label {
+  font-size: .88rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: .8px;
+  color: var(--dorado);
+}
+.dia-header--hoy .dia-label { color: var(--verde); }
+.dia-count {
+  font-size: .75rem;
+  color: var(--gris);
+}
+
+/* ── Lista de partidos ────────────────────────────────────────── */
+.partidos-list {
+  display: flex;
+  flex-direction: column;
+  gap: .6rem;
+  padding: 0 .75rem;
+}
+
+.partido-card {
+  background: var(--azul-medio);
+  border: 1px solid rgba(255,255,255,.07);
+  border-radius: 14px;
+  padding: .9rem 1rem;
+  transition: border-color .2s;
+}
+.partido-card:hover        { border-color: rgba(243,156,18,.25); }
+.partido-card--cerrado     { opacity: .6; }
+.partido-card--editado     { border-color: rgba(243,156,18,.5); }
+.partido-card--incompleto  { border-color: var(--rojo) !important;
+                             animation: shake .3s ease; }
+
+@keyframes shake {
+  0%,100% { transform: translateX(0); }
+  25%      { transform: translateX(-4px); }
+  75%      { transform: translateX(4px); }
+}
+
+/* ── Meta del partido ─────────────────────────────────────────── */
+.partido-meta {
+  display: flex;
+  align-items: center;
+  gap: .5rem;
+  font-size: .72rem;
+  color: var(--gris);
+  margin-bottom: .7rem;
+  flex-wrap: wrap;
+}
+.tag-abierto { color: var(--verde);  font-weight: 700; }
+.tag-cerrado { color: var(--rojo);   font-weight: 700; }
+.tag-grupo   { background: rgba(255,255,255,.08); border-radius: 4px;
+               padding: .1rem .4rem; color: var(--dorado); font-weight: 700; }
+
+/* ── Fila del marcador ────────────────────────────────────────── */
+.partido-row {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: .5rem;
+}
+
+.equipo {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: .25rem;
+}
+
+.equipo-flag {
+  width: 48px;
+  height: auto;
+  border-radius: 4px;
+  box-shadow: 0 2px 6px rgba(0,0,0,.4);
+}
+.equipo-codigo {
+  font-size: .72rem;
+  font-weight: 800;
+  letter-spacing: 1px;
+  color: var(--gris-claro);
+}
+
+/* ── Inputs de goles ──────────────────────────────────────────── */
+.marcador {
+  display: flex;
+  align-items: center;
+  gap: .35rem;
+}
+.gol-input {
+  width: 50px;
+  height: 50px;
+  background: var(--azul-oscuro);
+  border: 2px solid rgba(255,255,255,.15);
+  border-radius: 10px;
+  color: var(--blanco);
+  font-size: 1.35rem;
+  font-weight: 800;
+  text-align: center;
+  -moz-appearance: textfield;
+  transition: border-color .2s, box-shadow .2s;
+}
+.gol-input::-webkit-inner-spin-button,
+.gol-input::-webkit-outer-spin-button { -webkit-appearance: none; }
+.gol-input:focus {
+  outline: none;
+  border-color: var(--dorado);
+  box-shadow: 0 0 0 3px rgba(243,156,18,.2);
+}
+.gol-input:disabled { opacity: .45; cursor: not-allowed; }
+
+.marcador-sep { font-size: 1.2rem; font-weight: 900; color: var(--gris); }
+
+/* ── Status individual ────────────────────────────────────────── */
+.partido-status {
+  text-align: center;
+  font-size: .76rem;
+  margin-top: .55rem;
+}
+.status-guardado  { color: var(--verde);  font-weight: 700; }
+.status-guardando { color: var(--dorado); }
+.status-pendiente { color: var(--gris); }
+.status-sin-pred  { color: var(--rojo);   font-style: italic; }
+.status-error     { color: var(--rojo);   font-weight: 600; }
+
+/* ── Botón guardar día ────────────────────────────────────────── */
+.dia-footer {
+  display: flex;
+  align-items: center;
+  gap: .75rem;
+  padding: .75rem 1rem;
+  flex-wrap: wrap;
+}
+
+.btn-guardar-dia {
+  background: linear-gradient(135deg, var(--verde), #2ecc71);
+  color: var(--blanco);
+  border: none;
+  border-radius: 10px;
+  padding: .7rem 1.4rem;
+  font-size: .88rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all .2s;
+  flex: 1;
+}
+.btn-guardar-dia:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(39,174,96,.35);
+}
+.btn-guardar-dia:disabled { opacity: .6; cursor: not-allowed; }
+
+.dia-save-status { font-size: .8rem; }
+
+/* ── Desktop ──────────────────────────────────────────────────── */
+@media (min-width: 480px) {
+  .gol-input   { width: 58px; height: 58px; font-size: 1.5rem; }
+  .equipo-flag { width: 56px; }
+}
+
+@media (min-width: 768px) {
+  .pred-page { padding-top: 1rem; }
+  .filtros-wrapper { top: 50px; }  /* ajuste fino según altura real del navbar */
+}

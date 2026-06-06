@@ -1,0 +1,91 @@
+{% extends "base.html" %}
+{% block title %}Ranking — Mundial 2026{% endblock %}
+
+{% block content %}
+<div class="ranking-page">
+
+  <div class="ranking-header">
+    <h1>🏆 Ranking</h1>
+  </div>
+
+  <!-- Filtro por liga -->
+  <div class="filtros-wrapper">
+    <div class="filtros-scroll">
+      <a href="{{ url_for('ranking.index') }}"
+         class="filtro-pill {% if not liga_id %}active{% endif %}">All</a>
+      {% for l in ligas %}
+        <a href="{{ url_for('ranking.index', liga=l.id) }}"
+           class="filtro-pill {% if liga_id == l.id %}active{% endif %}">
+          {{ l.nombre }}
+        </a>
+      {% endfor %}
+    </div>
+  </div>
+
+  <!-- Tabla de posiciones -->
+  {% if not tabla %}
+    <div class="empty-state">
+      <span>⏳</span>
+      <p>Aún no hay puntos registrados.<br>¡El torneo empieza el 11 de junio!</p>
+    </div>
+  {% else %}
+    <div class="ranking-lista">
+      {% for jugador in tabla %}{% set i = loop.index0 %}
+        <div class="ranking-card {% if i == 0 %}ranking-card--oro{% elif i == 1 %}ranking-card--plata{% elif i == 2 %}ranking-card--bronce{% endif %}">
+
+          <!-- Posición -->
+          <div class="ranking-pos">
+            {% if i == 0 %}🥇
+            {% elif i == 1 %}🥈
+            {% elif i == 2 %}🥉
+            {% else %}<span class="pos-num">{{ i + 1 }}</span>
+            {% endif %}
+          </div>
+
+          <!-- Info del jugador -->
+          <div class="ranking-info">
+            <div class="ranking-nickname">{{ jugador.nickname }}</div>
+            <div class="ranking-codigo">{{ jugador.codigo }}</div>
+            {% if jugador.campeon_favorito %}
+              <div class="ranking-campeon">⚽ {{ jugador.campeon_favorito }}</div>
+            {% endif %}
+          </div>
+
+          <!-- Puntos totales -->
+          <div class="ranking-total">
+            <span class="ranking-pts">{{ jugador.total }}</span>
+            <span class="ranking-pts-label">pts</span>
+          </div>
+
+          <!-- Desglose por fase (barras) -->
+          <div class="ranking-fases">
+            {% set max_pts = tabla[0].total if tabla[0].total > 0 else 1 %}
+            {% for fase in ['grupos', '16avos', 'octavos', 'cuartos', 'semis', 'final'] %}
+              {% set pts_fase = jugador.por_fase.get(fase, 0) %}
+              {% if pts_fase > 0 %}
+                <div class="fase-bar-wrap" title="{{ fase }}: {{ pts_fase }} pts">
+                  <div class="fase-bar fase-bar--{{ fase }}"
+                       style="width: {{ (pts_fase / max_pts * 100) | int }}%">
+                  </div>
+                </div>
+              {% endif %}
+            {% endfor %}
+          </div>
+
+        </div>
+      {% endfor %}
+    </div>
+
+    <!-- Leyenda de fases -->
+    <div class="ranking-leyenda">
+      <span class="leyenda-item"><span class="dot dot--grupos"></span> Grupos</span>
+      <span class="leyenda-item"><span class="dot dot--16avos"></span> 16avos</span>
+      <span class="leyenda-item"><span class="dot dot--octavos"></span> Octavos</span>
+      <span class="leyenda-item"><span class="dot dot--cuartos"></span> Cuartos</span>
+      <span class="leyenda-item"><span class="dot dot--semis"></span> Semis</span>
+      <span class="leyenda-item"><span class="dot dot--final"></span> Final</span>
+    </div>
+  {% endif %}
+
+</div>
+{% endblock %}

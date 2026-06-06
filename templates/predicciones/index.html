@@ -1,0 +1,131 @@
+{% extends "base.html" %}
+{% block title %}Predicciones — Mundial 2026{% endblock %}
+
+{% block content %}
+<div class="pred-page">
+
+  <!-- ── Barra de filtros (sticky) ───────────────────────────────── -->
+  <div class="filtros-wrapper">
+
+    <!-- Filtro por grupo -->
+    <div class="filtros-scroll">
+      <button class="filtro-pill filtro-grupo active" data-grupo="todos">All</button>
+      {% for g in grupos %}
+        <button class="filtro-pill filtro-grupo" data-grupo="{{ g }}">{{ g }}</button>
+      {% endfor %}
+    </div>
+
+    <!-- Filtro por estado -->
+    <div class="filtros-estado">
+      <button class="filtro-estado-btn active" data-estado="todos">Todos</button>
+      <button class="filtro-estado-btn" data-estado="pendiente">Pendientes</button>
+      <button class="filtro-estado-btn" data-estado="guardado">Guardados</button>
+    </div>
+
+  </div>
+
+  <!-- ── Bloques por día ─────────────────────────────────────────── -->
+  {% for fecha, partidos in por_fecha.items() %}
+    {% set es_hoy = fecha == hoy %}
+    {% set hay_abiertos = partidos | selectattr('abierto') | list | length > 0 %}
+
+    <div class="dia-section" data-fecha="{{ fecha }}">
+
+      <!-- Header del día -->
+      <div class="dia-header {% if es_hoy %}dia-header--hoy{% endif %}">
+        <span class="dia-label">
+          {% if es_hoy %}🔴 HOY · {% endif %}
+          {{ fechas_label[fecha] }}
+        </span>
+        <span class="dia-count">
+          {{ partidos | length }} partido{{ 's' if partidos | length != 1 }}
+        </span>
+      </div>
+
+      <!-- Partidos del día -->
+      <div class="partidos-list">
+        {% for partido in partidos %}
+          {% set pred = predicciones.get(partido.id) %}
+          {% set cerrado = not partido.abierto %}
+          {% set iso_l = equipos[partido.equipo_local].iso   if partido.equipo_local  in equipos else 'un' %}
+          {% set iso_v = equipos[partido.equipo_visita].iso  if partido.equipo_visita in equipos else 'un' %}
+
+          <div class="partido-card {% if cerrado %}partido-card--cerrado{% endif %}"
+               data-partido-id="{{ partido.id }}"
+               data-grupo="{{ partido.grupo }}"
+               data-estado="{{ 'guardado' if pred else 'pendiente' }}">
+
+            <!-- Meta -->
+            <div class="partido-meta">
+              <span class="tag-grupo">Grupo {{ partido.grupo }}</span>
+              <span>🕐 {{ partido.hora }}</span>
+              {% if cerrado %}
+                <span class="tag-cerrado">Cerrado</span>
+              {% else %}
+                <span class="tag-abierto">Abierto</span>
+              {% endif %}
+            </div>
+
+            <!-- Equipos + marcador -->
+            <div class="partido-row">
+              <div class="equipo equipo--local">
+                <img class="equipo-flag" src="https://flagcdn.com/w80/{{ iso_l }}.png" alt="{{ partido.equipo_local }}">
+                <span class="equipo-codigo">{{ partido.equipo_local }}</span>
+              </div>
+
+              <div class="marcador">
+                <input type="number" min="0" max="20"
+                       class="gol-input gol-local"
+                       value="{{ pred.goles_local if pred else '' }}"
+                       placeholder="–"
+                       {% if cerrado %}disabled{% endif %}
+                       data-partido="{{ partido.id }}">
+                <span class="marcador-sep">:</span>
+                <input type="number" min="0" max="20"
+                       class="gol-input gol-visita"
+                       value="{{ pred.goles_visita if pred else '' }}"
+                       placeholder="–"
+                       {% if cerrado %}disabled{% endif %}
+                       data-partido="{{ partido.id }}">
+              </div>
+
+              <div class="equipo equipo--visita">
+                <img class="equipo-flag" src="https://flagcdn.com/w80/{{ iso_v }}.png" alt="{{ partido.equipo_visita }}">
+                <span class="equipo-codigo">{{ partido.equipo_visita }}</span>
+              </div>
+            </div>
+
+            <!-- Status individual -->
+            <div class="partido-status" id="status-{{ partido.id }}">
+              {% if pred %}
+                <span class="status-guardado">✓ {{ pred.goles_local }} – {{ pred.goles_visita }}</span>
+              {% elif cerrado %}
+                <span class="status-sin-pred">Sin predicción</span>
+              {% else %}
+                <span class="status-pendiente">Pendiente</span>
+              {% endif %}
+            </div>
+
+          </div>
+        {% endfor %}
+      </div>
+
+      <!-- Botón guardar del día (solo si hay partidos abiertos) -->
+      {% if hay_abiertos %}
+        <div class="dia-footer">
+          <button class="btn-guardar-dia" data-fecha="{{ fecha }}">
+            Guardar predicciones del {{ fechas_label[fecha] }}
+          </button>
+          <span class="dia-save-status" id="save-status-{{ fecha }}"></span>
+        </div>
+      {% endif %}
+
+    </div>
+  {% endfor %}
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/predicciones.js') }}"></script>
+{% endblock %}

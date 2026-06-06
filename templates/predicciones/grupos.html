@@ -1,0 +1,148 @@
+{% extends "base.html" %}
+{% block title %}Predicciones — Grupos{% endblock %}
+
+{% block content %}
+<div class="pred-page">
+
+  <!-- Tabs de grupos (scrollable horizontal en móvil) -->
+  <div class="grupos-tabs-wrapper">
+    <div class="grupos-tabs">
+      {% for g in grupos %}
+        <a href="{{ url_for('predicciones.grupos', grupo=g) }}"
+           class="grupo-tab {% if g == grupo_activo %}active{% endif %}">
+          {{ g }}
+          {% if badges[g] > 0 %}
+            <span class="badge">{{ badges[g] }}</span>
+          {% endif %}
+        </a>
+      {% endfor %}
+    </div>
+  </div>
+
+  <!-- Cabecera del grupo activo -->
+  <div class="grupo-header">
+    <h2>Grupo {{ grupo_activo }}
+      <span class="grupo-sede">· {{ grupos_info[grupo_activo] }}</span>
+    </h2>
+    <p class="grupo-hint">
+      Ingresa el marcador que predices para cada partido.
+      Los campos se bloquean cuando el partido comienza.
+    </p>
+  </div>
+
+  <!-- Lista de partidos -->
+  <div class="partidos-list">
+    {% for partido in partidos %}
+      {% set pred = predicciones.get(partido.id) %}
+      {% set cerrado = not partido.abierto %}
+
+      <div class="partido-card {% if cerrado %}partido-card--cerrado{% endif %}"
+           data-partido-id="{{ partido.id }}">
+
+        <!-- Fecha y hora -->
+        <div class="partido-meta">
+          <span>📅 {{ partido.fecha }}</span>
+          <span>🕐 {{ partido.hora }}</span>
+          {% if cerrado %}
+            <span class="tag-cerrado">Cerrado</span>
+          {% else %}
+            <span class="tag-abierto">Abierto</span>
+          {% endif %}
+        </div>
+
+        <!-- Marcador -->
+        <div class="partido-row">
+          <div class="equipo equipo--local">
+            {% set iso_l = equipos[partido.equipo_local].iso if partido.equipo_local in equipos else 'un' %}
+            <img class="equipo-flag" src="https://flagcdn.com/w80/{{ iso_l }}.png" alt="{{ partido.equipo_local }}">
+            <span class="equipo-codigo">{{ partido.equipo_local }}</span>
+          </div>
+
+          <div class="marcador">
+            <input type="number" min="0" max="20"
+                   class="gol-input gol-local"
+                   value="{{ pred.goles_local if pred else '' }}"
+                   placeholder="–"
+                   {% if cerrado %}disabled{% endif %}
+                   data-partido="{{ partido.id }}"
+                   data-lado="local">
+
+            <span class="marcador-sep">:</span>
+
+            <input type="number" min="0" max="20"
+                   class="gol-input gol-visita"
+                   value="{{ pred.goles_visita if pred else '' }}"
+                   placeholder="–"
+                   {% if cerrado %}disabled{% endif %}
+                   data-partido="{{ partido.id }}"
+                   data-lado="visita">
+          </div>
+
+          <div class="equipo equipo--visita">
+            {% set iso_v = equipos[partido.equipo_visita].iso if partido.equipo_visita in equipos else 'un' %}
+            <img class="equipo-flag" src="https://flagcdn.com/w80/{{ iso_v }}.png" alt="{{ partido.equipo_visita }}">
+            <span class="equipo-codigo">{{ partido.equipo_visita }}</span>
+          </div>
+        </div>
+
+        <!-- Estado de la predicción -->
+        <div class="partido-status" id="status-{{ partido.id }}">
+          {% if pred %}
+            <span class="status-guardado">✓ Guardado</span>
+          {% elif not cerrado %}
+            <span class="status-pendiente">Pendiente</span>
+          {% else %}
+            <span class="status-sin-pred">Sin predicción</span>
+          {% endif %}
+        </div>
+
+      </div>
+    {% endfor %}
+  </div>
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Guardado automático al cambiar cualquier input de goles
+document.querySelectorAll('.gol-input').forEach(input => {
+  input.addEventListener('change', () => {
+    const partidoId = input.dataset.partido;
+    const card = document.querySelector(`[data-partido-id="${partidoId}"]`);
+    const localInput  = card.querySelector('.gol-local');
+    const visitaInput = card.querySelector('.gol-visita');
+
+    const gl = localInput.value;
+    const gv = visitaInput.value;
+
+    // Solo guardar si ambos campos tienen valor
+    if (gl === '' || gv === '') return;
+
+    const statusEl = document.getElementById(`status-${partidoId}`);
+    statusEl.innerHTML = '<span class="status-guardando">⏳ Guardando...</span>';
+
+    fetch('/predicciones/guardar', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        partido_id:  parseInt(partidoId),
+        goles_local: parseInt(gl),
+        goles_visita: parseInt(gv),
+      })
+    })
+    .then(r => r.json())
+    .then(data => {
+      if (data.ok) {
+        statusEl.innerHTML = '<span class="status-guardado">✓ Guardado</span>';
+      } else {
+        statusEl.innerHTML = `<span class="status-error">✗ ${data.error}</span>`;
+      }
+    })
+    .catch(() => {
+      statusEl.innerHTML = '<span class="status-error">✗ Error de conexión</span>';
+    });
+  });
+});
+</script>
+{% endblock %}
