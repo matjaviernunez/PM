@@ -29,11 +29,10 @@
 }
 
 .filtro-pill {
-  flex: 0 0 calc(10% - .35rem);  /* ancho fijo — 10 por fila */
+  /* 7 por fila: (100% - 6 gaps) / 7 */
+  flex: 0 0 calc((100% - 6 * .35rem) / 7);
   text-align: center;
   white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
   padding: .35rem .3rem;
   border-radius: 20px;
   border: 1px solid rgba(255,255,255,.15);
@@ -43,6 +42,11 @@
   font-weight: 700;
   cursor: pointer;
   transition: all .18s;
+}
+
+/* All ocupa el doble (2 unidades + 1 gap) */
+.filtro-pill:first-child {
+  flex: 0 0 calc((100% - 6 * .35rem) / 7 * 2 + .35rem);
 }
 .filtro-pill:hover  { border-color: var(--dorado); color: var(--blanco); }
 .filtro-pill.active { background: var(--dorado); border-color: var(--dorado);
