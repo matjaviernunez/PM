@@ -6,6 +6,12 @@
 
   <div class="admin-header">
     <h1>⚙️ Panel Admin</h1>
+    <div class="scrape-bar">
+      <button class="btn-scrape" onclick="scrapeResultados()">
+        🔄 Actualizar resultados desde ESPN
+      </button>
+      <span id="scrape-status"></span>
+    </div>
   </div>
 
   <!-- ── Filtros por grupo (sticky) ────────────────────────────── -->
@@ -242,6 +248,28 @@ async function verPrediccionesUsuario(id, nombre) {
         `).join('')}
       </tbody>
     </table>`;
+}
+
+async function scrapeResultados() {
+  const btn = document.querySelector('.btn-scrape');
+  const st  = document.getElementById('scrape-status');
+  btn.disabled = true;
+  st.innerHTML = '<span class="status-guardando">⏳ Consultando ESPN...</span>';
+  try {
+    const res  = await fetch('/admin/scrape', { method: 'POST' });
+    const data = await res.json();
+    if (data.actualizados > 0) {
+      st.innerHTML = `<span class="status-guardado">✓ ${data.actualizados} partido(s) actualizado(s)</span>`;
+      setTimeout(() => location.reload(), 2000);
+    } else {
+      st.innerHTML = '<span class="status-pendiente">Sin nuevos resultados</span>';
+    }
+    if (data.errores?.length) console.warn('Errores scraper:', data.errores);
+  } catch {
+    st.innerHTML = '<span class="status-error">✗ Error de conexión</span>';
+  } finally {
+    btn.disabled = false;
+  }
 }
 
 async function borrarPrediccion(usuarioId, partidoId) {

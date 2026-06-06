@@ -238,6 +238,17 @@ def borrar_prediccion():
     return jsonify({"ok": True})
 
 
+# ── Scraper manual ────────────────────────────────────────────────────────
+
+@admin_bp.route("/scrape", methods=["POST"])
+@login_required
+@admin_required
+def scrape():
+    from scraper.runner import scrape_resultados
+    resultado = scrape_resultados()
+    return jsonify(resultado)
+
+
 # ── Hacerse admin (solo primera vez via CLI) ───────────────────────────────
 
 @admin_bp.route("/make-admin/<int:usuario_id>", methods=["POST"])

@@ -38,6 +38,31 @@
   padding: 1rem 1rem 6rem;
 }
 
+.scrape-bar {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-top: .75rem;
+  flex-wrap: wrap;
+}
+
+.btn-scrape {
+  background: linear-gradient(135deg, #2980b9, #3498db);
+  color: var(--blanco);
+  border: none;
+  border-radius: 10px;
+  padding: .7rem 1.2rem;
+  font-size: .9rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all .2s;
+}
+.btn-scrape:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(52,152,219,.4);
+}
+.btn-scrape:disabled { opacity: .6; cursor: not-allowed; }
+
 .admin-header h1 {
   font-size: 1.4rem;
   font-weight: 800;
