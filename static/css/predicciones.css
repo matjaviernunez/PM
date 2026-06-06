@@ -11,7 +11,7 @@
 /* ── Barra de filtros (sticky) ────────────────────────────────── */
 .filtros-wrapper {
   position: sticky;
-  top: 48px;           /* altura del navbar fijo en desktop */
+  top: 0;              /* móvil: navbar abajo, sticky al tope */
   z-index: 20;
   background: var(--azul-oscuro);
   border-bottom: 1px solid rgba(255,255,255,.08);
@@ -247,5 +247,5 @@
 
 @media (min-width: 768px) {
   .pred-page { padding-top: 1rem; }
-  .filtros-wrapper { top: 50px; }  /* ajuste fino según altura real del navbar */
+  .filtros-wrapper { top: 50px; }  /* desktop: navbar fijo arriba */
 }
