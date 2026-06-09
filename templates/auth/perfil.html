@@ -3,7 +3,7 @@
 
 {% block content %}
 <div class="auth-wrapper">
-  <div class="auth-card">
+  <div class="auth-card auth-card--wide">
 
     <div class="auth-logo">
       <span class="auth-logo-icon">👤</span>
@@ -17,40 +17,110 @@
       {% endfor %}
     {% endwith %}
 
-    <div class="perfil-info">
+    <!-- Info fija (no editable) -->
+    <div class="perfil-info" style="margin-bottom:1.25rem">
       <div class="perfil-row">
         <span class="perfil-label">Usuario</span>
         <span>{{ current_user.username }}</span>
       </div>
-      {% if current_user.edad %}
       <div class="perfil-row">
-        <span class="perfil-label">Edad</span>
-        <span>{{ current_user.edad }} años</span>
+        <span class="perfil-label">Código</span>
+        <span style="font-family:monospace;color:var(--dorado)">{{ current_user.codigo }}</span>
       </div>
-      {% endif %}
-      {% if current_user.equipo_favorito %}
-      <div class="perfil-row">
-        <span class="perfil-label">Equipo favorito</span>
-        <span>{{ current_user.equipo_favorito }}</span>
-      </div>
-      {% endif %}
-      {% if current_user.jugador_favorito %}
-      <div class="perfil-row">
-        <span class="perfil-label">Jugador favorito</span>
-        <span>{{ current_user.jugador_favorito }}</span>
-      </div>
-      {% endif %}
-      {% if current_user.campeon_favorito %}
-      <div class="perfil-row">
-        <span class="perfil-label">Campeón favorito</span>
-        <span>{{ current_user.campeon_favorito }}</span>
-      </div>
-      {% endif %}
     </div>
 
-    <a href="{{ url_for('auth.logout') }}" class="btn-logout">
-      Cerrar sesión
-    </a>
+    <!-- Formulario editable -->
+    <form method="POST" action="{{ url_for('auth.perfil') }}" class="auth-form">
+
+      <div class="form-section">
+        <p class="form-section-title">Datos personales</p>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="edad">Edad</label>
+            <input type="number" id="edad" name="edad" min="5" max="99"
+                   value="{{ current_user.edad or '' }}" placeholder="¿Cuántos tienes?">
+          </div>
+          <div class="form-group">
+            <label for="jugador_favorito">Jugador favorito</label>
+            <input type="text" id="jugador_favorito" name="jugador_favorito"
+                   value="{{ current_user.jugador_favorito or '' }}"
+                   placeholder="Ej: Messi">
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="equipo_favorito">Equipo favorito</label>
+            <select id="equipo_favorito" name="equipo_favorito">
+              <option value="">— Selecciona —</option>
+              {% for e in equipos %}
+                <option value="{{ e.codigo }}"
+                  {% if current_user.equipo_favorito == e.codigo %}selected{% endif %}>
+                  {{ e.nombre }}
+                </option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="campeon_favorito">Campeón favorito</label>
+            <select id="campeon_favorito" name="campeon_favorito">
+              <option value="">— Selecciona —</option>
+              {% for e in equipos %}
+                <option value="{{ e.codigo }}"
+                  {% if current_user.campeon_favorito == e.codigo %}selected{% endif %}>
+                  {{ e.nombre }}
+                </option>
+              {% endfor %}
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <!-- Ligas: muestra actuales + permite unirse a nuevas -->
+      <div class="form-section">
+        <p class="form-section-title">Ligas</p>
+
+        {% if ligas_usuario %}
+          <p style="font-size:.82rem;color:var(--gris);margin-bottom:.5rem">
+            Ya inscrito en:
+            {% for l in current_user.ligas() %}
+              <span style="color:var(--dorado);font-weight:700">{{ l.nombre }}</span>{% if not loop.last %}, {% endif %}
+            {% endfor %}
+          </p>
+        {% endif %}
+
+        <p style="font-size:.82rem;color:var(--gris);margin-bottom:.6rem">Unirte a nuevas ligas:</p>
+        <div class="ligas-grid">
+          {% for liga in ligas %}
+            {% if liga.id not in ligas_usuario %}
+              <label class="liga-checkbox">
+                <input type="checkbox" name="ligas" value="{{ liga.id }}">
+                {{ liga.nombre }}
+              </label>
+            {% else %}
+              <span class="liga-checkbox" style="opacity:.5;cursor:default">
+                ✓ {{ liga.nombre }}
+              </span>
+            {% endif %}
+          {% endfor %}
+          {% if ligas | length == ligas_usuario | length %}
+            <p style="font-size:.82rem;color:var(--gris);font-style:italic">
+              Ya estás en todas las ligas disponibles.
+            </p>
+          {% endif %}
+        </div>
+      </div>
+
+      <button type="submit" class="btn-primary">Guardar cambios</button>
+
+    </form>
+
+    <div style="margin-top:1rem">
+      <a href="{{ url_for('auth.logout') }}" class="btn-logout">
+        Cerrar sesión
+      </a>
+    </div>
 
   </div>
 </div>

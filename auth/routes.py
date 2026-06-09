@@ -109,10 +109,37 @@ def login():
 
 # ── Perfil ─────────────────────────────────────────────────────────────────
 
-@auth_bp.route("/perfil")
+@auth_bp.route("/perfil", methods=["GET", "POST"])
 @login_required
 def perfil():
-    return render_template("auth/perfil.html")
+    equipos = _cargar_equipos()
+    ligas   = _cargar_ligas()
+
+    if request.method == "POST":
+        edad             = request.form.get("edad") or None
+        equipo_favorito  = request.form.get("equipo_favorito") or None
+        jugador_favorito = request.form.get("jugador_favorito", "").strip() or None
+        campeon_favorito = request.form.get("campeon_favorito") or None
+        liga_ids         = [int(lid) for lid in request.form.getlist("ligas") if lid]
+
+        Usuario.actualizar(
+            user_id=current_user.id,
+            edad=int(edad) if edad else None,
+            equipo_favorito=equipo_favorito,
+            jugador_favorito=jugador_favorito,
+            campeon_favorito=campeon_favorito,
+            nuevas_liga_ids=liga_ids if liga_ids else None,
+        )
+        # Refrescar datos del usuario en sesión
+        from flask_login import login_user
+        usuario_actualizado = Usuario.get_by_id(current_user.id)
+        login_user(usuario_actualizado)
+        flash("Perfil actualizado ✓", "success")
+        return redirect(url_for("auth.perfil"))
+
+    ligas_usuario = {l["id"] for l in current_user.ligas()}
+    return render_template("auth/perfil.html", equipos=equipos, ligas=ligas,
+                           ligas_usuario=ligas_usuario)
 
 
 # ── Logout ─────────────────────────────────────────────────────────────────

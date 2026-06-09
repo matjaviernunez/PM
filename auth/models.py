@@ -85,6 +85,24 @@ class Usuario(UserMixin):
         return Usuario.get_by_id(user_id)
 
     @staticmethod
+    def actualizar(user_id, edad=None, equipo_favorito=None,
+                   jugador_favorito=None, campeon_favorito=None,
+                   nuevas_liga_ids=None):
+        """Actualiza campos del perfil y agrega ligas (sin quitar las existentes)."""
+        with get_db() as conn:
+            conn.execute("""
+                UPDATE usuarios
+                SET edad = ?, equipo_favorito = ?, jugador_favorito = ?, campeon_favorito = ?
+                WHERE id = ?
+            """, (edad, equipo_favorito, jugador_favorito, campeon_favorito, user_id))
+            if nuevas_liga_ids:
+                conn.executemany(
+                    "INSERT OR IGNORE INTO usuario_liga (usuario_id, liga_id) VALUES (?, ?)",
+                    [(user_id, lid) for lid in nuevas_liga_ids]
+                )
+            conn.commit()
+
+    @staticmethod
     def todos():
         with get_db() as conn:
             rows = conn.execute(
