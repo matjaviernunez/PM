@@ -11,7 +11,7 @@
   position: relative;
   height: 110px;
   overflow: hidden;
-  background: url('/static/img/clutch.avif') center 30% / cover no-repeat;
+  background: url('/static/img/clutch.jpg') center 30% / cover no-repeat;
   display: flex;
   align-items: flex-end;
 }

@@ -15,25 +15,23 @@ function getFechasProximas() {
     .sort();
 }
 
-// ── Filtro por día ───────────────────────────────────────────────
-document.querySelectorAll(".filtro-dia-btn").forEach(btn => {
-  btn.addEventListener("click", () => {
-    document.querySelectorAll(".filtro-dia-btn").forEach(b => b.classList.remove("active"));
-    btn.classList.add("active");
-    diaActivo = btn.dataset.dia;
+// ── Filtro por día (select) ──────────────────────────────────────
+const selDia = document.getElementById("sel-dia");
+if (selDia) {
+  selDia.addEventListener("change", () => {
+    diaActivo = selDia.value;
     aplicarFiltros();
   });
-});
+}
 
-// ── Filtro por grupo ─────────────────────────────────────────────
-document.querySelectorAll(".filtro-grupo").forEach(btn => {
-  btn.addEventListener("click", () => {
-    document.querySelectorAll(".filtro-grupo").forEach(b => b.classList.remove("active"));
-    btn.classList.add("active");
-    grupoActivo = btn.dataset.grupo;
+// ── Filtro por grupo (select) ────────────────────────────────────
+const selGrupo = document.getElementById("sel-grupo");
+if (selGrupo) {
+  selGrupo.addEventListener("change", () => {
+    grupoActivo = selGrupo.value;
     aplicarFiltros();
   });
-});
+}
 
 // ── Filtro por estado ────────────────────────────────────────────
 document.querySelectorAll(".filtro-estado-btn").forEach(btn => {

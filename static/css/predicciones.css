@@ -13,7 +13,7 @@
   position: relative;
   height: 110px;
   overflow: hidden;
-  background: url('/static/img/zayu.avif') center 25% / cover no-repeat;
+  background: url('/static/img/zayu.jpg') center 25% / cover no-repeat;
   display: flex;
   align-items: flex-end;
 }
@@ -102,75 +102,59 @@
 /* ── Barra de filtros (sticky) ────────────────────────────────── */
 .filtros-wrapper {
   position: sticky;
-  top: 0;              /* móvil: navbar abajo, sticky al tope */
+  top: 0;
   z-index: 20;
   background: var(--azul-oscuro);
   border-bottom: 1px solid rgba(255,255,255,.08);
-  padding: .6rem 0 .4rem;
+  padding: .55rem 0 .45rem;
 }
 
-/* Pills de grupo */
-.filtros-scroll {
+/* Fila de selects */
+.filtros-selects {
   display: flex;
-  flex-wrap: wrap;
-  gap: .35rem;
-  padding: 0 1rem .4rem;
+  gap: .5rem;
+  padding: 0 .75rem .45rem;
   max-width: 680px;
   margin: 0 auto;
 }
 
-.filtro-pill {
-  /* 7 por fila: (100% - 6 gaps) / 7 */
-  flex: 0 0 calc((100% - 6 * .35rem) / 7);
-  text-align: center;
-  white-space: nowrap;
-  padding: .35rem .3rem;
-  border-radius: 20px;
-  border: 1px solid rgba(255,255,255,.15);
-  background: transparent;
-  color: var(--gris);
-  font-size: .75rem;
-  font-weight: 700;
-  cursor: pointer;
-  transition: all .18s;
-}
-
-/* All ocupa el doble (2 unidades + 1 gap) */
-.filtro-pill:first-child {
-  flex: 0 0 calc((100% - 6 * .35rem) / 7 * 2 + .35rem);
-}
-.filtro-pill:hover  { border-color: var(--dorado); color: var(--blanco); }
-.filtro-pill.active { background: var(--dorado); border-color: var(--dorado);
-                      color: var(--azul-oscuro); }
-
-/* Pills de día */
-.filtros-dias {
-  display: flex;
-  gap: .4rem;
-  padding: 0 1rem .2rem;
-  max-width: 680px;
-  margin: 0 auto;
-}
-
-.filtro-dia-btn {
+.filtro-select-wrap {
   flex: 1;
-  padding: .28rem .5rem;
-  border-radius: 20px;
-  border: 1px solid rgba(255,255,255,.1);
-  background: transparent;
-  color: var(--gris);
-  font-size: .75rem;
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.filtro-select-icon {
+  position: absolute;
+  left: .7rem;
+  font-size: .8rem;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.filtro-select {
+  width: 100%;
+  padding: .45rem .7rem .45rem 2rem;
+  background: var(--azul-medio);
+  border: 1px solid rgba(255,255,255,.15);
+  border-radius: 10px;
+  color: var(--blanco);
+  font-size: .8rem;
   font-weight: 600;
   cursor: pointer;
-  transition: all .18s;
-  text-align: center;
+  appearance: none;
+  -webkit-appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%2395a5a6' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right .7rem center;
+  transition: border-color .18s;
 }
-.filtro-dia-btn:hover  { color: var(--blanco); }
-.filtro-dia-btn.active {
-  background: var(--rojo);
-  border-color: var(--rojo);
-  color: var(--blanco);
+.filtro-select:focus {
+  outline: none;
+  border-color: var(--dorado);
 }
+.filtro-select option { background: var(--azul-oscuro); }
 
 /* Pills de estado */
 .filtros-estado {

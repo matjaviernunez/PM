@@ -29,23 +29,29 @@
   <!-- ── Barra de filtros (sticky) ───────────────────────────────── -->
   <div class="filtros-wrapper">
 
-    <!-- 1. Filtro por día -->
-    <div class="filtros-dias">
-      <button class="filtro-dia-btn active" data-dia="todos">Todos</button>
-      <button class="filtro-dia-btn" data-dia="1">Sig. día</button>
-      <button class="filtro-dia-btn" data-dia="2">Sig. 2 días</button>
-      <button class="filtro-dia-btn" data-dia="3">Sig. 3 días</button>
+    <!-- Fila 1: selects de grupo + días -->
+    <div class="filtros-selects">
+      <div class="filtro-select-wrap">
+        <span class="filtro-select-icon">🏳️</span>
+        <select id="sel-grupo" class="filtro-select">
+          <option value="todos">Todos los grupos</option>
+          {% for g in grupos %}
+            <option value="{{ g }}">Grupo {{ g }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="filtro-select-wrap">
+        <span class="filtro-select-icon">📅</span>
+        <select id="sel-dia" class="filtro-select">
+          <option value="todos">Todos los días</option>
+          <option value="1">Siguiente día</option>
+          <option value="2">Próximos 2 días</option>
+          <option value="3">Próximos 3 días</option>
+        </select>
+      </div>
     </div>
 
-    <!-- 2. Filtro por grupo -->
-    <div class="filtros-scroll">
-      <button class="filtro-pill filtro-grupo active" data-grupo="todos">All</button>
-      {% for g in grupos %}
-        <button class="filtro-pill filtro-grupo" data-grupo="{{ g }}">{{ g }}</button>
-      {% endfor %}
-    </div>
-
-    <!-- 3. Filtro por estado -->
+    <!-- Fila 2: toggle estado -->
     <div class="filtros-estado">
       <button class="filtro-estado-btn active" data-estado="todos">Todos</button>
       <button class="filtro-estado-btn" data-estado="pendiente">Pendientes</button>

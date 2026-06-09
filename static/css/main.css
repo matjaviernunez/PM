@@ -98,7 +98,7 @@ a:hover { color: var(--dorado-claro); text-decoration: underline; }
 .auth-wrapper--maple {
   background:
     radial-gradient(ellipse at top, #1e3a5f 0%, var(--azul-oscuro) 60%),
-    url('/static/img/maple.avif') right bottom / 320px auto no-repeat;
+    url('/static/img/maple.jpg') right bottom / 320px auto no-repeat;
   background-blend-mode: normal, normal;
 }
 
