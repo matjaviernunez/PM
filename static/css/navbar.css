@@ -30,6 +30,15 @@
 .nav-label { font-size: .65rem; font-weight: 600; text-transform: uppercase;
              letter-spacing: .5px; }
 
+/* ── Botón audio ─────────────────────────────────────────────── */
+.nav-audio-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  outline: none;
+}
+.nav-audio-btn:hover { color: var(--blanco); }
+
 /* ── Desktop: convertir en top bar ───────────────────────────── */
 @media (min-width: 768px) {
   .bottom-nav {

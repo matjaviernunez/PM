@@ -9,16 +9,22 @@
   </div>
 
   <!-- Filtro por liga -->
-  <div class="filtros-wrapper">
-    <div class="filtros-scroll">
-      <a href="{{ url_for('ranking.index') }}"
-         class="filtro-pill {% if not liga_id %}active{% endif %}">All</a>
-      {% for l in ligas %}
-        <a href="{{ url_for('ranking.index', liga=l.id) }}"
-           class="filtro-pill {% if liga_id == l.id %}active{% endif %}">
-          {{ l.nombre }}
-        </a>
-      {% endfor %}
+  <div class="filtros-wrapper ranking-filtros">
+    <div class="filtros-selects">
+      <div class="filtro-select-wrap">
+        <span class="filtro-select-icon">🏆</span>
+        <select class="filtro-select" onchange="window.location.href=this.value">
+          <option value="{{ url_for('ranking.index') }}" {% if not liga_id %}selected{% endif %}>
+            Todas las ligas
+          </option>
+          {% for l in ligas %}
+            <option value="{{ url_for('ranking.index', liga=l.id) }}"
+                    {% if liga_id == l.id %}selected{% endif %}>
+              {{ l.nombre }}
+            </option>
+          {% endfor %}
+        </select>
+      </div>
     </div>
   </div>
 
@@ -144,6 +150,32 @@
     </div>
 
   </div>
+
+  <!-- ── El más botado ──────────────────────────────────────────── -->
+  {% if tabla and tabla | length > 1 %}
+  {% set botado = tabla[-1] %}
+  <div class="botado-card">
+    <div class="botado-header">
+      <span class="botado-trophy">🥄</span>
+      <div>
+        <div class="botado-title">El Más Botado</div>
+        <div class="botado-sub">Cuchara de palo · última posición</div>
+      </div>
+    </div>
+    <div class="botado-jugador">
+      <span class="botado-nombre">{{ botado.nickname }}</span>
+      <span class="botado-pts">{{ botado.total }} <span class="botado-pts-label">pts</span></span>
+    </div>
+    {% if botado.campeon_favorito %}
+    <div class="botado-detail">
+      Apostó por <strong>{{ botado.campeon_favorito }}</strong> como campeón 🤞
+    </div>
+    {% endif %}
+    <div class="botado-mensaje">
+      "Todavía hay tiempo... ¿o no?" 😅
+    </div>
+  </div>
+  {% endif %}
 
 </div>
 {% endblock %}

@@ -4,6 +4,21 @@
   max-width: 720px;
   margin: 0 auto;
   padding: 1rem 1rem 6rem;
+  position: relative;
+}
+/* Maple difuminado de fondo */
+.hub-page::before {
+  content: '';
+  position: fixed;
+  bottom: 0;
+  right: -5%;
+  width: 55vw;
+  max-width: 340px;
+  height: 70vh;
+  background: url('/static/img/maple.jpg') center bottom / contain no-repeat;
+  opacity: .045;
+  pointer-events: none;
+  z-index: 0;
 }
 
 .hub-header {
@@ -73,6 +88,53 @@
 .hub-link--flash:hover { border-color: #f39c12; }
 .hub-link--one:hover   { border-color: #27ae60; }
 .hub-link--news:hover  { border-color: #4285f4; }
+
+/* ── Música ───────────────────────────────────────────────────── */
+.hub-music-grid {
+  display: flex;
+  flex-direction: column;
+  gap: .5rem;
+}
+.hub-music-card {
+  display: flex;
+  align-items: center;
+  gap: .85rem;
+  background: var(--azul-medio);
+  border: 1px solid rgba(255,255,255,.07);
+  border-radius: 12px;
+  padding: .75rem 1rem;
+  text-decoration: none;
+  color: var(--blanco);
+  transition: all .18s;
+}
+.hub-music-card:hover {
+  border-color: var(--dorado);
+  background: rgba(243,156,18,.07);
+  text-decoration: none;
+  transform: translateX(3px);
+}
+.hub-music-icon { font-size: 1.4rem; flex-shrink: 0; }
+.hub-music-info {
+  display: flex;
+  flex-direction: column;
+  gap: .1rem;
+  flex: 1;
+  min-width: 0;
+}
+.hub-music-title {
+  font-size: .9rem;
+  font-weight: 700;
+  color: var(--blanco);
+}
+.hub-music-artist {
+  font-size: .72rem;
+  color: var(--gris);
+}
+.hub-music-play {
+  font-size: .9rem;
+  color: var(--dorado);
+  flex-shrink: 0;
+}
 
 /* ── Twitter / X ──────────────────────────────────────────────── */
 .hub-twitter-grid {

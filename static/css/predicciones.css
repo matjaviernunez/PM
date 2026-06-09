@@ -6,6 +6,21 @@
   max-width: 680px;
   margin: 0 auto;
   padding: 0 0 6rem;
+  position: relative;
+}
+/* Zayu difuminado de fondo */
+.pred-page::before {
+  content: '';
+  position: fixed;
+  bottom: 0;
+  right: -5%;
+  width: 55vw;
+  max-width: 340px;
+  height: 70vh;
+  background: url('/static/img/zayu.jpg') center bottom / contain no-repeat;
+  opacity: .045;
+  pointer-events: none;
+  z-index: 0;
 }
 
 /* ── Header con Zayu ─────────────────────────────────────────── */

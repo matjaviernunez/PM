@@ -301,6 +301,37 @@
 .admin-page .filtro-select:focus { outline: none; border-color: var(--dorado); }
 .admin-page .filtro-select option { background: var(--azul-oscuro); }
 
+/* ── Panel de ligas inline ─────────────────────────────────────── */
+.admin-ligas-panel {
+  padding: .6rem .75rem;
+  background: rgba(243,156,18,.06);
+  border: 1px solid rgba(243,156,18,.2);
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: .4rem;
+}
+.admin-ligas-label {
+  font-size: .78rem;
+  font-weight: 700;
+  color: var(--dorado);
+}
+.admin-ligas-checks {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .35rem .75rem;
+}
+.admin-liga-check {
+  display: flex;
+  align-items: center;
+  gap: .3rem;
+  font-size: .82rem;
+  cursor: pointer;
+  color: var(--gris-claro);
+}
+.admin-liga-check input { accent-color: var(--dorado); }
+.admin-ligas-status { font-size: .78rem; margin-left: .5rem; }
+
 /* ── Filtros de usuario ────────────────────────────────────────── */
 .admin-user-filters {
   display: flex;

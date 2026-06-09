@@ -161,22 +161,47 @@
         </thead>
         <tbody>
           {% for u in usuarios %}
+          {% set ligas_user = usuario_ligas.get(u.id, []) %}
           <tr id="user-row-{{ u.id }}"
               data-nickname="{{ u.nickname | lower }}"
               data-username="{{ u.username | lower }}"
-              data-ligas="{{ usuario_ligas.get(u.id, []) | join(',') }}">
+              data-ligas="{{ ligas_user | join(',') }}">
             <td>{{ u.nickname }}</td>
             <td>{{ u.username }}</td>
             <td id="pts-{{ u.id }}">–</td>
             <td>{{ '✓' if u.es_admin else '–' }}</td>
             <td>
               <button class="btn-sm" onclick="verPrediccionesUsuario({{ u.id }}, '{{ u.nickname }}')">Ver</button>
+              <button class="btn-sm" onclick="toggleLigasPanel({{ u.id }})">🏆 Ligas</button>
               <button class="btn-sm btn-rojo" onclick="eliminarUsuario({{ u.id }}, '{{ u.nickname }}')">Eliminar</button>
             </td>
           </tr>
+          <!-- Panel de predicciones -->
           <tr id="upreds-row-{{ u.id }}" style="display:none">
             <td colspan="5">
               <div class="upreds-container" id="upreds-{{ u.id }}"></div>
+            </td>
+          </tr>
+          <!-- Panel de ligas -->
+          <tr id="ligas-row-{{ u.id }}" style="display:none">
+            <td colspan="5">
+              <div class="admin-ligas-panel">
+                <span class="admin-ligas-label">Ligas de {{ u.nickname }}:</span>
+                <div class="admin-ligas-checks">
+                  {% for l in ligas %}
+                  <label class="admin-liga-check">
+                    <input type="checkbox"
+                           name="liga-{{ u.id }}"
+                           value="{{ l.id }}"
+                           {% if l.id in ligas_user %}checked{% endif %}>
+                    {{ l.nombre }}
+                  </label>
+                  {% endfor %}
+                </div>
+                <button class="btn-sm" style="margin-top:.4rem"
+                        onclick="guardarLigasUsuario({{ u.id }})">Guardar</button>
+                <span class="admin-ligas-status" id="ligas-status-{{ u.id }}"></span>
+              </div>
             </td>
           </tr>
           {% endfor %}
@@ -303,6 +328,37 @@ function aplicarFiltros() {
   });
 
   document.getElementById("partidos-vacio").style.display = visibles === 0 ? "" : "none";
+}
+
+// ── Panel de ligas por usuario ───────────────────────────────────
+function toggleLigasPanel(uid) {
+  const row = document.getElementById(`ligas-row-${uid}`);
+  const predsRow = document.getElementById(`upreds-row-${uid}`);
+  const abierto = row.style.display !== "none";
+  row.style.display = abierto ? "none" : "";
+  if (!abierto && predsRow) predsRow.style.display = "none"; // cierra preds si estaba abierto
+}
+
+async function guardarLigasUsuario(uid) {
+  const checks = document.querySelectorAll(`input[name="liga-${uid}"]:checked`);
+  const liga_ids = [...checks].map(c => parseInt(c.value));
+  const status = document.getElementById(`ligas-status-${uid}`);
+  status.textContent = "Guardando...";
+  const res = await fetch('/admin/usuario-ligas', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({ usuario_id: uid, liga_ids })
+  });
+  const data = await res.json();
+  if (data.ok) {
+    status.innerHTML = '<span style="color:var(--verde)">✓ Guardado</span>';
+    // Actualizar data-ligas en la fila para que el filtro funcione al momento
+    const row = document.getElementById(`user-row-${uid}`);
+    if (row) row.dataset.ligas = liga_ids.join(",");
+    setTimeout(() => { status.textContent = ""; }, 2500);
+  } else {
+    status.innerHTML = '<span style="color:var(--rojo)">Error</span>';
+  }
 }
 
 // ── Filtros de usuarios ──────────────────────────────────────────

@@ -364,6 +364,27 @@ def borrar_tarjeta():
     return jsonify({"ok": True})
 
 
+# ── Actualizar ligas de un usuario ────────────────────────────────────────
+
+@admin_bp.route("/usuario-ligas", methods=["POST"])
+@login_required
+@admin_required
+def actualizar_usuario_ligas():
+    data       = request.get_json()
+    usuario_id = int(data.get("usuario_id"))
+    liga_ids   = [int(x) for x in data.get("liga_ids", [])]
+
+    with get_db() as conn:
+        conn.execute("DELETE FROM usuario_liga WHERE usuario_id = ?", (usuario_id,))
+        for lid in liga_ids:
+            conn.execute(
+                "INSERT OR IGNORE INTO usuario_liga (usuario_id, liga_id) VALUES (?, ?)",
+                (usuario_id, lid)
+            )
+        conn.commit()
+    return jsonify({"ok": True})
+
+
 # ── Hacerse admin (solo primera vez via CLI) ───────────────────────────────
 
 @admin_bp.route("/make-admin/<int:usuario_id>", methods=["POST"])
