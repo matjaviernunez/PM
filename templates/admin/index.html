@@ -537,11 +537,6 @@ async function togglePartido(id, abierto) {
   location.reload();
 }
 
-}
-
-
-// Cargar al iniciar
-
 async function eliminarUsuario(id, nombre) {
   if (!confirm(`¿Eliminar a ${nombre}?`)) return;
   const res  = await fetch('/admin/eliminar-usuario', {
