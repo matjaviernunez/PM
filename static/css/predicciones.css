@@ -512,21 +512,35 @@
 
 /* ── Rules panel ─────────────────────────────────────────────── */
 .rules-bar {
-  display: flex;
-  justify-content: flex-end;
-  padding: .35rem .75rem 0;
+  padding: .6rem .75rem .25rem;
 }
 .rules-toggle {
-  background: rgba(255,255,255,.07);
-  border: 1px solid rgba(255,255,255,.15);
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: .4rem;
+  background: linear-gradient(135deg, rgba(var(--azul-medio-rgb, 13,71,161),.35), rgba(var(--dorado-rgb, 240,176,0),.12));
+  border: 1px solid rgba(255,255,255,.18);
   color: var(--text-main, #eee);
-  border-radius: 20px;
-  padding: .28rem .75rem;
-  font-size: .75rem;
+  border-radius: 10px;
+  padding: .6rem 1rem;
+  font-size: .82rem;
+  font-weight: 600;
+  letter-spacing: .3px;
   cursor: pointer;
-  transition: background .2s;
+  transition: background .25s, border-color .25s;
 }
-.rules-toggle:hover { background: rgba(255,255,255,.13); }
+.rules-toggle:hover {
+  background: linear-gradient(135deg, rgba(13,71,161,.5), rgba(240,176,0,.2));
+  border-color: rgba(255,255,255,.3);
+}
+.rules-toggle-arrow {
+  display: inline-block;
+  transition: transform .25s;
+  font-size: .75rem;
+  opacity: .7;
+}
 .rules-panel {
   margin: .5rem .75rem .25rem;
   background: rgba(255,255,255,.05);
@@ -557,4 +571,35 @@
 .rules-block ul {
   padding-left: 1.1rem;
   margin: 0;
+}
+
+/* ── Nav card (filtros) ───────────────────────────────────────── */
+.nav-card {
+  margin: .5rem .75rem .25rem;
+  background: rgba(255,255,255,.05);
+  border: 1px solid rgba(255,255,255,.1);
+  border-radius: 12px;
+  overflow: hidden;
+}
+.nav-card-header {
+  display: flex;
+  align-items: center;
+  gap: .45rem;
+  padding: .5rem .85rem .35rem;
+  border-bottom: 1px solid rgba(255,255,255,.07);
+}
+.nav-card-icon { font-size: .85rem; }
+.nav-card-title {
+  font-size: .7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: rgba(255,255,255,.45);
+}
+.nav-card .filtros-wrapper {
+  margin: 0;
+  border-radius: 0;
+  background: transparent;
+  border: none;
+  padding: .5rem .75rem .6rem;
 }

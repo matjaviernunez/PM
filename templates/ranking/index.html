@@ -99,34 +99,64 @@
 
 
     <!-- Cómo se puntúa -->
-    <div class="stats-card">
+    <div class="stats-card scoring-card">
       <h2 class="stats-title">📐 ¿Cómo se puntúa?</h2>
-      <p class="stats-sub">Sistema de puntuación por partido</p>
-      <div class="scoring-grid">
-        <div class="scoring-row">
-          <span class="scoring-pts">1 pt</span>
-          <span class="scoring-desc">Acertar el resultado (quién gana o empate)</span>
+      <p class="stats-sub">Cada predicción se evalúa con hasta 4 puntos base</p>
+
+      <div class="sc-criteria">
+        <div class="sc-criterion sc-c1">
+          <div class="sc-pts">1<span class="sc-pt-label">pt</span></div>
+          <div class="sc-info">
+            <div class="sc-label">Resultado correcto</div>
+            <div class="sc-hint">Acertás quién gana o que hay empate</div>
+          </div>
         </div>
-        <div class="scoring-row">
-          <span class="scoring-pts">+1 pt</span>
-          <span class="scoring-desc">+ Diferencia de goles exacta</span>
+        <div class="sc-criterion sc-c2">
+          <div class="sc-pts">+1<span class="sc-pt-label">pt</span></div>
+          <div class="sc-info">
+            <div class="sc-label">Diferencia exacta</div>
+            <div class="sc-hint">La diferencia de goles también es correcta</div>
+          </div>
         </div>
-        <div class="scoring-row">
-          <span class="scoring-pts">+2 pts</span>
-          <span class="scoring-desc">+ Marcador exacto (ambos goles correctos)</span>
+        <div class="sc-criterion sc-c3">
+          <div class="sc-pts">+2<span class="sc-pt-label">pts</span></div>
+          <div class="sc-info">
+            <div class="sc-label">Marcador exacto</div>
+            <div class="sc-hint">Ambos goles son exactamente correctos</div>
+          </div>
         </div>
-        <div class="scoring-row scoring-row--bonus">
-          <span class="scoring-pts">+1 pt</span>
-          <span class="scoring-desc">+ Marcador exacto en penales (eliminatorias)</span>
+        <div class="sc-criterion sc-cbonus">
+          <div class="sc-pts">+1<span class="sc-pt-label">pt</span></div>
+          <div class="sc-info">
+            <div class="sc-label">Penales exactos <span class="sc-badge-elim">Eliminatorias</span></div>
+            <div class="sc-hint">Adivinás el marcador exacto en la tanda</div>
+          </div>
         </div>
       </div>
-      <div class="scoring-mult">
-        <span class="scoring-mult-title">Multiplicadores por fase</span>
-        <div class="scoring-mult-row"><span class="mult-fase">Grupos · 16avos</span><span class="mult-val">×1</span></div>
-        <div class="scoring-mult-row"><span class="mult-fase">Octavos · Cuartos</span><span class="mult-val">×2</span></div>
-        <div class="scoring-mult-row"><span class="mult-fase">Semis · 3er Puesto · Final</span><span class="mult-val">×3</span></div>
+
+      <div class="sc-max-hint">Máximo base: <strong>4 pts</strong> por partido</div>
+
+      <div class="sc-mult-section">
+        <div class="sc-mult-title">✖ Multiplicador por fase</div>
+        <div class="sc-mult-grid">
+          <div class="sc-mult-item sc-m1">
+            <div class="sc-mult-val">×1</div>
+            <div class="sc-mult-fases">Grupos<br>16avos</div>
+          </div>
+          <div class="sc-mult-item sc-m2">
+            <div class="sc-mult-val">×2</div>
+            <div class="sc-mult-fases">Octavos<br>Cuartos</div>
+          </div>
+          <div class="sc-mult-item sc-m3">
+            <div class="sc-mult-val">×3</div>
+            <div class="sc-mult-fases">Semis · 3er Puesto<br>Final</div>
+          </div>
+        </div>
       </div>
-      <p class="stats-sub" style="margin-top:.75rem;font-style:italic">Máximo por partido: 4 pts × multiplicador de fase</p>
+
+      <div class="sc-example">
+        💡 Ejemplo: marcador exacto en Final → 4 pts × 3 = <strong>12 pts</strong>
+      </div>
     </div>
 
     <!-- Campeón favorito -->

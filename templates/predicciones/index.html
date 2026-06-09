@@ -29,7 +29,7 @@
   <!-- ── Panel de reglas (toggle) ───────────────────────────────── -->
   <div class="rules-bar">
     <button class="rules-toggle" onclick="toggleReglas()" id="rules-btn">
-      ℹ️ ¿Cómo funciona?
+      ℹ️ &nbsp;¿Cómo funciona? &nbsp;<span class="rules-toggle-arrow" id="rules-arrow">▾</span>
     </button>
   </div>
   <div class="rules-panel" id="rules-panel" style="display:none">
@@ -76,6 +76,11 @@
   </div>
 
   <!-- ── Barra de filtros (sticky) ───────────────────────────────── -->
+  <div class="nav-card">
+    <div class="nav-card-header">
+      <span class="nav-card-icon">🔍</span>
+      <span class="nav-card-title">Navegación</span>
+    </div>
   <div class="filtros-wrapper">
 
     <!-- Fila 1: selects de grupo + días -->
@@ -108,6 +113,7 @@
     </div>
 
   </div>
+  </div><!-- nav-card -->
 
   <!-- ── Bloques por día ─────────────────────────────────────────── -->
   {% for fecha, partidos in por_fecha.items() %}
@@ -243,10 +249,10 @@ setInterval(actualizarCountdown, 1000);
 // ── Panel de reglas ───────────────────────────────────────────
 function toggleReglas() {
   const panel = document.getElementById('rules-panel');
-  const btn   = document.getElementById('rules-btn');
+  const arrow = document.getElementById('rules-arrow');
   const open  = panel.style.display !== 'none';
   panel.style.display = open ? 'none' : 'block';
-  btn.textContent = open ? 'ℹ️ ¿Cómo funciona?' : '✖ Cerrar';
+  if (arrow) arrow.style.transform = open ? 'rotate(0deg)' : 'rotate(180deg)';
 }
 
 </script>

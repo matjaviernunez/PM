@@ -409,52 +409,131 @@
 }
 .empty-state span { font-size: 3rem; display: block; margin-bottom: 1rem; }
  
-/* ── Scoring explanation card ─────────────────────────────────── */
-.scoring-grid {
+/* ── Scoring card (redesign) ──────────────────────────────────── */
+.sc-criteria {
   display: flex;
   flex-direction: column;
-  gap: .4rem;
-  margin-bottom: .85rem;
+  gap: .45rem;
+  margin: .75rem 0 .5rem;
 }
-.scoring-row {
+.sc-criterion {
   display: flex;
   align-items: center;
-  gap: .65rem;
-  padding: .35rem .5rem;
-  background: rgba(255,255,255,.04);
-  border-radius: 7px;
+  gap: .75rem;
+  padding: .55rem .7rem;
+  border-radius: 10px;
+  border-left: 3px solid transparent;
 }
-.scoring-pts {
+.sc-c1 { background: rgba(255,255,255,.05); border-color: rgba(255,255,255,.2); }
+.sc-c2 { background: rgba(255,255,255,.05); border-color: rgba(255,255,255,.3); }
+.sc-c3 { background: rgba(var(--dorado-rgb,240,176,0),.1); border-color: var(--dorado,#f0b000); }
+.sc-cbonus { background: rgba(100,200,100,.07); border-color: #4caf50; }
+
+.sc-pts {
   font-family: 'Bebas Neue', 'Oswald', var(--font-main);
-  font-size: 1.15rem;
-  color: var(--dorado, #f0c040);
-  min-width: 44px;
+  font-size: 1.6rem;
+  line-height: 1;
+  color: var(--dorado, #f0b000);
+  min-width: 52px;
   text-align: center;
   flex-shrink: 0;
 }
-.scoring-desc {
-  font-size: .78rem;
-  color: rgba(255,255,255,.78);
+.sc-c3 .sc-pts { font-size: 1.8rem; }
+.sc-cbonus .sc-pts { color: #66bb6a; font-size: 1.4rem; }
+.sc-pt-label {
+  font-family: var(--font-main);
+  font-size: .55rem;
+  font-weight: 600;
+  letter-spacing: .5px;
+  vertical-align: super;
+  margin-left: 1px;
+  opacity: .8;
+}
+.sc-info { flex: 1; }
+.sc-label {
+  font-size: .82rem;
+  font-weight: 700;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  gap: .4rem;
+  flex-wrap: wrap;
+}
+.sc-hint {
+  font-size: .71rem;
+  color: rgba(255,255,255,.5);
+  margin-top: .1rem;
   line-height: 1.35;
 }
-.scoring-mult {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: .75rem;
-  margin-top: .25rem;
-}
-.scoring-mult th {
-  text-align: left;
-  color: var(--dorado, #f0c040);
-  font-size: .7rem;
+.sc-badge-elim {
+  font-size: .6rem;
+  font-weight: 700;
+  background: rgba(100,200,100,.2);
+  color: #66bb6a;
+  border: 1px solid #4caf50;
+  border-radius: 4px;
+  padding: 1px 5px;
+  letter-spacing: .3px;
   text-transform: uppercase;
-  letter-spacing: .4px;
-  padding: .25rem .4rem;
-  border-bottom: 1px solid rgba(255,255,255,.1);
 }
-.scoring-mult td {
-  padding: .25rem .4rem;
-  color: rgba(255,255,255,.72);
-  border-bottom: 1px solid rgba(255,255,255,.05);
+.sc-max-hint {
+  text-align: center;
+  font-size: .73rem;
+  color: rgba(255,255,255,.45);
+  margin: .4rem 0 .85rem;
 }
-.scoring-mult tr:last-child td { border-bottom: none; }
+.sc-max-hint strong { color: var(--dorado, #f0b000); }
+
+.sc-mult-section {
+  background: rgba(255,255,255,.04);
+  border-radius: 10px;
+  padding: .65rem .7rem;
+  margin-bottom: .6rem;
+}
+.sc-mult-title {
+  font-size: .68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .8px;
+  color: rgba(255,255,255,.4);
+  margin-bottom: .6rem;
+}
+.sc-mult-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: .5rem;
+}
+.sc-mult-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: .25rem;
+  padding: .5rem .3rem;
+  border-radius: 8px;
+  text-align: center;
+}
+.sc-m1 { background: rgba(255,255,255,.06); }
+.sc-m2 { background: rgba(255,176,0,.1); }
+.sc-m3 { background: rgba(255,100,100,.1); }
+.sc-mult-val {
+  font-family: 'Bebas Neue', 'Oswald', var(--font-main);
+  font-size: 1.6rem;
+  line-height: 1;
+  color: var(--dorado, #f0b000);
+}
+.sc-m3 .sc-mult-val { color: #ef5350; font-size: 1.9rem; }
+.sc-mult-fases {
+  font-size: .62rem;
+  color: rgba(255,255,255,.55);
+  line-height: 1.4;
+}
+.sc-example {
+  font-size: .73rem;
+  color: rgba(255,255,255,.5);
+  text-align: center;
+  padding: .4rem .5rem;
+  border-radius: 7px;
+  background: rgba(255,255,255,.03);
+  font-style: italic;
+}
+.sc-example strong { color: var(--dorado, #f0b000); font-style: normal; }
