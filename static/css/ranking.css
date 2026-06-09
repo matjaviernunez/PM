@@ -135,6 +135,119 @@
 .dot--semis    { background: #e74c3c; }
 .dot--final    { background: #9b59b6; }
 
+/* ── Sección de estadísticas ──────────────────────────────────── */
+.stats-section {
+  padding: .5rem .75rem 2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.stats-card {
+  background: var(--azul-medio);
+  border: 1px solid rgba(255,255,255,.07);
+  border-radius: 14px;
+  padding: 1rem 1.1rem 1.2rem;
+}
+
+.stats-title {
+  font-size: .95rem;
+  font-weight: 800;
+  color: var(--dorado);
+  margin-bottom: .15rem;
+}
+.stats-sub {
+  font-size: .75rem;
+  color: var(--gris);
+  margin-bottom: .9rem;
+}
+.stats-empty {
+  font-size: .82rem;
+  color: var(--gris);
+  font-style: italic;
+}
+
+/* Campeón favorito */
+.campeon-chart {
+  display: flex;
+  flex-direction: column;
+  gap: .45rem;
+}
+.campeon-row {
+  display: grid;
+  grid-template-columns: 28px 52px 1fr 28px;
+  align-items: center;
+  gap: .4rem;
+}
+.campeon-flag {
+  width: 24px;
+  height: auto;
+  border-radius: 2px;
+}
+.campeon-nombre {
+  font-size: .78rem;
+  font-weight: 700;
+  color: var(--gris-claro);
+}
+.campeon-bar-wrap {
+  background: rgba(255,255,255,.06);
+  border-radius: 4px;
+  height: 10px;
+  overflow: hidden;
+}
+.campeon-bar {
+  height: 100%;
+  border-radius: 4px;
+  background: linear-gradient(90deg, var(--dorado), #e67e22);
+  min-width: 6px;
+  transition: width .5s ease;
+}
+.campeon-votos {
+  font-size: .78rem;
+  font-weight: 800;
+  color: var(--dorado);
+  text-align: right;
+}
+
+/* Marcadores */
+.marcador-chart {
+  display: flex;
+  flex-direction: column;
+  gap: .4rem;
+}
+.marcador-row {
+  display: grid;
+  grid-template-columns: 42px 1fr 28px;
+  align-items: center;
+  gap: .5rem;
+}
+.marcador-score {
+  font-size: .85rem;
+  font-weight: 800;
+  color: var(--blanco);
+  letter-spacing: .5px;
+  text-align: center;
+}
+.marcador-bar-wrap {
+  background: rgba(255,255,255,.06);
+  border-radius: 4px;
+  height: 10px;
+  overflow: hidden;
+}
+.marcador-bar {
+  height: 100%;
+  border-radius: 4px;
+  background: linear-gradient(90deg, var(--azul-claro), #3498db);
+  min-width: 6px;
+  transition: width .5s ease;
+}
+.marcador-count {
+  font-size: .78rem;
+  font-weight: 800;
+  color: var(--gris-claro);
+  text-align: right;
+}
+
 /* Empty state */
 .empty-state {
   text-align: center;

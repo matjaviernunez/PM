@@ -1,0 +1,160 @@
+/* hub.css — Página Mundial 2026 */
+
+.hub-page {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 1rem 1rem 6rem;
+}
+
+.hub-header {
+  text-align: center;
+  padding: 1.5rem 0 .5rem;
+  margin-bottom: 1.5rem;
+}
+.hub-header h1 {
+  font-size: 1.8rem;
+  font-weight: 900;
+  letter-spacing: -0.5px;
+}
+.hub-sub {
+  color: var(--gris);
+  font-size: .88rem;
+  margin-top: .3rem;
+}
+
+/* ── Secciones ────────────────────────────────────────────────── */
+.hub-section {
+  margin-bottom: 2rem;
+}
+.hub-section h2 {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--dorado);
+  text-transform: uppercase;
+  letter-spacing: .8px;
+  margin-bottom: .9rem;
+  border-left: 3px solid var(--dorado);
+  padding-left: .6rem;
+}
+
+/* ── Links externos ───────────────────────────────────────────── */
+.hub-links-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: .6rem;
+}
+
+.hub-link-card {
+  display: flex;
+  flex-direction: column;
+  gap: .2rem;
+  background: var(--azul-medio);
+  border: 1px solid rgba(255,255,255,.07);
+  border-radius: 12px;
+  padding: .9rem 1rem;
+  text-decoration: none;
+  transition: all .2s;
+  cursor: pointer;
+}
+.hub-link-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 16px rgba(0,0,0,.3);
+  text-decoration: none;
+}
+
+.hub-link-icon  { font-size: 1.4rem; }
+.hub-link-name  { font-size: .95rem; font-weight: 700; color: var(--blanco); }
+.hub-link-desc  { font-size: .75rem; color: var(--gris); }
+
+/* Colores de acento por sitio */
+.hub-link--fifa:hover  { border-color: #0066cc; }
+.hub-link--sofa:hover  { border-color: #ff6900; }
+.hub-link--espn:hover  { border-color: #d00000; }
+.hub-link--flash:hover { border-color: #f39c12; }
+.hub-link--one:hover   { border-color: #27ae60; }
+.hub-link--news:hover  { border-color: #4285f4; }
+
+/* ── Twitter / X ──────────────────────────────────────────────── */
+.hub-twitter-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: .6rem;
+}
+
+.hub-twitter-card {
+  display: flex;
+  flex-direction: column;
+  gap: .2rem;
+  background: var(--azul-medio);
+  border: 1px solid rgba(255,255,255,.07);
+  border-radius: 12px;
+  padding: .75rem 1rem;
+  text-decoration: none;
+  transition: all .2s;
+}
+.hub-twitter-card:hover {
+  border-color: #1da1f2;
+  transform: translateY(-1px);
+  text-decoration: none;
+}
+
+.hub-tw-handle { font-size: .9rem; font-weight: 700; color: #1da1f2; }
+.hub-tw-desc   { font-size: .75rem; color: var(--gris); }
+
+/* ── Tablas ───────────────────────────────────────────────────── */
+.hub-table-wrapper { overflow-x: auto; }
+
+.hub-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: .88rem;
+}
+.hub-table th {
+  text-align: left;
+  padding: .4rem .6rem;
+  color: var(--gris);
+  font-size: .72rem;
+  text-transform: uppercase;
+  letter-spacing: .5px;
+  border-bottom: 1px solid rgba(255,255,255,.08);
+}
+.hub-table td {
+  padding: .5rem .6rem;
+  border-bottom: 1px solid rgba(255,255,255,.04);
+}
+.hub-table tr:hover td { background: rgba(255,255,255,.02); }
+
+.hub-rank { color: var(--gris); font-size: .78rem; width: 28px; }
+
+.hub-stat {
+  font-weight: 800;
+  font-size: 1rem;
+  text-align: center;
+}
+.hub-stat--goles    { color: var(--verde); }
+.hub-stat--amarilla { color: #f1c40f; }
+.hub-stat--roja     { color: var(--rojo); }
+
+/* ── Estado vacío ─────────────────────────────────────────────── */
+.hub-empty {
+  text-align: center;
+  padding: 1.5rem;
+  background: rgba(255,255,255,.03);
+  border: 1px dashed rgba(255,255,255,.1);
+  border-radius: 12px;
+  color: var(--gris);
+}
+.hub-empty span { font-size: 2rem; display: block; margin-bottom: .5rem; }
+.hub-empty p    { font-size: .88rem; margin-bottom: .75rem; }
+.hub-empty-link {
+  color: var(--dorado);
+  font-size: .85rem;
+  font-weight: 600;
+}
+.hub-empty-link:hover { color: var(--dorado-claro); }
+
+/* ── Desktop ──────────────────────────────────────────────────── */
+@media (max-width: 480px) {
+  .hub-links-grid,
+  .hub-twitter-grid { grid-template-columns: 1fr; }
+}

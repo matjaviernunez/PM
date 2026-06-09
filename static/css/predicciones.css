@@ -8,6 +8,58 @@
   padding: 0 0 6rem;
 }
 
+/* ── Countdown ────────────────────────────────────────────────── */
+.countdown-banner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: .5rem;
+  padding: .9rem 1rem .8rem;
+  background: linear-gradient(135deg, rgba(243,156,18,.12), rgba(192,57,43,.10));
+  border-bottom: 1px solid rgba(243,156,18,.2);
+  text-align: center;
+}
+.countdown-label {
+  font-size: .78rem;
+  font-weight: 700;
+  color: var(--dorado);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+.countdown-blocks {
+  display: flex;
+  align-items: center;
+  gap: .3rem;
+}
+.countdown-block {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background: rgba(255,255,255,.06);
+  border-radius: 8px;
+  padding: .3rem .55rem;
+  min-width: 48px;
+}
+.countdown-block span:first-child {
+  font-size: 1.4rem;
+  font-weight: 900;
+  color: var(--blanco);
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+.cd-unit {
+  font-size: .6rem;
+  color: var(--gris);
+  text-transform: uppercase;
+  letter-spacing: .5px;
+}
+.countdown-sep {
+  font-size: 1.2rem;
+  font-weight: 900;
+  color: var(--dorado);
+  margin-bottom: .8rem;
+}
+
 /* ── Barra de filtros (sticky) ────────────────────────────────── */
 .filtros-wrapper {
   position: sticky;

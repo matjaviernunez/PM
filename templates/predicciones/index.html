@@ -4,6 +4,20 @@
 {% block content %}
 <div class="pred-page">
 
+  <!-- ── Countdown al Mundial ────────────────────────────────────── -->
+  <div class="countdown-banner" id="countdown-banner">
+    <span class="countdown-label">⚽ El Mundial empieza en</span>
+    <div class="countdown-blocks">
+      <div class="countdown-block"><span id="cd-dias">--</span><span class="cd-unit">días</span></div>
+      <div class="countdown-sep">:</div>
+      <div class="countdown-block"><span id="cd-horas">--</span><span class="cd-unit">hrs</span></div>
+      <div class="countdown-sep">:</div>
+      <div class="countdown-block"><span id="cd-mins">--</span><span class="cd-unit">min</span></div>
+      <div class="countdown-sep">:</div>
+      <div class="countdown-block"><span id="cd-segs">--</span><span class="cd-unit">seg</span></div>
+    </div>
+  </div>
+
   <!-- ── Barra de filtros (sticky) ───────────────────────────────── -->
   <div class="filtros-wrapper">
 
@@ -136,4 +150,31 @@
 
 {% block extra_js %}
 <script src="{{ url_for('static', filename='js/predicciones.js') }}"></script>
+<script>
+// ── Countdown al Mundial (11 jun 2026, 17:00 ET = 21:00 UTC) ───
+const INICIO = new Date('2026-06-11T21:00:00Z');
+
+function actualizarCountdown() {
+  const ahora = new Date();
+  const diff  = INICIO - ahora;
+
+  if (diff <= 0) {
+    document.getElementById('countdown-banner').style.display = 'none';
+    return;
+  }
+
+  const dias  = Math.floor(diff / 86400000);
+  const horas = Math.floor((diff % 86400000) / 3600000);
+  const mins  = Math.floor((diff % 3600000)  / 60000);
+  const segs  = Math.floor((diff % 60000)    / 1000);
+
+  document.getElementById('cd-dias').textContent  = String(dias).padStart(2, '0');
+  document.getElementById('cd-horas').textContent = String(horas).padStart(2, '0');
+  document.getElementById('cd-mins').textContent  = String(mins).padStart(2, '0');
+  document.getElementById('cd-segs').textContent  = String(segs).padStart(2, '0');
+}
+
+actualizarCountdown();
+setInterval(actualizarCountdown, 1000);
+</script>
 {% endblock %}

@@ -31,6 +31,9 @@ app.register_blueprint(pred_bp, url_prefix="/predicciones")
 from ranking.routes import ranking_bp
 app.register_blueprint(ranking_bp, url_prefix="/ranking")
 
+from hub.routes import hub_bp
+app.register_blueprint(hub_bp, url_prefix="/mundial")
+
 # ── Rutas base ─────────────────────────────────────────────────────────────
 @app.route("/")
 def index():

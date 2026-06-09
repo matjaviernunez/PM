@@ -1,0 +1,164 @@
+{% extends "base.html" %}
+{% block title %}Mundial 2026{% endblock %}
+
+{% block content %}
+<div class="hub-page">
+
+  <div class="hub-header">
+    <h1>🌎 Mundial 2026</h1>
+    <p class="hub-sub">USA · Canadá · México · 11 jun – 19 jul</p>
+  </div>
+
+  <!-- ── Links externos ──────────────────────────────────────────── -->
+  <section class="hub-section">
+    <h2>🔗 Resultados y fixtures</h2>
+    <div class="hub-links-grid">
+
+      <a href="https://www.fifa.com/es/tournaments/mens/worldcup/canadamexicousa2026"
+         target="_blank" rel="noopener" class="hub-link-card hub-link--fifa">
+        <span class="hub-link-icon">🏆</span>
+        <span class="hub-link-name">FIFA Oficial</span>
+        <span class="hub-link-desc">Resultados, grupos y noticias oficiales</span>
+      </a>
+
+      <a href="https://www.sofascore.com/tournament/football/world/world-cup/16"
+         target="_blank" rel="noopener" class="hub-link-card hub-link--sofa">
+        <span class="hub-link-icon">📊</span>
+        <span class="hub-link-name">Sofascore</span>
+        <span class="hub-link-desc">Marcadores en vivo, estadísticas y lineups</span>
+      </a>
+
+      <a href="https://www.espn.com/soccer/league/_/name/FIFA.WORLD"
+         target="_blank" rel="noopener" class="hub-link-card hub-link--espn">
+        <span class="hub-link-icon">📺</span>
+        <span class="hub-link-name">ESPN FC</span>
+        <span class="hub-link-desc">Coberturas, análisis y en vivo</span>
+      </a>
+
+      <a href="https://www.flashscore.com/football/world/world-cup/"
+         target="_blank" rel="noopener" class="hub-link-card hub-link--flash">
+        <span class="hub-link-icon">⚡</span>
+        <span class="hub-link-name">Flashscore</span>
+        <span class="hub-link-desc">Marcadores en tiempo real</span>
+      </a>
+
+      <a href="https://onefootball.com/es/competicion/copa-del-mundo-fifa-2026-17"
+         target="_blank" rel="noopener" class="hub-link-card hub-link--one">
+        <span class="hub-link-icon">⚽</span>
+        <span class="hub-link-name">OneFootball</span>
+        <span class="hub-link-desc">Noticias, fixtures y resultados</span>
+      </a>
+
+      <a href="https://news.google.com/search?q=Mundial+2026&hl=es"
+         target="_blank" rel="noopener" class="hub-link-card hub-link--news">
+        <span class="hub-link-icon">📰</span>
+        <span class="hub-link-name">Google Noticias</span>
+        <span class="hub-link-desc">Lo último del torneo</span>
+      </a>
+
+    </div>
+  </section>
+
+  <!-- ── Twitter / X ─────────────────────────────────────────────── -->
+  <section class="hub-section">
+    <h2>𝕏 Cuentas clave</h2>
+    <div class="hub-twitter-grid">
+
+      <a href="https://x.com/FIFAWorldCup" target="_blank" rel="noopener" class="hub-twitter-card">
+        <span class="hub-tw-handle">@FIFAWorldCup</span>
+        <span class="hub-tw-desc">Cuenta oficial del Mundial FIFA</span>
+      </a>
+
+      <a href="https://x.com/ESPNFC" target="_blank" rel="noopener" class="hub-twitter-card">
+        <span class="hub-tw-handle">@ESPNFC</span>
+        <span class="hub-tw-desc">Cobertura y análisis ESPN</span>
+      </a>
+
+      <a href="https://x.com/goal" target="_blank" rel="noopener" class="hub-twitter-card">
+        <span class="hub-tw-handle">@goal</span>
+        <span class="hub-tw-desc">Noticias y goles al instante</span>
+      </a>
+
+      <a href="https://x.com/FabrizioRomano" target="_blank" rel="noopener" class="hub-twitter-card">
+        <span class="hub-tw-handle">@FabrizioRomano</span>
+        <span class="hub-tw-desc">El rey del periodismo fútbolero</span>
+      </a>
+
+      <a href="https://x.com/OptaJoe" target="_blank" rel="noopener" class="hub-twitter-card">
+        <span class="hub-tw-handle">@OptaJoe</span>
+        <span class="hub-tw-desc">Estadísticas y datos del fútbol</span>
+      </a>
+
+      <a href="https://x.com/Transfermarkt_e" target="_blank" rel="noopener" class="hub-twitter-card">
+        <span class="hub-tw-handle">@Transfermarkt_e</span>
+        <span class="hub-tw-desc">Valores de mercado y stats</span>
+      </a>
+
+    </div>
+  </section>
+
+  <!-- ── Goleadores ──────────────────────────────────────────────── -->
+  <section class="hub-section">
+    <h2>👟 Tabla de goleadores</h2>
+    {% if goleadores %}
+      <div class="hub-table-wrapper">
+        <table class="hub-table">
+          <thead>
+            <tr><th>#</th><th>Jugador</th><th>Equipo</th><th>⚽</th></tr>
+          </thead>
+          <tbody>
+            {% for g in goleadores %}
+            <tr>
+              <td class="hub-rank">{{ loop.index }}</td>
+              <td><strong>{{ g.jugador }}</strong></td>
+              <td>{{ g.equipo }}</td>
+              <td class="hub-stat hub-stat--goles">{{ g.goles }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}
+      <div class="hub-empty">
+        <span>⏳</span>
+        <p>Aún no hay datos — se actualizarán cuando empiece el torneo.</p>
+        <a href="https://www.sofascore.com/tournament/football/world/world-cup/16#id:69098,tab:top-players"
+           target="_blank" rel="noopener" class="hub-empty-link">
+          Ver goleadores en Sofascore →
+        </a>
+      </div>
+    {% endif %}
+  </section>
+
+  <!-- ── Tarjetas ────────────────────────────────────────────────── -->
+  <section class="hub-section">
+    <h2>🟨 Tarjetas</h2>
+    {% if tarjetas %}
+      <div class="hub-table-wrapper">
+        <table class="hub-table">
+          <thead>
+            <tr><th>#</th><th>Jugador</th><th>Equipo</th><th>🟨</th><th>🟥</th></tr>
+          </thead>
+          <tbody>
+            {% for t in tarjetas %}
+            <tr>
+              <td class="hub-rank">{{ loop.index }}</td>
+              <td><strong>{{ t.jugador }}</strong></td>
+              <td>{{ t.equipo }}</td>
+              <td class="hub-stat hub-stat--amarilla">{{ t.amarillas }}</td>
+              <td class="hub-stat hub-stat--roja">{{ t.rojas }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}
+      <div class="hub-empty">
+        <span>⏳</span>
+        <p>Aún no hay datos — se actualizarán cuando empiece el torneo.</p>
+      </div>
+    {% endif %}
+  </section>
+
+</div>
+{% endblock %}

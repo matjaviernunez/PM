@@ -9,6 +9,7 @@
   <link rel="stylesheet" href="{{ url_for('static', filename='css/navbar.css') }}">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/ranking.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/hub.css') }}">
   {% block extra_css %}{% endblock %}
 </head>
 <body>
@@ -28,7 +29,7 @@
       <span class="nav-icon">🏆</span>
       <span class="nav-label">Ranking</span>
     </a>
-    <a href="#"
+    <a href="{{ url_for('hub.index') }}"
        class="nav-item {% if request.endpoint and 'hub' in request.endpoint %}active{% endif %}">
       <span class="nav-icon">📰</span>
       <span class="nav-label">Mundial</span>

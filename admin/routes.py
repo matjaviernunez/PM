@@ -65,6 +65,13 @@ def index():
 
         ligas = conn.execute("SELECT * FROM ligas ORDER BY nombre").fetchall()
 
+        # Liga IDs por usuario para filtrado en frontend
+        ul_rows = conn.execute("SELECT usuario_id, liga_id FROM usuario_liga").fetchall()
+
+    usuario_ligas = {}
+    for row in ul_rows:
+        usuario_ligas.setdefault(row["usuario_id"], []).append(row["liga_id"])
+
     return render_template(
         "admin/index.html",
         pendientes=[dict(p) for p in pendientes],
@@ -73,6 +80,7 @@ def index():
         ligas=[dict(l) for l in ligas],
         grupos=GRUPOS,
         equipos=EQUIPOS,
+        usuario_ligas=usuario_ligas,
     )
 
 
@@ -247,6 +255,113 @@ def scrape():
     from scraper.runner import scrape_resultados
     resultado = scrape_resultados()
     return jsonify(resultado)
+
+
+# ── Goleadores ────────────────────────────────────────────────────────────
+
+@admin_bp.route("/goleadores")
+@login_required
+@admin_required
+def listar_goleadores():
+    with get_db() as conn:
+        rows = conn.execute(
+            "SELECT * FROM goleadores ORDER BY goles DESC"
+        ).fetchall()
+    return jsonify({"goleadores": [dict(r) for r in rows]})
+
+@admin_bp.route("/goleadores/guardar", methods=["POST"])
+@login_required
+@admin_required
+def guardar_goleador():
+    data    = request.get_json()
+    jugador = data.get("jugador", "").strip()
+    equipo  = data.get("equipo", "").strip()
+    goles   = int(data.get("goles", 0))
+
+    if not jugador or not equipo:
+        return jsonify({"ok": False, "error": "Jugador y equipo requeridos"}), 400
+
+    with get_db() as conn:
+        existe = conn.execute(
+            "SELECT id FROM goleadores WHERE jugador = ? AND equipo = ?",
+            (jugador, equipo)
+        ).fetchone()
+        if existe:
+            conn.execute(
+                "UPDATE goleadores SET goles = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?",
+                (goles, existe["id"])
+            )
+        else:
+            conn.execute(
+                "INSERT INTO goleadores (jugador, equipo, goles) VALUES (?, ?, ?)",
+                (jugador, equipo, goles)
+            )
+        conn.commit()
+    return jsonify({"ok": True})
+
+@admin_bp.route("/goleadores/borrar", methods=["POST"])
+@login_required
+@admin_required
+def borrar_goleador():
+    goleador_id = request.get_json().get("id")
+    with get_db() as conn:
+        conn.execute("DELETE FROM goleadores WHERE id = ?", (goleador_id,))
+        conn.commit()
+    return jsonify({"ok": True})
+
+
+# ── Tarjetas ───────────────────────────────────────────────────────────────
+
+@admin_bp.route("/tarjetas")
+@login_required
+@admin_required
+def listar_tarjetas():
+    with get_db() as conn:
+        rows = conn.execute(
+            "SELECT * FROM tarjetas ORDER BY rojas DESC, amarillas DESC"
+        ).fetchall()
+    return jsonify({"tarjetas": [dict(r) for r in rows]})
+
+@admin_bp.route("/tarjetas/guardar", methods=["POST"])
+@login_required
+@admin_required
+def guardar_tarjeta():
+    data      = request.get_json()
+    jugador   = data.get("jugador", "").strip()
+    equipo    = data.get("equipo", "").strip()
+    amarillas = int(data.get("amarillas", 0))
+    rojas     = int(data.get("rojas", 0))
+
+    if not jugador or not equipo:
+        return jsonify({"ok": False, "error": "Jugador y equipo requeridos"}), 400
+
+    with get_db() as conn:
+        existe = conn.execute(
+            "SELECT id FROM tarjetas WHERE jugador = ? AND equipo = ?",
+            (jugador, equipo)
+        ).fetchone()
+        if existe:
+            conn.execute(
+                "UPDATE tarjetas SET amarillas = ?, rojas = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?",
+                (amarillas, rojas, existe["id"])
+            )
+        else:
+            conn.execute(
+                "INSERT INTO tarjetas (jugador, equipo, amarillas, rojas) VALUES (?, ?, ?, ?)",
+                (jugador, equipo, amarillas, rojas)
+            )
+        conn.commit()
+    return jsonify({"ok": True})
+
+@admin_bp.route("/tarjetas/borrar", methods=["POST"])
+@login_required
+@admin_required
+def borrar_tarjeta():
+    tarjeta_id = request.get_json().get("id")
+    with get_db() as conn:
+        conn.execute("DELETE FROM tarjetas WHERE id = ?", (tarjeta_id,))
+        conn.commit()
+    return jsonify({"ok": True})
 
 
 # ── Hacerse admin (solo primera vez via CLI) ───────────────────────────────

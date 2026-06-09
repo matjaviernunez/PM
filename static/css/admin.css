@@ -178,6 +178,56 @@
 }
 .btn-guardar-resultado:hover { background: #27ae60; transform: translateY(-1px); }
 
+/* ── Estadísticas admin ────────────────────────────────────────── */
+.stats-admin-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+@media (max-width: 600px) {
+  .stats-admin-grid { grid-template-columns: 1fr; }
+}
+
+.stats-admin-panel {
+  background: rgba(255,255,255,.03);
+  border: 1px solid rgba(255,255,255,.07);
+  border-radius: 10px;
+  padding: .85rem;
+}
+.stats-admin-title {
+  font-size: .85rem;
+  font-weight: 700;
+  color: var(--dorado);
+  margin-bottom: .6rem;
+}
+.stats-admin-list { font-size: .82rem; }
+
+/* ── Filtros de usuario ────────────────────────────────────────── */
+.admin-user-filters {
+  display: flex;
+  gap: .5rem;
+  margin-bottom: .75rem;
+  flex-wrap: wrap;
+}
+
+.admin-user-filters select,
+.admin-user-filters input {
+  background: var(--azul-oscuro);
+  border: 1px solid rgba(255,255,255,.15);
+  border-radius: 8px;
+  color: var(--blanco);
+  padding: .45rem .8rem;
+  font-size: .85rem;
+  flex: 1;
+  min-width: 140px;
+}
+.admin-user-filters select option { background: var(--azul-oscuro); }
+.admin-user-filters select:focus,
+.admin-user-filters input:focus {
+  outline: none;
+  border-color: var(--dorado);
+}
+
 /* ── Tabla de usuarios ─────────────────────────────────────────── */
 .admin-table-wrapper { overflow-x: auto; }
 .admin-table {

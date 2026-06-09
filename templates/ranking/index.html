@@ -87,5 +87,63 @@
     </div>
   {% endif %}
 
+
+  <!-- ── Estadísticas de la polla ───────────────────────────────── -->
+  <div class="stats-section">
+
+    <!-- Campeón favorito -->
+    <div class="stats-card">
+      <h2 class="stats-title">🏆 ¿Quién va a ganar?</h2>
+      <p class="stats-sub">Campeón favorito de los participantes</p>
+
+      {% if campeon_stats %}
+        {% set max_votos = campeon_stats[0].votos %}
+        <div class="campeon-chart">
+          {% for item in campeon_stats %}
+            {% set iso = equipos_iso.get(item.equipo, 'un') %}
+            {% set pct = (item.votos / max_votos * 100) | int %}
+            <div class="campeon-row">
+              <img class="campeon-flag"
+                   src="https://flagcdn.com/w40/{{ iso }}.png"
+                   alt="{{ item.equipo }}">
+              <span class="campeon-nombre">{{ item.equipo }}</span>
+              <div class="campeon-bar-wrap">
+                <div class="campeon-bar" style="width:{{ pct }}%"></div>
+              </div>
+              <span class="campeon-votos">{{ item.votos }}</span>
+            </div>
+          {% endfor %}
+        </div>
+      {% else %}
+        <p class="stats-empty">Aún no hay datos — completa tu perfil para aparecer aquí.</p>
+      {% endif %}
+    </div>
+
+    <!-- Marcadores más predichos -->
+    <div class="stats-card">
+      <h2 class="stats-title">📊 Marcadores más predichos</h2>
+      <p class="stats-sub">Los resultados favoritos de todos</p>
+
+      {% if marcadores_stats %}
+        {% set max_total = marcadores_stats[0].total %}
+        <div class="marcador-chart">
+          {% for item in marcadores_stats %}
+            {% set pct = (item.total / max_total * 100) | int %}
+            <div class="marcador-row">
+              <span class="marcador-score">{{ item.goles_local }} – {{ item.goles_visita }}</span>
+              <div class="marcador-bar-wrap">
+                <div class="marcador-bar" style="width:{{ pct }}%"></div>
+              </div>
+              <span class="marcador-count">{{ item.total }}</span>
+            </div>
+          {% endfor %}
+        </div>
+      {% else %}
+        <p class="stats-empty">Aún sin predicciones guardadas.</p>
+      {% endif %}
+    </div>
+
+  </div>
+
 </div>
 {% endblock %}

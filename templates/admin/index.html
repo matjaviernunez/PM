@@ -14,26 +14,43 @@
     </div>
   </div>
 
-  <!-- ── Filtros por grupo (sticky) ────────────────────────────── -->
+  <!-- ── Barra de filtros (sticky) ─────────────────────────────── -->
   <div class="filtros-wrapper">
+
+    <!-- 1. Filtro por día -->
+    <div class="filtros-dias">
+      <button class="filtro-dia-btn active" data-dia="todos">Todos</button>
+      <button class="filtro-dia-btn" data-dia="1">Sig. día</button>
+      <button class="filtro-dia-btn" data-dia="2">Sig. 2 días</button>
+      <button class="filtro-dia-btn" data-dia="3">Sig. 3 días</button>
+    </div>
+
+    <!-- 2. Filtro por grupo -->
     <div class="filtros-scroll">
       <button class="filtro-pill filtro-grupo active" data-grupo="todos">All</button>
       {% for g in grupos %}
         <button class="filtro-pill filtro-grupo" data-grupo="{{ g }}">{{ g }}</button>
       {% endfor %}
     </div>
+
+    <!-- 3. Filtro por estado -->
+    <div class="filtros-estado">
+      <button class="filtro-estado-btn active" data-estado="todos">Todos</button>
+      <button class="filtro-estado-btn" data-estado="pendiente">Pendientes</button>
+      <button class="filtro-estado-btn" data-estado="completado">Completados</button>
+    </div>
+
   </div>
 
-  <!-- ── Cargar resultados ─────────────────────────────────────── -->
-  <section class="admin-section">
-    <h2>📋 Partidos pendientes de resultado</h2>
+  <!-- ── Partidos (pendientes + completados mezclados con data-estado) ── -->
+  <section class="admin-section" id="seccion-partidos">
 
-    {% if not pendientes %}
-      <p class="admin-empty">Todos los partidos tienen resultado cargado.</p>
-    {% endif %}
-
+    <!-- Pendientes -->
     {% for p in pendientes %}
-    <div class="admin-card" id="partido-{{ p.id }}" data-grupo="{{ p.grupo }}">
+    <div class="admin-card" id="partido-{{ p.id }}"
+         data-grupo="{{ p.grupo }}"
+         data-fecha="{{ p.fecha }}"
+         data-estado="pendiente">
       <div class="admin-card-meta">
         <span class="tag-grupo">Grupo {{ p.grupo }}</span>
         <span>{{ p.fecha }} {{ p.hora }}</span>
@@ -71,32 +88,48 @@
       </div>
 
       <div class="admin-status" id="astatus-{{ p.id }}"></div>
-
-      <!-- Predicciones del partido (lazy load) -->
       <div class="pred-lista" id="preds-{{ p.id }}" style="display:none"></div>
     </div>
     {% endfor %}
-  </section>
 
-  <!-- ── Resultados cargados ───────────────────────────────────── -->
-  {% if completados %}
-  <section class="admin-section">
-    <h2>✅ Últimos resultados cargados</h2>
+    <!-- Completados -->
     {% for p in completados %}
-    <div class="admin-card admin-card--done" data-grupo="{{ p.grupo }}">
-      <span class="tag-grupo">Grupo {{ p.grupo }}</span>
-      <span>{{ p.fecha }}</span>
-      <strong>{{ p.equipo_local }} {{ p.goles_local }} – {{ p.goles_visita }} {{ p.equipo_visita }}</strong>
-      <button class="btn-sm" onclick="togglePredicciones({{ p.id }})">👁 Preds</button>
+    <div class="admin-card admin-card--done"
+         data-grupo="{{ p.grupo }}"
+         data-fecha="{{ p.fecha }}"
+         data-estado="completado">
+      <div class="admin-card-meta">
+        <span class="tag-grupo">Grupo {{ p.grupo }}</span>
+        <span>{{ p.fecha }}</span>
+        <span class="tag-cerrado">Cerrado</span>
+        <strong style="color:var(--blanco)">{{ p.equipo_local }} {{ p.goles_local }} – {{ p.goles_visita }} {{ p.equipo_visita }}</strong>
+        <button class="btn-sm" onclick="togglePredicciones({{ p.id }})">👁 Preds</button>
+      </div>
       <div class="pred-lista" id="preds-{{ p.id }}" style="display:none"></div>
     </div>
     {% endfor %}
+
+    <p class="admin-empty" id="partidos-vacio" style="display:none">
+      Sin partidos con estos filtros.
+    </p>
   </section>
-  {% endif %}
 
   <!-- ── Usuarios ──────────────────────────────────────────────── -->
   <section class="admin-section">
     <h2>👥 Usuarios registrados</h2>
+
+    <!-- Filtros de usuarios -->
+    <div class="admin-user-filters">
+      <select id="filtro-liga" onchange="filtrarUsuarios()">
+        <option value="">Todas las ligas</option>
+        {% for l in ligas %}
+          <option value="{{ l.id }}">{{ l.nombre }}</option>
+        {% endfor %}
+      </select>
+      <input type="text" id="filtro-usuario" placeholder="🔍 Buscar usuario..."
+             oninput="filtrarUsuarios()">
+    </div>
+
     <div class="admin-table-wrapper">
       <table class="admin-table">
         <thead>
@@ -104,7 +137,10 @@
         </thead>
         <tbody>
           {% for u in usuarios %}
-          <tr id="user-row-{{ u.id }}">
+          <tr id="user-row-{{ u.id }}"
+              data-nickname="{{ u.nickname | lower }}"
+              data-username="{{ u.username | lower }}"
+              data-ligas="{{ usuario_ligas.get(u.id, []) | join(',') }}">
             <td>{{ u.nickname }}</td>
             <td>{{ u.username }}</td>
             <td id="pts-{{ u.id }}">–</td>
@@ -114,7 +150,6 @@
               <button class="btn-sm btn-rojo" onclick="eliminarUsuario({{ u.id }}, '{{ u.nickname }}')">Eliminar</button>
             </td>
           </tr>
-          <!-- Fila expandible de predicciones del usuario -->
           <tr id="upreds-row-{{ u.id }}" style="display:none">
             <td colspan="5">
               <div class="upreds-container" id="upreds-{{ u.id }}"></div>
@@ -123,6 +158,44 @@
           {% endfor %}
         </tbody>
       </table>
+    </div>
+  </section>
+
+  <!-- ── Goleadores y tarjetas ───────────────────────────────────── -->
+  <section class="admin-section">
+    <h2>📊 Goleadores y Tarjetas</h2>
+
+    <div class="stats-admin-grid">
+
+      <!-- Goleadores -->
+      <div class="stats-admin-panel">
+        <h3 class="stats-admin-title">👟 Goleadores</h3>
+        <div class="admin-form" style="margin-bottom:.75rem">
+          <input type="text" id="gol-jugador" placeholder="Jugador">
+          <input type="text" id="gol-equipo" placeholder="Equipo (código FIFA)">
+          <input type="number" id="gol-goles" placeholder="Goles" min="0" style="max-width:70px">
+          <button class="btn-sm" onclick="guardarGoleador()">Guardar</button>
+        </div>
+        <div id="lista-goleadores" class="stats-admin-list">
+          <span class="status-guardando">⏳ Cargando...</span>
+        </div>
+      </div>
+
+      <!-- Tarjetas -->
+      <div class="stats-admin-panel">
+        <h3 class="stats-admin-title">🟨 Tarjetas</h3>
+        <div class="admin-form" style="margin-bottom:.75rem;flex-wrap:wrap">
+          <input type="text" id="tar-jugador" placeholder="Jugador">
+          <input type="text" id="tar-equipo" placeholder="Equipo (código FIFA)">
+          <input type="number" id="tar-amarillas" placeholder="🟨" min="0" style="max-width:55px">
+          <input type="number" id="tar-rojas" placeholder="🟥" min="0" style="max-width:55px">
+          <button class="btn-sm" onclick="guardarTarjeta()">Guardar</button>
+        </div>
+        <div id="lista-tarjetas" class="stats-admin-list">
+          <span class="status-guardando">⏳ Cargando...</span>
+        </div>
+      </div>
+
     </div>
   </section>
 
@@ -145,17 +218,87 @@
 
 {% block extra_js %}
 <script>
-// ── Filtro por grupo ─────────────────────────────────────────────
+// ── Estado de filtros ────────────────────────────────────────────
+let grupoActivo  = "todos";
+let estadoActivo = "todos";
+let diaActivo    = "todos";
+
+// Fechas futuras o de hoy (para filtro días)
+function getFechasProximas() {
+  const hoy = new Date().toISOString().slice(0, 10);
+  const fechas = [...new Set(
+    [...document.querySelectorAll(".admin-card[data-fecha]")]
+      .map(c => c.dataset.fecha)
+      .filter(f => f >= hoy)
+  )].sort();
+  return fechas;
+}
+
+// ── Filtros de partidos ──────────────────────────────────────────
+document.querySelectorAll(".filtro-dia-btn").forEach(btn => {
+  btn.addEventListener("click", () => {
+    document.querySelectorAll(".filtro-dia-btn").forEach(b => b.classList.remove("active"));
+    btn.classList.add("active");
+    diaActivo = btn.dataset.dia;
+    aplicarFiltros();
+  });
+});
+
 document.querySelectorAll(".filtro-grupo").forEach(btn => {
   btn.addEventListener("click", () => {
     document.querySelectorAll(".filtro-grupo").forEach(b => b.classList.remove("active"));
     btn.classList.add("active");
-    const g = btn.dataset.grupo;
-    document.querySelectorAll(".admin-card[data-grupo]").forEach(card => {
-      card.style.display = (g === "todos" || card.dataset.grupo === g) ? "" : "none";
-    });
+    grupoActivo = btn.dataset.grupo;
+    aplicarFiltros();
   });
 });
+
+document.querySelectorAll(".filtro-estado-btn").forEach(btn => {
+  btn.addEventListener("click", () => {
+    document.querySelectorAll(".filtro-estado-btn").forEach(b => b.classList.remove("active"));
+    btn.classList.add("active");
+    estadoActivo = btn.dataset.estado;
+    aplicarFiltros();
+  });
+});
+
+function aplicarFiltros() {
+  let fechasPermitidas = null;
+  if (diaActivo !== "todos") {
+    const proximas = getFechasProximas();
+    fechasPermitidas = new Set(proximas.slice(0, parseInt(diaActivo)));
+  }
+
+  let visibles = 0;
+  document.querySelectorAll(".admin-card[data-grupo]").forEach(card => {
+    const pasaDia    = !fechasPermitidas || fechasPermitidas.has(card.dataset.fecha);
+    const pasaGrupo  = grupoActivo  === "todos" || card.dataset.grupo  === grupoActivo;
+    const pasaEstado = estadoActivo === "todos" || card.dataset.estado === estadoActivo;
+    const mostrar    = pasaDia && pasaGrupo && pasaEstado;
+    card.style.display = mostrar ? "" : "none";
+    if (mostrar) visibles++;
+  });
+
+  document.getElementById("partidos-vacio").style.display = visibles === 0 ? "" : "none";
+}
+
+// ── Filtros de usuarios ──────────────────────────────────────────
+function filtrarUsuarios() {
+  const ligaId  = document.getElementById("filtro-liga").value;
+  const buscar  = document.getElementById("filtro-usuario").value.toLowerCase().trim();
+
+  document.querySelectorAll("tr[data-nickname]").forEach(row => {
+    const pasaLiga    = !ligaId || row.dataset.ligas.split(",").includes(ligaId);
+    const pasaBuscar  = !buscar
+      || row.dataset.nickname.includes(buscar)
+      || row.dataset.username.includes(buscar);
+    const mostrar = pasaLiga && pasaBuscar;
+    row.style.display = mostrar ? "" : "none";
+    // Ocultar también la fila de predicciones expandida si el usuario se oculta
+    const expandida = document.getElementById(`upreds-row-${row.id.replace("user-row-", "")}`);
+    if (expandida && !mostrar) expandida.style.display = "none";
+  });
+}
 
 // ── Guardar resultado ────────────────────────────────────────────
 async function guardarResultado(id) {
@@ -171,7 +314,7 @@ async function guardarResultado(id) {
   const data = await res.json();
   if (data.ok) {
     st.innerHTML = `<span class="status-guardado">✓ Guardado · ${data.predicciones_procesadas} predicciones actualizadas</span>`;
-    setTimeout(() => document.getElementById(`partido-${id}`).style.opacity = '.4', 1500);
+    setTimeout(() => location.reload(), 2000);
   } else {
     st.innerHTML = `<span class="status-error">✗ ${data.error}</span>`;
   }
@@ -181,7 +324,6 @@ async function guardarResultado(id) {
 async function togglePredicciones(id) {
   const div = document.getElementById(`preds-${id}`);
   if (div.style.display !== 'none') { div.style.display = 'none'; return; }
-
   if (div.dataset.loaded) { div.style.display = ''; return; }
 
   div.style.display = '';
@@ -225,7 +367,6 @@ async function verPrediccionesUsuario(id, nombre) {
   const data = await res.json();
   div.dataset.loaded = '1';
 
-  // Actualizar pts en la tabla
   document.getElementById(`pts-${id}`).textContent = data.total_puntos;
 
   if (!data.predicciones.length) {
@@ -235,7 +376,7 @@ async function verPrediccionesUsuario(id, nombre) {
   div.innerHTML = `
     <h4 style="color:var(--dorado);margin:.5rem 0">${nombre} — ${data.total_puntos} pts</h4>
     <table class="pred-tabla">
-      <thead><tr><th>Partido</th><th>Predicción</th><th>Real</th><th>Pts</th></tr></thead>
+      <thead><tr><th>Partido</th><th>Predicción</th><th>Real</th><th>Pts</th><th></th></tr></thead>
       <tbody>
         ${data.predicciones.map(p => `
           <tr id="upred-${id}-${p.partido_id}">
@@ -279,9 +420,7 @@ async function borrarPrediccion(usuarioId, partidoId) {
     body: JSON.stringify({usuario_id: usuarioId, partido_id: partidoId})
   });
   const data = await res.json();
-  if (data.ok) {
-    document.getElementById(`upred-${usuarioId}-${partidoId}`)?.remove();
-  }
+  if (data.ok) document.getElementById(`upred-${usuarioId}-${partidoId}`)?.remove();
 }
 
 async function togglePartido(id, abierto) {
@@ -291,6 +430,98 @@ async function togglePartido(id, abierto) {
   });
   location.reload();
 }
+
+// ── Goleadores ───────────────────────────────────────────────────
+async function cargarGoleadores() {
+  const res  = await fetch('/admin/goleadores');
+  const data = await res.json();
+  const div  = document.getElementById('lista-goleadores');
+  if (!data.goleadores.length) {
+    div.innerHTML = '<p class="admin-empty">Sin datos aún.</p>'; return;
+  }
+  div.innerHTML = `<table class="pred-tabla">
+    <thead><tr><th>Jugador</th><th>Equipo</th><th>⚽</th><th></th></tr></thead>
+    <tbody>
+      ${data.goleadores.map(g => `
+        <tr>
+          <td>${g.jugador}</td><td>${g.equipo}</td>
+          <td><strong>${g.goles}</strong></td>
+          <td><button class="btn-sm btn-rojo" onclick="borrarGoleador(${g.id})">✕</button></td>
+        </tr>`).join('')}
+    </tbody></table>`;
+}
+
+async function guardarGoleador() {
+  const jugador = document.getElementById('gol-jugador').value.trim();
+  const equipo  = document.getElementById('gol-equipo').value.trim().toUpperCase();
+  const goles   = parseInt(document.getElementById('gol-goles').value) || 0;
+  if (!jugador || !equipo) return;
+  await fetch('/admin/goleadores/guardar', {
+    method: 'POST', headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({jugador, equipo, goles})
+  });
+  document.getElementById('gol-jugador').value = '';
+  document.getElementById('gol-equipo').value  = '';
+  document.getElementById('gol-goles').value   = '';
+  cargarGoleadores();
+}
+
+async function borrarGoleador(id) {
+  await fetch('/admin/goleadores/borrar', {
+    method: 'POST', headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({id})
+  });
+  cargarGoleadores();
+}
+
+// ── Tarjetas ─────────────────────────────────────────────────────
+async function cargarTarjetas() {
+  const res  = await fetch('/admin/tarjetas');
+  const data = await res.json();
+  const div  = document.getElementById('lista-tarjetas');
+  if (!data.tarjetas.length) {
+    div.innerHTML = '<p class="admin-empty">Sin datos aún.</p>'; return;
+  }
+  div.innerHTML = `<table class="pred-tabla">
+    <thead><tr><th>Jugador</th><th>Equipo</th><th>🟨</th><th>🟥</th><th></th></tr></thead>
+    <tbody>
+      ${data.tarjetas.map(t => `
+        <tr>
+          <td>${t.jugador}</td><td>${t.equipo}</td>
+          <td>${t.amarillas}</td><td>${t.rojas}</td>
+          <td><button class="btn-sm btn-rojo" onclick="borrarTarjeta(${t.id})">✕</button></td>
+        </tr>`).join('')}
+    </tbody></table>`;
+}
+
+async function guardarTarjeta() {
+  const jugador   = document.getElementById('tar-jugador').value.trim();
+  const equipo    = document.getElementById('tar-equipo').value.trim().toUpperCase();
+  const amarillas = parseInt(document.getElementById('tar-amarillas').value) || 0;
+  const rojas     = parseInt(document.getElementById('tar-rojas').value) || 0;
+  if (!jugador || !equipo) return;
+  await fetch('/admin/tarjetas/guardar', {
+    method: 'POST', headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({jugador, equipo, amarillas, rojas})
+  });
+  document.getElementById('tar-jugador').value   = '';
+  document.getElementById('tar-equipo').value    = '';
+  document.getElementById('tar-amarillas').value = '';
+  document.getElementById('tar-rojas').value     = '';
+  cargarTarjetas();
+}
+
+async function borrarTarjeta(id) {
+  await fetch('/admin/tarjetas/borrar', {
+    method: 'POST', headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({id})
+  });
+  cargarTarjetas();
+}
+
+// Cargar al iniciar
+cargarGoleadores();
+cargarTarjetas();
 
 async function eliminarUsuario(id, nombre) {
   if (!confirm(`¿Eliminar a ${nombre}?`)) return;
