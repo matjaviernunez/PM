@@ -273,8 +273,8 @@ def borrar_prediccion():
 @login_required
 @admin_required
 def scrape():
-    from scraper.runner import scrape_resultados
-    resultado = scrape_resultados()
+    from scraper.runner import scrape_todo
+    resultado = scrape_todo()
     return jsonify(resultado)
 
 

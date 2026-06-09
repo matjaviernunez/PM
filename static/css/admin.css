@@ -209,6 +209,8 @@
   font-weight: 600;
   cursor: pointer;
   transition: all .15s;
+  min-width: 68px;
+  text-align: center;
 }
 .btn-sm:hover    { background: rgba(255,255,255,.1); }
 .btn-sm.btn-rojo { border-color: var(--rojo); color: var(--rojo); }
