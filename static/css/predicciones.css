@@ -603,3 +603,12 @@
   border: none;
   padding: .5rem .75rem .6rem;
 }
+
+/* ── Timezone label ─────────────────────────────────────────────── */
+.hora-tz {
+  font-size: .62rem;
+  color: rgba(255,255,255,.35);
+  font-weight: 600;
+  letter-spacing: .3px;
+  vertical-align: middle;
+}

@@ -3,7 +3,7 @@ predicciones/routes.py -- Vista principal de predicciones por fecha.
 """
 
 import json, os
-from datetime import date
+from datetime import date, datetime, timedelta
 from flask import Blueprint, render_template, request, jsonify
 from flask_login import login_required, current_user
 
@@ -81,7 +81,7 @@ def index():
         por_fecha.setdefault(p['fecha'], []).append(p)
 
     fechas_label = {f: _formato_fecha(f) for f in por_fecha}
-    hoy = date.today().isoformat()
+    hoy = (datetime.utcnow() - timedelta(hours=5)).date().isoformat()  # hora Ecuador UTC-5
     fases_elim = get_fases_eliminatorias_disponibles()
 
     return render_template(

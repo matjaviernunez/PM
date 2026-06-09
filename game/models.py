@@ -2,7 +2,7 @@
 game/models.py -- Queries de partidos y predicciones.
 """
 
-from datetime import datetime, date
+from datetime import datetime, date, timedelta
 from db import get_db
 
 
@@ -90,15 +90,16 @@ def guardar_predicciones_lote(usuario_id: int, predicciones: list[dict]) -> dict
 
 
 def cerrar_partidos_vencidos():
-    """Marca como cerrados los partidos cuya fecha/hora ya paso."""
-    ahora = datetime.now()
+    """Marca como cerrados los partidos cuya fecha/hora ya paso (hora Ecuador UTC-5)."""
+    # El servidor corre en UTC; los horarios en la DB estan en hora Ecuador (UTC-5)
+    ahora_ecuador = datetime.utcnow() - timedelta(hours=5)
     with get_db() as conn:
         conn.execute("""
             UPDATE partidos
             SET abierto = FALSE
             WHERE abierto = TRUE
               AND datetime(fecha || ' ' || hora) <= ?
-        """, (ahora.strftime('%Y-%m-%d %H:%M'),))
+        """, (ahora_ecuador.strftime('%Y-%m-%d %H:%M'),))
         conn.commit()
 
 
