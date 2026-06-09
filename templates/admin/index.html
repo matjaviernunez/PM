@@ -17,23 +17,29 @@
   <!-- ── Barra de filtros (sticky) ─────────────────────────────── -->
   <div class="filtros-wrapper">
 
-    <!-- 1. Filtro por día -->
-    <div class="filtros-dias">
-      <button class="filtro-dia-btn active" data-dia="todos">Todos</button>
-      <button class="filtro-dia-btn" data-dia="1">Sig. día</button>
-      <button class="filtro-dia-btn" data-dia="2">Sig. 2 días</button>
-      <button class="filtro-dia-btn" data-dia="3">Sig. 3 días</button>
+    <!-- Fila 1: selects de grupo + días -->
+    <div class="filtros-selects">
+      <div class="filtro-select-wrap">
+        <span class="filtro-select-icon">🏳️</span>
+        <select id="sel-grupo" class="filtro-select">
+          <option value="todos">Todos los grupos</option>
+          {% for g in grupos %}
+            <option value="{{ g }}">Grupo {{ g }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="filtro-select-wrap">
+        <span class="filtro-select-icon">📅</span>
+        <select id="sel-dia" class="filtro-select">
+          <option value="todos">Todos los días</option>
+          <option value="1">Siguiente día</option>
+          <option value="2">Próximos 2 días</option>
+          <option value="3">Próximos 3 días</option>
+        </select>
+      </div>
     </div>
 
-    <!-- 2. Filtro por grupo -->
-    <div class="filtros-scroll">
-      <button class="filtro-pill filtro-grupo active" data-grupo="todos">All</button>
-      {% for g in grupos %}
-        <button class="filtro-pill filtro-grupo" data-grupo="{{ g }}">{{ g }}</button>
-      {% endfor %}
-    </div>
-
-    <!-- 3. Filtro por estado -->
+    <!-- Fila 2: toggle estado -->
     <div class="filtros-estado">
       <button class="filtro-estado-btn active" data-estado="todos">Todos</button>
       <button class="filtro-estado-btn" data-estado="pendiente">Pendientes</button>
@@ -47,48 +53,64 @@
 
     <!-- Pendientes -->
     {% for p in pendientes %}
+    {% set iso_l = equipos[p.equipo_local].iso  if p.equipo_local  in equipos else 'un' %}
+    {% set iso_v = equipos[p.equipo_visita].iso if p.equipo_visita in equipos else 'un' %}
     <div class="admin-card" id="partido-{{ p.id }}"
          data-grupo="{{ p.grupo }}"
          data-fecha="{{ p.fecha }}"
          data-estado="pendiente">
-      <div class="admin-card-meta">
+
+      <!-- Cabecera siempre visible — click para expandir -->
+      <div class="admin-card-meta admin-card-toggle" onclick="toggleCard(this)">
+        <span class="admin-toggle-arrow">▶</span>
         <span class="tag-grupo">Grupo {{ p.grupo }}</span>
-        <span>{{ p.fecha }} {{ p.hora }}</span>
-        {% if p.abierto %}
-          <span class="tag-abierto">Abierto</span>
-          <button class="btn-sm btn-rojo" onclick="togglePartido({{ p.id }}, false)">Cerrar</button>
-        {% else %}
-          <span class="tag-cerrado">Cerrado</span>
-          <button class="btn-sm" onclick="togglePartido({{ p.id }}, true)">Abrir</button>
-        {% endif %}
-        <button class="btn-sm" onclick="togglePredicciones({{ p.id }})">👁 Ver predicciones</button>
+        <span class="admin-equipos-label">
+          <img class="admin-flag-mini" src="https://flagcdn.com/w20/{{ iso_l }}.png"> {{ p.equipo_local }}
+          <span class="admin-vs">vs</span>
+          <img class="admin-flag-mini" src="https://flagcdn.com/w20/{{ iso_v }}.png"> {{ p.equipo_visita }}
+        </span>
+        <span class="admin-meta-right">
+          <span class="admin-hora">{{ p.hora }}</span>
+          {% if p.abierto %}<span class="tag-abierto">Abierto</span>
+          {% else %}<span class="tag-cerrado">Cerrado</span>{% endif %}
+        </span>
       </div>
 
-      <div class="admin-resultado-row">
-        <span class="admin-equipo">
-          {% set iso_l = equipos[p.equipo_local].iso if p.equipo_local in equipos else 'un' %}
-          <img class="admin-flag" src="https://flagcdn.com/w40/{{ iso_l }}.png" alt="{{ p.equipo_local }}">
-          {{ p.equipo_local }}
-        </span>
-        <div class="admin-inputs">
-          <input type="number" min="0" max="20" class="gol-input"
-                 id="gl-{{ p.id }}" placeholder="–">
-          <span class="marcador-sep">:</span>
-          <input type="number" min="0" max="20" class="gol-input"
-                 id="gv-{{ p.id }}" placeholder="–">
+      <!-- Cuerpo colapsable -->
+      <div class="admin-card-body" style="display:none">
+        <div class="admin-card-actions">
+          {% if p.abierto %}
+            <button class="btn-sm btn-rojo" onclick="togglePartido({{ p.id }}, false)">Cerrar</button>
+          {% else %}
+            <button class="btn-sm" onclick="togglePartido({{ p.id }}, true)">Abrir</button>
+          {% endif %}
+          <button class="btn-sm" onclick="togglePredicciones({{ p.id }})">👁 Ver predicciones</button>
         </div>
-        <span class="admin-equipo admin-equipo--visita">
-          {{ p.equipo_visita }}
-          {% set iso_v = equipos[p.equipo_visita].iso if p.equipo_visita in equipos else 'un' %}
-          <img class="admin-flag" src="https://flagcdn.com/w40/{{ iso_v }}.png" alt="{{ p.equipo_visita }}">
-        </span>
-        <button class="btn-guardar-resultado" onclick="guardarResultado({{ p.id }})">
-          Guardar
-        </button>
-      </div>
 
-      <div class="admin-status" id="astatus-{{ p.id }}"></div>
-      <div class="pred-lista" id="preds-{{ p.id }}" style="display:none"></div>
+        <div class="admin-resultado-row">
+          <span class="admin-equipo">
+            <img class="admin-flag" src="https://flagcdn.com/w40/{{ iso_l }}.png" alt="{{ p.equipo_local }}">
+            {{ p.equipo_local }}
+          </span>
+          <div class="admin-inputs">
+            <input type="number" min="0" max="20" class="gol-input"
+                   id="gl-{{ p.id }}" placeholder="–">
+            <span class="marcador-sep">:</span>
+            <input type="number" min="0" max="20" class="gol-input"
+                   id="gv-{{ p.id }}" placeholder="–">
+          </div>
+          <span class="admin-equipo admin-equipo--visita">
+            {{ p.equipo_visita }}
+            <img class="admin-flag" src="https://flagcdn.com/w40/{{ iso_v }}.png" alt="{{ p.equipo_visita }}">
+          </span>
+          <button class="btn-guardar-resultado" onclick="guardarResultado({{ p.id }})">
+            Guardar
+          </button>
+        </div>
+
+        <div class="admin-status" id="astatus-{{ p.id }}"></div>
+        <div class="pred-lista" id="preds-{{ p.id }}" style="display:none"></div>
+      </div>
     </div>
     {% endfor %}
 
@@ -98,14 +120,16 @@
          data-grupo="{{ p.grupo }}"
          data-fecha="{{ p.fecha }}"
          data-estado="completado">
-      <div class="admin-card-meta">
+      <div class="admin-card-meta admin-card-toggle" onclick="toggleCard(this)">
+        <span class="admin-toggle-arrow">▶</span>
         <span class="tag-grupo">Grupo {{ p.grupo }}</span>
-        <span>{{ p.fecha }}</span>
-        <span class="tag-cerrado">Cerrado</span>
-        <strong style="color:var(--blanco)">{{ p.equipo_local }} {{ p.goles_local }} – {{ p.goles_visita }} {{ p.equipo_visita }}</strong>
-        <button class="btn-sm" onclick="togglePredicciones({{ p.id }})">👁 Preds</button>
+        <strong class="admin-score-label">{{ p.equipo_local }} {{ p.goles_local }}–{{ p.goles_visita }} {{ p.equipo_visita }}</strong>
+        <span class="tag-cerrado admin-meta-right">✓</span>
       </div>
-      <div class="pred-lista" id="preds-{{ p.id }}" style="display:none"></div>
+      <div class="admin-card-body" style="display:none">
+        <button class="btn-sm" onclick="togglePredicciones({{ p.id }})">👁 Ver predicciones</button>
+        <div class="pred-lista" id="preds-{{ p.id }}" style="display:none"></div>
+      </div>
     </div>
     {% endfor %}
 
@@ -235,23 +259,11 @@ function getFechasProximas() {
 }
 
 // ── Filtros de partidos ──────────────────────────────────────────
-document.querySelectorAll(".filtro-dia-btn").forEach(btn => {
-  btn.addEventListener("click", () => {
-    document.querySelectorAll(".filtro-dia-btn").forEach(b => b.classList.remove("active"));
-    btn.classList.add("active");
-    diaActivo = btn.dataset.dia;
-    aplicarFiltros();
-  });
-});
+const selGrupo = document.getElementById("sel-grupo");
+if (selGrupo) selGrupo.addEventListener("change", () => { grupoActivo = selGrupo.value; aplicarFiltros(); });
 
-document.querySelectorAll(".filtro-grupo").forEach(btn => {
-  btn.addEventListener("click", () => {
-    document.querySelectorAll(".filtro-grupo").forEach(b => b.classList.remove("active"));
-    btn.classList.add("active");
-    grupoActivo = btn.dataset.grupo;
-    aplicarFiltros();
-  });
-});
+const selDia = document.getElementById("sel-dia");
+if (selDia) selDia.addEventListener("change", () => { diaActivo = selDia.value; aplicarFiltros(); });
 
 document.querySelectorAll(".filtro-estado-btn").forEach(btn => {
   btn.addEventListener("click", () => {
@@ -261,6 +273,17 @@ document.querySelectorAll(".filtro-estado-btn").forEach(btn => {
     aplicarFiltros();
   });
 });
+
+// ── Toggle colapsar/expandir partido ────────────────────────────
+function toggleCard(metaEl) {
+  const card = metaEl.closest(".admin-card");
+  const body  = card.querySelector(".admin-card-body");
+  const arrow = metaEl.querySelector(".admin-toggle-arrow");
+  const abierto = body.style.display !== "none";
+  body.style.display  = abierto ? "none" : "";
+  arrow.textContent   = abierto ? "▶" : "▼";
+  arrow.style.color   = abierto ? "" : "var(--dorado)";
+}
 
 function aplicarFiltros() {
   let fechasPermitidas = null;

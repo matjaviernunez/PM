@@ -94,20 +94,69 @@
   padding: .9rem 1rem;
   margin-bottom: .6rem;
 }
-.admin-card--done {
-  display: flex;
-  gap: 1rem;
-  align-items: center;
-  font-size: .88rem;
-  opacity: .75;
-}
+.admin-card--done { opacity: .75; }
 
+/* Cabecera clickeable */
 .admin-card-meta {
   display: flex;
   align-items: center;
   gap: .6rem;
   font-size: .75rem;
   color: var(--gris);
+  flex-wrap: wrap;
+}
+.admin-card-toggle {
+  cursor: pointer;
+  padding: .1rem 0;
+  user-select: none;
+}
+.admin-card-toggle:hover { color: var(--blanco); }
+
+.admin-toggle-arrow {
+  font-size: .65rem;
+  color: var(--gris);
+  transition: color .15s;
+  flex-shrink: 0;
+}
+.admin-equipos-label {
+  display: flex;
+  align-items: center;
+  gap: .3rem;
+  font-weight: 700;
+  color: var(--blanco);
+  font-size: .82rem;
+}
+.admin-vs {
+  color: var(--gris);
+  font-weight: 400;
+  font-size: .72rem;
+}
+.admin-flag-mini {
+  width: 18px;
+  height: auto;
+  border-radius: 2px;
+}
+.admin-hora {
+  font-size: .72rem;
+  color: var(--gris);
+}
+.admin-meta-right {
+  margin-left: auto;
+}
+.admin-score-label {
+  font-size: .85rem;
+  color: var(--blanco);
+}
+
+/* Cuerpo colapsable */
+.admin-card-body {
+  margin-top: .7rem;
+  border-top: 1px solid rgba(255,255,255,.07);
+  padding-top: .7rem;
+}
+.admin-card-actions {
+  display: flex;
+  gap: .5rem;
   margin-bottom: .7rem;
   flex-wrap: wrap;
 }
@@ -201,6 +250,56 @@
   margin-bottom: .6rem;
 }
 .stats-admin-list { font-size: .82rem; }
+
+/* ── Filtros de partidos (selects) ────────────────────────────── */
+.admin-page .filtros-wrapper {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  background: var(--azul-oscuro);
+  border-bottom: 1px solid rgba(255,255,255,.08);
+  padding: .55rem 0 .45rem;
+  margin: 0 -1rem 1rem;
+  padding-left: 1rem;
+  padding-right: 1rem;
+}
+.admin-page .filtros-selects {
+  display: flex;
+  gap: .5rem;
+  margin-bottom: .45rem;
+}
+.admin-page .filtro-select-wrap {
+  flex: 1;
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+.admin-page .filtro-select-icon {
+  position: absolute;
+  left: .7rem;
+  font-size: .8rem;
+  pointer-events: none;
+  z-index: 1;
+}
+.admin-page .filtro-select {
+  width: 100%;
+  padding: .45rem .7rem .45rem 2rem;
+  background: var(--azul-medio);
+  border: 1px solid rgba(255,255,255,.15);
+  border-radius: 10px;
+  color: var(--blanco);
+  font-size: .8rem;
+  font-weight: 600;
+  cursor: pointer;
+  appearance: none;
+  -webkit-appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%2395a5a6' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right .7rem center;
+  transition: border-color .18s;
+}
+.admin-page .filtro-select:focus { outline: none; border-color: var(--dorado); }
+.admin-page .filtro-select option { background: var(--azul-oscuro); }
 
 /* ── Filtros de usuario ────────────────────────────────────────── */
 .admin-user-filters {
