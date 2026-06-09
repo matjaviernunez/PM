@@ -10,6 +10,7 @@ from functools import wraps
 import json, os
 from db import get_db
 from game.scoring import recalcular_partido
+from game.bracket import generar_cruces_16avos
 from config import GRUPOS, BASE_DIR
 
 def _equipos_map():
@@ -254,6 +255,16 @@ def borrar_prediccion():
 def scrape():
     from scraper.runner import scrape_resultados
     resultado = scrape_resultados()
+    return jsonify(resultado)
+
+
+# ── Generar cruces 16avos ─────────────────────────────────────────────────
+
+@admin_bp.route("/generar-16avos", methods=["POST"])
+@login_required
+@admin_required
+def generar_16avos():
+    resultado = generar_cruces_16avos()
     return jsonify(resultado)
 
 

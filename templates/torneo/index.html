@@ -1,0 +1,270 @@
+{% extends "base.html" %}
+{% block title %}Torneo — Mundial 2026{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/torneo.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="torneo-page">
+
+  <!-- ── Header con Maple ──────────────────────────────────────── -->
+  <div class="torneo-header">
+    <div class="torneo-header-text">
+      <h1>Torneo</h1>
+      <span>Mundial 2026</span>
+    </div>
+  </div>
+
+  <!-- ── Tabs + Refrescar ──────────────────────────────────────── -->
+  <div class="torneo-tabs-bar">
+    <button class="torneo-tab {% if tab_activa == 'posiciones' %}active{% endif %}"
+            onclick="mostrarTab('posiciones')">
+      📊 Posiciones
+    </button>
+    <button class="torneo-tab {% if tab_activa == '16avos' %}active{% endif %}"
+            onclick="mostrarTab('16avos')">
+      ⚔️ 16avos
+    </button>
+    <button class="torneo-refresh" id="btn-refrescar" onclick="refrescar()">
+      🔄 Refrescar
+    </button>
+  </div>
+
+  <!-- ════════════════════════════════════════════════════════════
+       TAB 1 — POSICIONES DE GRUPOS
+  ════════════════════════════════════════════════════════════ -->
+  <div class="torneo-content">
+    <section class="torneo-section {% if tab_activa == 'posiciones' %}visible{% endif %}"
+             id="sec-posiciones">
+
+      <!-- Leyenda -->
+      <div class="leyenda-clasif">
+        <span class="leyenda-item"><span class="clasif-dot verde"></span>Clasificado directo</span>
+        <span class="leyenda-item"><span class="clasif-dot dorado"></span>Posible mejor tercero</span>
+        <span class="leyenda-item"><span class="clasif-dot rojo"></span>Eliminado / en riesgo</span>
+      </div>
+
+      <!-- Mejores terceros (si hay suficientes resultados) -->
+      {% set mt = [] %}
+      {% for g in grupos %}
+        {% if tablas[g]|length >= 3 and tablas[g][2].pj > 0 %}
+          {% set _ = mt.append(tablas[g][2]) %}
+        {% endif %}
+      {% endfor %}
+      {% if mt|length > 0 %}
+        {% set mt_sorted = mt | sort(attribute='pts', reverse=True) %}
+        <div class="mejores-terceros-banner">
+          <h3>🌟 Mejores terceros clasificados</h3>
+          <div class="mt-list">
+            {% for t in mt_sorted[:8] %}
+              {% set iso = equipos[t.equipo].iso if t.equipo in equipos else 'un' %}
+              <div class="mt-chip">
+                <img src="https://flagcdn.com/w40/{{ iso }}.png" alt="{{ t.equipo }}">
+                <span>{{ t.equipo }}</span>
+                <span style="color:var(--gris);font-size:.7rem">{{ t.pts }}pts</span>
+              </div>
+            {% endfor %}
+          </div>
+        </div>
+      {% endif %}
+
+      <!-- Grilla de grupos -->
+      <div class="grupos-grid">
+        {% for grupo in grupos %}
+          {% set tabla = tablas[grupo] %}
+          <div class="grupo-card">
+            <div class="grupo-card-header">
+              <span>Grupo {{ grupo }}</span>
+              <span class="grupo-pts-label">PJ G E P GF GC DG Pts</span>
+            </div>
+            <table class="tabla-grupo">
+              <thead>
+                <tr>
+                  <th></th>
+                  <th>PJ</th><th>G</th><th>E</th><th>P</th>
+                  <th>GF</th><th>GC</th><th>DG</th><th>Pts</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for fila in tabla %}
+                  {% set iso = equipos[fila.equipo].iso if fila.equipo in equipos else 'un' %}
+                  {% if fila.pos <= 2 %}
+                    {% set row_class = 'pos-' ~ fila.pos %}
+                    {% set dot_class = 'verde' %}
+                  {% elif fila.pos == 3 %}
+                    {% set row_class = 'pos-3-bueno' %}
+                    {% set dot_class = 'dorado' %}
+                  {% else %}
+                    {% set row_class = 'pos-4' %}
+                    {% set dot_class = 'rojo' %}
+                  {% endif %}
+                  <tr class="{{ row_class }}">
+                    <td>
+                      <div class="equipo-fila">
+                        <span class="clasif-dot {{ dot_class }}"></span>
+                        <img src="https://flagcdn.com/w40/{{ iso }}.png" alt="{{ fila.equipo }}">
+                        <span class="cod">{{ fila.equipo }}</span>
+                      </div>
+                    </td>
+                    <td>{{ fila.pj }}</td>
+                    <td>{{ fila.pg }}</td>
+                    <td>{{ fila.pe }}</td>
+                    <td>{{ fila.pp }}</td>
+                    <td>{{ fila.gf }}</td>
+                    <td>{{ fila.gc }}</td>
+                    <td>{{ '+' if fila.dg > 0 else '' }}{{ fila.dg }}</td>
+                    <td class="pts-bold">{{ fila.pts }}</td>
+                  </tr>
+                {% else %}
+                  <tr><td colspan="9" style="text-align:center;color:var(--gris);padding:.5rem;font-size:.75rem">Sin resultados aún</td></tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        {% endfor %}
+      </div>
+
+    </section>
+
+    <!-- ════════════════════════════════════════════════════════
+         TAB 2 — CRUCES 16AVOS
+    ════════════════════════════════════════════════════════ -->
+    <section class="torneo-section {% if tab_activa == '16avos' %}visible{% endif %}"
+             id="sec-16avos">
+
+      {% if not cruces %}
+        <div class="cruces-empty">
+          <p>⚽ Los cruces de 16avos aún no fueron generados.</p>
+          {% if current_user.es_admin %}
+            <p style="font-size:.8rem;color:var(--dorado)">
+              Ve al Panel Admin y pulsa "⚽ Generar 16avos" cuando cierren los grupos.
+            </p>
+          {% else %}
+            <p style="font-size:.8rem">Disponible una vez cerrada la fase de grupos.</p>
+          {% endif %}
+        </div>
+      {% else %}
+        <div class="cruces-list">
+          {% for c in cruces %}
+            {% set jugado = c.goles_local is not none %}
+            {% set iso_l  = equipos[c.equipo_local].iso   if c.equipo_local  in equipos else 'un' %}
+            {% set iso_v  = equipos[c.equipo_visita].iso  if c.equipo_visita in equipos else 'un' %}
+            {% set es_placeholder_l = c.equipo_local  and (c.equipo_local.startswith('1')  or c.equipo_local.startswith('2')  or c.equipo_local.startswith('3'))  and c.equipo_local|length <= 3 %}
+            {% set es_placeholder_v = c.equipo_visita and (c.equipo_visita.startswith('1') or c.equipo_visita.startswith('2') or c.equipo_visita.startswith('3')) and c.equipo_visita|length <= 3 %}
+
+            <div class="cruce-card {% if jugado %}cruce-card--jugado{% endif %}">
+
+              <!-- Meta -->
+              <div class="cruce-meta">
+                <span class="cruce-num">M{{ loop.index }}</span>
+                {% if c.fecha %}<span>📅 {{ c.fecha }}</span>{% endif %}
+                {% if c.hora  %}<span>🕐 {{ c.hora }}</span>{% endif %}
+                {% if jugado %}
+                  <span class="tag-jugado" style="margin-left:auto">✓ Jugado</span>
+                {% elif c.abierto %}
+                  <span class="tag-abierto" style="margin-left:auto">Abierto</span>
+                {% else %}
+                  <span class="tag-cerrado" style="margin-left:auto">Cerrado</span>
+                {% endif %}
+              </div>
+
+              <!-- Equipos + marcador -->
+              <div class="cruce-row">
+
+                <!-- Local -->
+                <div class="cruce-equipo {% if es_placeholder_l %}cruce-equipo--placeholder{% endif %}">
+                  {% if not es_placeholder_l %}
+                    <img src="https://flagcdn.com/w80/{{ iso_l }}.png" alt="{{ c.equipo_local }}">
+                  {% endif %}
+                  <span class="cod">
+                    {% if es_placeholder_l %}
+                      {{ _slot_label(c.equipo_local) }}
+                    {% else %}
+                      {{ c.equipo_local }}
+                    {% endif %}
+                  </span>
+                </div>
+
+                <!-- Marcador -->
+                <div class="cruce-marcador">
+                  {% if jugado %}
+                    <span class="gol">{{ c.goles_local }}</span>
+                    <span class="sep">-</span>
+                    <span class="gol">{{ c.goles_visita }}</span>
+                  {% else %}
+                    <span class="tbd">vs</span>
+                  {% endif %}
+                </div>
+
+                <!-- Visita -->
+                <div class="cruce-equipo cruce-equipo--visita {% if es_placeholder_v %}cruce-equipo--placeholder{% endif %}">
+                  {% if not es_placeholder_v %}
+                    <img src="https://flagcdn.com/w80/{{ iso_v }}.png" alt="{{ c.equipo_visita }}">
+                  {% endif %}
+                  <span class="cod">
+                    {% if es_placeholder_v %}
+                      {{ _slot_label(c.equipo_visita) }}
+                    {% else %}
+                      {{ c.equipo_visita }}
+                    {% endif %}
+                  </span>
+                </div>
+
+              </div><!-- cruce-row -->
+
+              <!-- Penales -->
+              {% if jugado and c.penales_ganador %}
+                <div class="cruce-penales">
+                  🏅 Avanza {{ c.penales_ganador }} (pen.)
+                </div>
+              {% endif %}
+
+            </div><!-- cruce-card -->
+          {% endfor %}
+        </div><!-- cruces-list -->
+      {% endif %}
+
+    </section>
+
+  </div><!-- torneo-content -->
+
+</div><!-- torneo-page -->
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// ── Tab switcher ───────────────────────────────────────────────
+function mostrarTab(nombre) {
+  document.querySelectorAll('.torneo-section').forEach(s => s.classList.remove('visible'));
+  document.querySelectorAll('.torneo-tab').forEach(t => t.classList.remove('active'));
+
+  const sec = document.getElementById('sec-' + nombre);
+  if (sec) sec.classList.add('visible');
+
+  const idx = nombre === 'posiciones' ? 0 : 1;
+  document.querySelectorAll('.torneo-tab')[idx]?.classList.add('active');
+
+  // Persistir tab activa en sessionStorage
+  sessionStorage.setItem('torneo_tab', nombre);
+}
+
+// ── Refrescar ─────────────────────────────────────────────────
+function refrescar() {
+  const btn = document.getElementById('btn-refrescar');
+  btn.disabled = true;
+  btn.textContent = '⏳ Cargando...';
+  location.reload();
+}
+
+// ── Restaurar tab al volver ────────────────────────────────────
+(function() {
+  const saved = sessionStorage.getItem('torneo_tab');
+  const activa = '{{ tab_activa }}';
+  // Si la URL ya indica la tab, respetar; sino restaurar guardada
+  if (activa === 'posiciones' && saved === '16avos') {
+    mostrarTab('16avos');
+  }
+})();
+</script>
+{% endblock %}

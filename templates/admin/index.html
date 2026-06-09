@@ -10,7 +10,11 @@
       <button class="btn-scrape" onclick="scrapeResultados()">
         🔄 Actualizar resultados desde ESPN
       </button>
+      <button class="btn-scrape btn-generar" onclick="generarCruces()" style="background:var(--dorado);color:var(--azul-oscuro);margin-left:.5rem;">
+        ⚽ Generar 16avos
+      </button>
       <span id="scrape-status"></span>
+      <span id="generar-status" style="font-size:.82rem;margin-left:.5rem;"></span>
     </div>
   </div>
 
@@ -485,6 +489,28 @@ async function scrapeResultados() {
       st.innerHTML = '<span class="status-pendiente">Sin nuevos resultados</span>';
     }
     if (data.errores?.length) console.warn('Errores scraper:', data.errores);
+  } catch {
+    st.innerHTML = '<span class="status-error">✗ Error de conexión</span>';
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+async function generarCruces() {
+  const btn = document.querySelector('.btn-generar');
+  const st  = document.getElementById('generar-status');
+  if (!confirm('¿Generar los 16 cruces de 16avos? Esta acción no se puede deshacer fácilmente.')) return;
+  btn.disabled = true;
+  st.innerHTML = '<span class="status-guardando">⏳ Generando...</span>';
+  try {
+    const res  = await fetch('/admin/generar-16avos', { method: 'POST' });
+    const data = await res.json();
+    if (data.ok) {
+      st.innerHTML = `<span class="status-guardado">✓ ${data.mensaje}</span>`;
+      setTimeout(() => location.reload(), 2000);
+    } else {
+      st.innerHTML = `<span class="status-error">⚠ ${data.mensaje}</span>`;
+    }
   } catch {
     st.innerHTML = '<span class="status-error">✗ Error de conexión</span>';
   } finally {
