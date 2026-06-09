@@ -25,20 +25,20 @@
       <span class="nav-icon">⚽</span>
       <span class="nav-label">Predicciones</span>
     </a>
-    <a href="{{ url_for('ranking.index') }}"
-       class="nav-item {% if request.endpoint and 'ranking' in request.endpoint %}active{% endif %}">
-      <span class="nav-icon">🏆</span>
-      <span class="nav-label">Ranking</span>
-    </a>
     <a href="{{ url_for('torneo.index') }}"
        class="nav-item {% if request.endpoint and 'torneo' in request.endpoint %}active{% endif %}">
       <span class="nav-icon">🌍</span>
       <span class="nav-label">Torneo</span>
     </a>
+    <a href="{{ url_for('ranking.index') }}"
+       class="nav-item {% if request.endpoint and 'ranking' in request.endpoint %}active{% endif %}">
+      <span class="nav-icon">🏆</span>
+      <span class="nav-label">Ranking</span>
+    </a>
     <a href="{{ url_for('hub.index') }}"
        class="nav-item {% if request.endpoint and 'hub' in request.endpoint %}active{% endif %}">
       <span class="nav-icon">📰</span>
-      <span class="nav-label">Mundial</span>
+      <span class="nav-label">Hub</span>
     </a>
     {% if current_user.es_admin %}
     <a href="{{ url_for('admin.index') }}"

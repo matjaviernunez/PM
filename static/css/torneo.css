@@ -358,3 +358,107 @@
   color: var(--gris);
 }
 .leyenda-item { display: flex; align-items: center; gap: .3rem; }
+
+/* ── Live Board ───────────────────────────────────────────────── */
+.live-board {
+  margin: 0 0 1rem;
+  border: 1px solid var(--rojo);
+  border-radius: 10px;
+  overflow: hidden;
+  background: rgba(255,255,255,.04);
+}
+.live-board-header {
+  display: flex;
+  align-items: center;
+  gap: .55rem;
+  padding: .55rem .85rem;
+  background: rgba(200,30,30,.12);
+  border-bottom: 1px solid rgba(200,30,30,.25);
+}
+.live-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--rojo);
+  animation: pulse-dot 1.2s ease-in-out infinite;
+  flex-shrink: 0;
+}
+@keyframes pulse-dot {
+  0%,100% { opacity: 1; transform: scale(1); }
+  50%      { opacity: .35; transform: scale(.75); }
+}
+.live-title {
+  font-family: 'Bebas Neue', 'Oswald', var(--font-main);
+  font-size: 1rem;
+  letter-spacing: 1.5px;
+  color: var(--rojo);
+  text-transform: uppercase;
+}
+.live-update {
+  margin-left: auto;
+  font-size: .68rem;
+  color: var(--gris);
+}
+.live-matches {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+.live-match-card {
+  display: flex;
+  align-items: center;
+  gap: .5rem;
+  padding: .5rem .85rem;
+  border-bottom: 1px solid rgba(255,255,255,.06);
+  font-size: .82rem;
+}
+.live-match-card:last-child { border-bottom: none; }
+.live-team {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: .35rem;
+  overflow: hidden;
+}
+.live-team--right {
+  flex-direction: row-reverse;
+  text-align: right;
+}
+.live-team img {
+  width: 22px;
+  height: 15px;
+  object-fit: cover;
+  border-radius: 2px;
+  flex-shrink: 0;
+}
+.live-team-name {
+  font-weight: 600;
+  font-size: .78rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.live-score-box {
+  display: flex;
+  align-items: center;
+  gap: .25rem;
+  background: rgba(255,255,255,.08);
+  border-radius: 6px;
+  padding: .2rem .55rem;
+  min-width: 60px;
+  justify-content: center;
+  flex-shrink: 0;
+  flex-direction: column;
+}
+.live-score {
+  font-family: 'Bebas Neue', 'Oswald', var(--font-main);
+  font-size: 1.25rem;
+  line-height: 1;
+  letter-spacing: 2px;
+}
+.live-minute {
+  font-size: .6rem;
+  color: var(--rojo);
+  font-weight: 600;
+  letter-spacing: .5px;
+}

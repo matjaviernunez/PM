@@ -509,3 +509,52 @@
   opacity: .55;
   cursor: not-allowed;
 }
+
+/* ── Rules panel ─────────────────────────────────────────────── */
+.rules-bar {
+  display: flex;
+  justify-content: flex-end;
+  padding: .35rem .75rem 0;
+}
+.rules-toggle {
+  background: rgba(255,255,255,.07);
+  border: 1px solid rgba(255,255,255,.15);
+  color: var(--text-main, #eee);
+  border-radius: 20px;
+  padding: .28rem .75rem;
+  font-size: .75rem;
+  cursor: pointer;
+  transition: background .2s;
+}
+.rules-toggle:hover { background: rgba(255,255,255,.13); }
+.rules-panel {
+  margin: .5rem .75rem .25rem;
+  background: rgba(255,255,255,.05);
+  border: 1px solid rgba(255,255,255,.1);
+  border-radius: 10px;
+  padding: .85rem 1rem;
+}
+.rules-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: .75rem;
+}
+.rules-block h4 {
+  font-size: .78rem;
+  font-weight: 700;
+  color: var(--dorado, #f0c040);
+  text-transform: uppercase;
+  letter-spacing: .5px;
+  margin: 0 0 .3rem;
+}
+.rules-block p,
+.rules-block li {
+  font-size: .75rem;
+  color: rgba(255,255,255,.72);
+  line-height: 1.45;
+  margin: 0;
+}
+.rules-block ul {
+  padding-left: 1.1rem;
+  margin: 0;
+}

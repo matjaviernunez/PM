@@ -26,6 +26,41 @@
     </a>
     {% endif %}
   </div>
+  <!-- ── Panel de reglas (toggle) ───────────────────────────────── -->
+  <div class="rules-bar">
+    <button class="rules-toggle" onclick="toggleReglas()" id="rules-btn">
+      ℹ️ ¿Cómo funciona?
+    </button>
+  </div>
+  <div class="rules-panel" id="rules-panel" style="display:none">
+    <div class="rules-grid">
+      <div class="rules-block">
+        <h4>🔍 Filtros</h4>
+        <ul>
+          <li><strong>Grupo:</strong> muestra solo los partidos del grupo seleccionado.</li>
+          <li><strong>Días:</strong> filtra por los próximos 1, 2 o 3 días de juego.</li>
+          <li><strong>Estado:</strong> alterna entre todos los partidos, solo los pendientes de predicción, o los ya guardados.</li>
+        </ul>
+      </div>
+      <div class="rules-block">
+        <h4>⏱️ Ventana de predicciones</h4>
+        <ul>
+          <li>Puedes ingresar o cambiar tu predicción <strong>hasta el momento en que el partido empieza</strong>.</li>
+          <li>El cierre es automático — cuando el partido comienza, el formulario se bloquea.</li>
+          <li>Partidos marcados como <span class="tag-cerrado" style="font-size:.7rem">Cerrado</span> ya no aceptan predicciones.</li>
+        </ul>
+      </div>
+      <div class="rules-block">
+        <h4>✏️ Cambiar una predicción</h4>
+        <ul>
+          <li>Edita el marcador directamente en el campo del partido.</li>
+          <li>Presiona <strong>Guardar</strong> (o el botón del día) antes del cierre.</li>
+          <li>La nueva predicción reemplaza la anterior automáticamente.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
   <!-- ── Countdown al Mundial ────────────────────────────────────── -->
   <div class="countdown-banner" id="countdown-banner">
     <span class="countdown-label">⚽ El Mundial empieza en</span>
@@ -204,5 +239,15 @@ function actualizarCountdown() {
 
 actualizarCountdown();
 setInterval(actualizarCountdown, 1000);
+
+// ── Panel de reglas ───────────────────────────────────────────
+function toggleReglas() {
+  const panel = document.getElementById('rules-panel');
+  const btn   = document.getElementById('rules-btn');
+  const open  = panel.style.display !== 'none';
+  panel.style.display = open ? 'none' : 'block';
+  btn.textContent = open ? 'ℹ️ ¿Cómo funciona?' : '✖ Cerrar';
+}
+
 </script>
 {% endblock %}

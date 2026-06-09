@@ -409,3 +409,52 @@
 }
 .empty-state span { font-size: 3rem; display: block; margin-bottom: 1rem; }
  
+/* ── Scoring explanation card ─────────────────────────────────── */
+.scoring-grid {
+  display: flex;
+  flex-direction: column;
+  gap: .4rem;
+  margin-bottom: .85rem;
+}
+.scoring-row {
+  display: flex;
+  align-items: center;
+  gap: .65rem;
+  padding: .35rem .5rem;
+  background: rgba(255,255,255,.04);
+  border-radius: 7px;
+}
+.scoring-pts {
+  font-family: 'Bebas Neue', 'Oswald', var(--font-main);
+  font-size: 1.15rem;
+  color: var(--dorado, #f0c040);
+  min-width: 44px;
+  text-align: center;
+  flex-shrink: 0;
+}
+.scoring-desc {
+  font-size: .78rem;
+  color: rgba(255,255,255,.78);
+  line-height: 1.35;
+}
+.scoring-mult {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: .75rem;
+  margin-top: .25rem;
+}
+.scoring-mult th {
+  text-align: left;
+  color: var(--dorado, #f0c040);
+  font-size: .7rem;
+  text-transform: uppercase;
+  letter-spacing: .4px;
+  padding: .25rem .4rem;
+  border-bottom: 1px solid rgba(255,255,255,.1);
+}
+.scoring-mult td {
+  padding: .25rem .4rem;
+  color: rgba(255,255,255,.72);
+  border-bottom: 1px solid rgba(255,255,255,.05);
+}
+.scoring-mult tr:last-child td { border-bottom: none; }

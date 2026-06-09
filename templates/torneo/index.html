@@ -16,6 +16,16 @@
     </div>
   </div>
 
+  <!-- ── Board en vivo ────────────────────────────────────────── -->
+  <div class="live-board" id="live-board" style="display:none">
+    <div class="live-board-header">
+      <span class="live-dot"></span>
+      <span class="live-title">En Vivo</span>
+      <span class="live-update" id="live-update-time"></span>
+    </div>
+    <div class="live-matches" id="live-matches"></div>
+  </div>
+
   <!-- ── Tabs + Refrescar ──────────────────────────────────────── -->
   <div class="torneo-tabs-bar">
     <button class="torneo-tab {% if tab_activa == 'posiciones' %}active{% endif %}"
@@ -266,5 +276,62 @@ function refrescar() {
     mostrarTab('16avos');
   }
 })();
+
+// ── Live Board ────────────────────────────────────────────────
+const ESPN_SCOREBOARD = 'https://site.api.espn.com/apis/site/v2/sports/soccer/fifa.world/scoreboard';
+
+async function fetchLiveMatches() {
+  try {
+    const r = await fetch(ESPN_SCOREBOARD);
+    const data = await r.json();
+    const events = (data.events || []).filter(e => e.status?.type?.state === 'in');
+    renderLiveBoard(events);
+  } catch(err) {
+    console.warn('Live board fetch error:', err);
+  }
+}
+
+function renderLiveBoard(events) {
+  const board  = document.getElementById('live-board');
+  const cont   = document.getElementById('live-matches');
+  const upd    = document.getElementById('live-update-time');
+
+  if (!events.length) { board.style.display = 'none'; return; }
+
+  board.style.display = 'block';
+  const now = new Date();
+  upd.textContent = 'Actualizado ' + now.toLocaleTimeString('es-MX', {hour:'2-digit', minute:'2-digit'});
+
+  cont.innerHTML = events.map(ev => {
+    const comp = ev.competitions?.[0] || {};
+    const home = comp.competitors?.find(c => c.homeAway === 'home') || {};
+    const away = comp.competitors?.find(c => c.homeAway === 'away') || {};
+    const min  = ev.status?.displayClock || ev.status?.type?.shortDetail || '';
+    const hl   = home.team?.abbreviation || home.team?.shortDisplayName || '???';
+    const al   = away.team?.abbreviation || away.team?.shortDisplayName || '???';
+    const hsc  = home.score ?? '-';
+    const asc  = away.score ?? '-';
+    const hfl  = home.team?.flag || '';
+    const afl  = away.team?.flag || '';
+
+    const flagH = hfl ? `<img src="${hfl}" alt="${hl}" onerror="this.style.display='none'">` : '';
+    const flagA = afl ? `<img src="${afl}" alt="${al}" onerror="this.style.display='none'">` : '';
+
+    return `
+    <div class="live-match-card">
+      <div class="live-team">${flagH}<span class="live-team-name">${hl}</span></div>
+      <div class="live-score-box">
+        <span class="live-score">${hsc} · ${asc}</span>
+        <span class="live-minute">${min}</span>
+      </div>
+      <div class="live-team live-team--right">${flagA}<span class="live-team-name">${al}</span></div>
+    </div>`;
+  }).join('');
+}
+
+// Fetch inmediato + cada 60 s
+fetchLiveMatches();
+setInterval(fetchLiveMatches, 60000);
+
 </script>
 {% endblock %}
