@@ -4,7 +4,7 @@ ranking/routes.py — Tabla de posiciones general y por liga.
 
 import json, os
 from flask import Blueprint, render_template, request
-from flask_login import login_required
+from flask_login import login_required, current_user
 
 from game.scoring import get_ranking
 from db import get_db
