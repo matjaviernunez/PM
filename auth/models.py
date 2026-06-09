@@ -25,8 +25,12 @@ class Usuario(UserMixin):
         self.edad             = row["edad"]
         self.equipo_favorito  = row["equipo_favorito"]
         self.jugador_favorito = row["jugador_favorito"]
-        self.campeon_favorito = row["campeon_favorito"]
-        self.codigo           = row["codigo"]
+        self.campeon_favorito    = row["campeon_favorito"]
+        self.goleador_mundial    = row["goleador_mundial"]    if "goleador_mundial"    in row.keys() else None
+        self.equipo_mas_goleador = row["equipo_mas_goleador"] if "equipo_mas_goleador" in row.keys() else None
+        self.equipo_sorpresa     = row["equipo_sorpresa"]     if "equipo_sorpresa"     in row.keys() else None
+        self.equipo_decepcion    = row["equipo_decepcion"]    if "equipo_decepcion"    in row.keys() else None
+        self.codigo              = row["codigo"]
         self.es_admin         = bool(row["es_admin"])
         self.created_at       = row["created_at"]
 
@@ -87,14 +91,20 @@ class Usuario(UserMixin):
     @staticmethod
     def actualizar(user_id, edad=None, equipo_favorito=None,
                    jugador_favorito=None, campeon_favorito=None,
+                   goleador_mundial=None, equipo_mas_goleador=None,
+                   equipo_sorpresa=None, equipo_decepcion=None,
                    nuevas_liga_ids=None):
         """Actualiza campos del perfil y agrega ligas (sin quitar las existentes)."""
         with get_db() as conn:
             conn.execute("""
                 UPDATE usuarios
-                SET edad = ?, equipo_favorito = ?, jugador_favorito = ?, campeon_favorito = ?
+                SET edad = ?, equipo_favorito = ?, jugador_favorito = ?, campeon_favorito = ?,
+                    goleador_mundial = ?, equipo_mas_goleador = ?,
+                    equipo_sorpresa = ?, equipo_decepcion = ?
                 WHERE id = ?
-            """, (edad, equipo_favorito, jugador_favorito, campeon_favorito, user_id))
+            """, (edad, equipo_favorito, jugador_favorito, campeon_favorito,
+                  goleador_mundial, equipo_mas_goleador,
+                  equipo_sorpresa, equipo_decepcion, user_id))
             if nuevas_liga_ids:
                 conn.executemany(
                     "INSERT OR IGNORE INTO usuario_liga (usuario_id, liga_id) VALUES (?, ?)",

@@ -117,10 +117,14 @@ def perfil():
 
     if request.method == "POST":
         edad             = request.form.get("edad") or None
-        equipo_favorito  = request.form.get("equipo_favorito") or None
-        jugador_favorito = request.form.get("jugador_favorito", "").strip() or None
-        campeon_favorito = request.form.get("campeon_favorito") or None
-        liga_ids         = [int(lid) for lid in request.form.getlist("ligas") if lid]
+        equipo_favorito      = request.form.get("equipo_favorito") or None
+        jugador_favorito     = request.form.get("jugador_favorito", "").strip() or None
+        campeon_favorito     = request.form.get("campeon_favorito") or None
+        goleador_mundial     = request.form.get("goleador_mundial", "").strip() or None
+        equipo_mas_goleador  = request.form.get("equipo_mas_goleador") or None
+        equipo_sorpresa      = request.form.get("equipo_sorpresa") or None
+        equipo_decepcion     = request.form.get("equipo_decepcion") or None
+        liga_ids             = [int(lid) for lid in request.form.getlist("ligas") if lid]
 
         Usuario.actualizar(
             user_id=current_user.id,
@@ -128,6 +132,10 @@ def perfil():
             equipo_favorito=equipo_favorito,
             jugador_favorito=jugador_favorito,
             campeon_favorito=campeon_favorito,
+            goleador_mundial=goleador_mundial,
+            equipo_mas_goleador=equipo_mas_goleador,
+            equipo_sorpresa=equipo_sorpresa,
+            equipo_decepcion=equipo_decepcion,
             nuevas_liga_ids=liga_ids if liga_ids else None,
         )
         # Refrescar datos del usuario en sesión
@@ -138,8 +146,57 @@ def perfil():
         return redirect(url_for("auth.perfil"))
 
     ligas_usuario = {l["id"] for l in current_user.ligas()}
+
+    # ── Historial personal ────────────────────────────────────────────────
+    from db import get_db
+    historial = {}
+    with get_db() as conn:
+        # Stats generales
+        stats = conn.execute("""
+            SELECT
+                COUNT(*) AS total,
+                SUM(CASE WHEN pr.puntos_obtenidos > 0 THEN 1 ELSE 0 END) AS con_puntos,
+                SUM(pr.puntos_obtenidos) AS puntos_total,
+                SUM(CASE WHEN pa.goles_local IS NOT NULL
+                    AND pr.goles_local = pa.goles_local
+                    AND pr.goles_visita = pa.goles_visita THEN 1 ELSE 0 END) AS exactos
+            FROM predicciones pr
+            JOIN partidos pa ON pa.id = pr.partido_id
+            WHERE pr.usuario_id = ? AND pa.abierto = 0
+        """, (current_user.id,)).fetchone()
+        historial["stats"] = dict(stats) if stats else {}
+
+        # Evolución de puntos por fecha (para gráfico)
+        evo = conn.execute("""
+            SELECT pa.fecha, SUM(pr.puntos_obtenidos) AS pts_dia
+            FROM predicciones pr
+            JOIN partidos pa ON pa.id = pr.partido_id
+            WHERE pr.usuario_id = ? AND pa.abierto = 0 AND pr.puntos_obtenidos IS NOT NULL
+            GROUP BY pa.fecha
+            ORDER BY pa.fecha
+        """, (current_user.id,)).fetchall()
+        # Acumular puntos
+        acum = 0
+        evolucion = []
+        for r in evo:
+            acum += (r["pts_dia"] or 0)
+            evolucion.append({"fecha": r["fecha"], "puntos": acum})
+        historial["evolucion"] = evolucion
+
+        # Top 3 mejores predicciones
+        top = conn.execute("""
+            SELECT pa.local, pa.visita, pa.fecha, pa.fase,
+                   pr.goles_local, pr.goles_visita, pr.puntos_obtenidos
+            FROM predicciones pr
+            JOIN partidos pa ON pa.id = pr.partido_id
+            WHERE pr.usuario_id = ? AND pa.abierto = 0 AND pr.puntos_obtenidos IS NOT NULL
+            ORDER BY pr.puntos_obtenidos DESC
+            LIMIT 3
+        """, (current_user.id,)).fetchall()
+        historial["top"] = [dict(r) for r in top]
+
     return render_template("auth/perfil.html", equipos=equipos, ligas=ligas,
-                           ligas_usuario=ligas_usuario)
+                           ligas_usuario=ligas_usuario, historial=historial)
 
 
 # ── Logout ─────────────────────────────────────────────────────────────────

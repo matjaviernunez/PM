@@ -77,6 +77,60 @@
         </div>
       </div>
 
+      <!-- Pronósticos del torneo -->
+      <div class="form-section">
+        <p class="form-section-title">🔮 Pronósticos del torneo</p>
+        <p class="form-section-hint">Solo datos curiosos — no afectan el puntaje</p>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="goleador_mundial">Goleador del mundial</label>
+            <input type="text" id="goleador_mundial" name="goleador_mundial"
+                   value="{{ current_user.goleador_mundial or '' }}"
+                   placeholder="Ej: Mbappé">
+          </div>
+          <div class="form-group">
+            <label for="equipo_mas_goleador">Equipo más goleador</label>
+            <select id="equipo_mas_goleador" name="equipo_mas_goleador">
+              <option value="">— Selecciona —</option>
+              {% for e in equipos %}
+                <option value="{{ e.codigo }}"
+                  {% if current_user.equipo_mas_goleador == e.codigo %}selected{% endif %}>
+                  {{ e.nombre }}
+                </option>
+              {% endfor %}
+            </select>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="equipo_sorpresa">Equipo sorpresa 🌟</label>
+            <select id="equipo_sorpresa" name="equipo_sorpresa">
+              <option value="">— Selecciona —</option>
+              {% for e in equipos %}
+                <option value="{{ e.codigo }}"
+                  {% if current_user.equipo_sorpresa == e.codigo %}selected{% endif %}>
+                  {{ e.nombre }}
+                </option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="equipo_decepcion">Equipo decepción 💔</label>
+            <select id="equipo_decepcion" name="equipo_decepcion">
+              <option value="">— Selecciona —</option>
+              {% for e in equipos %}
+                <option value="{{ e.codigo }}"
+                  {% if current_user.equipo_decepcion == e.codigo %}selected{% endif %}>
+                  {{ e.nombre }}
+                </option>
+              {% endfor %}
+            </select>
+          </div>
+        </div>
+      </div>
+
       <!-- Ligas: muestra actuales + permite unirse a nuevas -->
       <div class="form-section">
         <p class="form-section-title">Ligas</p>
@@ -122,6 +176,97 @@
       </a>
     </div>
 
+  </div><!-- auth-card -->
+</div><!-- auth-wrapper -->
+
+<!-- ── Historial personal ──────────────────────────────────────────── -->
+{% if historial and historial.stats and historial.stats.total %}
+<div class="historial-wrapper">
+
+  <h2 class="historial-title">📊 Mi historial</h2>
+
+  <!-- Stats generales -->
+  <div class="historial-stats-grid">
+    <div class="hstat-card">
+      <div class="hstat-val">{{ historial.stats.total or 0 }}</div>
+      <div class="hstat-lbl">Predicciones</div>
+    </div>
+    <div class="hstat-card">
+      <div class="hstat-val hstat-val--gold">{{ historial.stats.puntos_total or 0 }}</div>
+      <div class="hstat-lbl">Puntos totales</div>
+    </div>
+    <div class="hstat-card">
+      <div class="hstat-val">{{ historial.stats.exactos or 0 }}</div>
+      <div class="hstat-lbl">Marcadores exactos</div>
+    </div>
+    <div class="hstat-card">
+      {% set pct = ((historial.stats.con_puntos or 0) / historial.stats.total * 100) | int %}
+      <div class="hstat-val hstat-val--green">{{ pct }}%</div>
+      <div class="hstat-lbl">Con puntos</div>
+    </div>
   </div>
-</div>
+
+  <!-- Gráfico de evolución -->
+  {% if historial.evolucion %}
+  <div class="historial-chart-card">
+    <div class="historial-chart-title">📈 Evolución de puntos</div>
+    <canvas id="evoChart" height="120"></canvas>
+  </div>
+  {% endif %}
+
+  <!-- Top predicciones -->
+  {% if historial.top %}
+  <div class="historial-top-card">
+    <div class="historial-chart-title">🏅 Mis mejores predicciones</div>
+    {% for p in historial.top %}
+    <div class="htop-row">
+      <div class="htop-match">
+        <span class="htop-teams">{{ p.local }} vs {{ p.visita }}</span>
+        <span class="htop-score">{{ p.goles_local }}–{{ p.goles_visita }}</span>
+      </div>
+      <div class="htop-pts">+{{ p.puntos_obtenidos }} pts</div>
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+</div><!-- historial-wrapper -->
+{% endif %}
+
+{% endblock %}
+
+{% block extra_js %}
+{% if historial and historial.evolucion %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<script>
+const evoData = {{ historial.evolucion | tojson }};
+const ctx = document.getElementById('evoChart').getContext('2d');
+new Chart(ctx, {
+  type: 'line',
+  data: {
+    labels: evoData.map(d => {
+      const f = d.fecha;
+      return f ? f.slice(5) : '';  // MM-DD
+    }),
+    datasets: [{
+      data: evoData.map(d => d.puntos),
+      borderColor: '#f0b000',
+      backgroundColor: 'rgba(240,176,0,.12)',
+      borderWidth: 2,
+      pointRadius: 3,
+      pointBackgroundColor: '#f0b000',
+      fill: true,
+      tension: 0.3,
+    }]
+  },
+  options: {
+    plugins: { legend: { display: false } },
+    scales: {
+      x: { ticks: { color: 'rgba(255,255,255,.45)', font: { size: 10 } }, grid: { color: 'rgba(255,255,255,.06)' } },
+      y: { ticks: { color: 'rgba(255,255,255,.45)', font: { size: 10 } }, grid: { color: 'rgba(255,255,255,.06)' }, beginAtZero: true }
+    }
+  }
+});
+</script>
+{% endif %}
 {% endblock %}

@@ -289,3 +289,91 @@ a:hover { color: var(--dorado-claro); text-decoration: underline; }
   .form-row { grid-template-columns: 1fr; }
   .auth-card { padding: 1.5rem; }
 }
+
+/* ── Form section hint ───────────────────────────────────────────── */
+.form-section-hint {
+  font-size: .73rem;
+  color: rgba(255,255,255,.4);
+  margin: -.4rem 0 .6rem;
+  font-style: italic;
+}
+
+/* ── Historial personal ──────────────────────────────────────────── */
+.historial-wrapper {
+  max-width: 720px;
+  margin: 1.5rem auto 2rem;
+  padding: 0 1rem;
+}
+.historial-title {
+  font-family: 'Bebas Neue', 'Oswald', var(--font-main);
+  font-size: 1.4rem;
+  letter-spacing: 1px;
+  margin-bottom: .85rem;
+  color: #fff;
+}
+.historial-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: .6rem;
+  margin-bottom: .85rem;
+}
+@media (max-width: 480px) {
+  .historial-stats-grid { grid-template-columns: repeat(2, 1fr); }
+}
+.hstat-card {
+  background: rgba(255,255,255,.06);
+  border: 1px solid rgba(255,255,255,.1);
+  border-radius: 10px;
+  padding: .75rem .5rem;
+  text-align: center;
+}
+.hstat-val {
+  font-family: 'Bebas Neue', 'Oswald', var(--font-main);
+  font-size: 2rem;
+  line-height: 1;
+  color: #fff;
+}
+.hstat-val--gold  { color: var(--dorado, #f0b000); }
+.hstat-val--green { color: #66bb6a; }
+.hstat-lbl {
+  font-size: .68rem;
+  color: rgba(255,255,255,.45);
+  margin-top: .3rem;
+  text-transform: uppercase;
+  letter-spacing: .4px;
+}
+.historial-chart-card,
+.historial-top-card {
+  background: rgba(255,255,255,.05);
+  border: 1px solid rgba(255,255,255,.09);
+  border-radius: 12px;
+  padding: .85rem 1rem;
+  margin-bottom: .75rem;
+}
+.historial-chart-title {
+  font-size: .75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .6px;
+  color: rgba(255,255,255,.45);
+  margin-bottom: .65rem;
+}
+.htop-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: .45rem .35rem;
+  border-bottom: 1px solid rgba(255,255,255,.06);
+}
+.htop-row:last-child { border-bottom: none; }
+.htop-match { display: flex; flex-direction: column; gap: .15rem; }
+.htop-teams { font-size: .8rem; font-weight: 600; }
+.htop-score {
+  font-size: .72rem;
+  color: rgba(255,255,255,.5);
+}
+.htop-pts {
+  font-family: 'Bebas Neue', 'Oswald', var(--font-main);
+  font-size: 1.3rem;
+  color: var(--dorado, #f0b000);
+}

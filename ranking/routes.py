@@ -62,6 +62,46 @@ def index():
             LIMIT 10
         """).fetchall()
 
+        # Goleador del mundial
+        goleador_stats = conn.execute("""
+            SELECT goleador_mundial AS jugador, COUNT(*) AS votos
+            FROM usuarios
+            WHERE goleador_mundial IS NOT NULL AND goleador_mundial != ''
+            GROUP BY goleador_mundial
+            ORDER BY votos DESC
+            LIMIT 8
+        """).fetchall()
+
+        # Equipo más goleador
+        mas_goleador_stats = conn.execute("""
+            SELECT equipo_mas_goleador AS equipo, COUNT(*) AS votos
+            FROM usuarios
+            WHERE equipo_mas_goleador IS NOT NULL
+            GROUP BY equipo_mas_goleador
+            ORDER BY votos DESC
+            LIMIT 8
+        """).fetchall()
+
+        # Equipo sorpresa
+        sorpresa_stats = conn.execute("""
+            SELECT equipo_sorpresa AS equipo, COUNT(*) AS votos
+            FROM usuarios
+            WHERE equipo_sorpresa IS NOT NULL
+            GROUP BY equipo_sorpresa
+            ORDER BY votos DESC
+            LIMIT 8
+        """).fetchall()
+
+        # Equipo decepción
+        decepcion_stats = conn.execute("""
+            SELECT equipo_decepcion AS equipo, COUNT(*) AS votos
+            FROM usuarios
+            WHERE equipo_decepcion IS NOT NULL
+            GROUP BY equipo_decepcion
+            ORDER BY votos DESC
+            LIMIT 8
+        """).fetchall()
+
     liga_id    = request.args.get("liga", type=int)
     tabla      = get_ranking(liga_id=liga_id)
     equipos_iso = _equipos_iso()
@@ -75,5 +115,9 @@ def index():
         campeon_stats=[dict(r) for r in campeon_stats],
         jugador_stats=[dict(r) for r in jugador_stats],
         marcadores_stats=[dict(r) for r in marcadores_stats],
+        goleador_stats=[dict(r) for r in goleador_stats],
+        mas_goleador_stats=[dict(r) for r in mas_goleador_stats],
+        sorpresa_stats=[dict(r) for r in sorpresa_stats],
+        decepcion_stats=[dict(r) for r in decepcion_stats],
         equipos_iso=equipos_iso,
     )

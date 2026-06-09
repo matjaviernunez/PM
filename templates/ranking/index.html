@@ -237,6 +237,89 @@
       {% endif %}
     </div>
 
+
+    <!-- Goleador del mundial -->
+    {% if goleador_stats %}
+    <div class="stats-card">
+      <h2 class="stats-title">👟 Goleador del mundial</h2>
+      <p class="stats-sub">Quién creen que va a ser el máximo anotador</p>
+      {% set max_g = goleador_stats[0].votos %}
+      <div class="campeon-chart">
+        {% for item in goleador_stats %}
+          {% set pct = (item.votos / max_g * 100) | int %}
+          <div class="campeon-row">
+            <span class="campeon-name">{{ item.jugador }}</span>
+            <div class="campeon-bar-wrap"><div class="campeon-bar" style="width:{{ pct }}%"></div></div>
+            <span class="campeon-count">{{ item.votos }}</span>
+          </div>
+        {% endfor %}
+      </div>
+    </div>
+    {% endif %}
+
+    <!-- Equipo más goleador -->
+    {% if mas_goleador_stats %}
+    <div class="stats-card">
+      <h2 class="stats-title">⚽ Equipo más goleador</h2>
+      <p class="stats-sub">El equipo que esperan que haga más goles</p>
+      {% set max_mg = mas_goleador_stats[0].votos %}
+      <div class="campeon-chart">
+        {% for item in mas_goleador_stats %}
+          {% set iso = equipos_iso.get(item.equipo, 'un') %}
+          {% set pct = (item.votos / max_mg * 100) | int %}
+          <div class="campeon-row">
+            <img class="campeon-flag" src="https://flagcdn.com/w40/{{ iso }}.png" alt="{{ item.equipo }}">
+            <span class="campeon-name">{{ item.equipo }}</span>
+            <div class="campeon-bar-wrap"><div class="campeon-bar" style="width:{{ pct }}%"></div></div>
+            <span class="campeon-count">{{ item.votos }}</span>
+          </div>
+        {% endfor %}
+      </div>
+    </div>
+    {% endif %}
+
+    <!-- Equipo sorpresa -->
+    {% if sorpresa_stats %}
+    <div class="stats-card">
+      <h2 class="stats-title">🌟 Equipo sorpresa</h2>
+      <p class="stats-sub">El equipo que más va a sorprender</p>
+      {% set max_s = sorpresa_stats[0].votos %}
+      <div class="campeon-chart">
+        {% for item in sorpresa_stats %}
+          {% set iso = equipos_iso.get(item.equipo, 'un') %}
+          {% set pct = (item.votos / max_s * 100) | int %}
+          <div class="campeon-row">
+            <img class="campeon-flag" src="https://flagcdn.com/w40/{{ iso }}.png" alt="{{ item.equipo }}">
+            <span class="campeon-name">{{ item.equipo }}</span>
+            <div class="campeon-bar-wrap"><div class="campeon-bar" style="width:{{ pct }}%"></div></div>
+            <span class="campeon-count">{{ item.votos }}</span>
+          </div>
+        {% endfor %}
+      </div>
+    </div>
+    {% endif %}
+
+    <!-- Equipo decepción -->
+    {% if decepcion_stats %}
+    <div class="stats-card">
+      <h2 class="stats-title">💔 Equipo decepción</h2>
+      <p class="stats-sub">El equipo que más va a decepcionar</p>
+      {% set max_d = decepcion_stats[0].votos %}
+      <div class="campeon-chart">
+        {% for item in decepcion_stats %}
+          {% set iso = equipos_iso.get(item.equipo, 'un') %}
+          {% set pct = (item.votos / max_d * 100) | int %}
+          <div class="campeon-row">
+            <img class="campeon-flag" src="https://flagcdn.com/w40/{{ iso }}.png" alt="{{ item.equipo }}">
+            <span class="campeon-name">{{ item.equipo }}</span>
+            <div class="campeon-bar-wrap"><div class="campeon-bar" style="width:{{ pct }}%"></div></div>
+            <span class="campeon-count">{{ item.votos }}</span>
+          </div>
+        {% endfor %}
+      </div>
+    </div>
+    {% endif %}
+
   </div>
 
 
