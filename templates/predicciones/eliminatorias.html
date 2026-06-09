@@ -1,0 +1,267 @@
+{% extends "base.html" %}
+{% block title %}Eliminatorias — Mundial 2026{% endblock %}
+
+{% block content %}
+<div class="pred-page">
+
+  <!-- Header -->
+  <div class="pred-header">
+    <div class="pred-header-text">
+      <h1>Predicciones</h1>
+      <span>Mundial 2026</span>
+    </div>
+  </div>
+
+  <!-- Pestañas -->
+  <div class="pred-tabs">
+    <a href="{{ url_for('predicciones.index') }}"
+       class="pred-tab {% if tab_activa == 'grupos' %}pred-tab--activa{% endif %}">
+      ⚽ Grupos
+    </a>
+    {% if fases_elim %}
+    <a href="{{ url_for('predicciones.eliminatorias') }}"
+       class="pred-tab {% if tab_activa == 'eliminatorias' %}pred-tab--activa{% endif %}">
+      ⚔️ Eliminatorias
+    </a>
+    {% endif %}
+  </div>
+
+  {% if not por_fase %}
+    <div class="empty-state" style="padding:4rem 1rem;text-align:center;color:var(--gris)">
+      <span style="font-size:3rem;display:block;margin-bottom:1rem">⏳</span>
+      <p>Los partidos de eliminatorias aparecerán aquí cuando se generen.</p>
+    </div>
+  {% else %}
+
+  {% for fase in fases_elim %}
+    {% if fase in por_fase %}
+    <div class="fase-section">
+
+      <div class="fase-header">
+        <span class="fase-label">{{ label_fase.get(fase, fase) }}</span>
+      </div>
+
+      <div class="partidos-list">
+        {% for partido in por_fase[fase] %}
+          {% set pred = predicciones.get(partido.id) %}
+          {% set cerrado = not partido.abierto %}
+          {% set iso_l = equipos[partido.equipo_local].iso  if partido.equipo_local  in equipos else 'un' %}
+          {% set iso_v = equipos[partido.equipo_visita].iso if partido.equipo_visita in equipos else 'un' %}
+
+          <!-- Detectar si la pred actual es empate -->
+          {% set pred_es_empate = pred and pred.goles_local == pred.goles_visita %}
+
+          <div class="partido-card partido-card--elim {% if cerrado %}partido-card--cerrado{% endif %}"
+               data-partido-id="{{ partido.id }}"
+               data-estado="{{ 'guardado' if pred else 'pendiente' }}">
+
+            <!-- Meta -->
+            <div class="partido-meta">
+              <span class="tag-fase">{{ label_fase.get(partido.fase, partido.fase) }}</span>
+              {% if partido.fecha %}
+                <span>📅 {{ partido.fecha }} {% if partido.hora %}· 🕐 {{ partido.hora }}{% endif %}</span>
+              {% endif %}
+              {% if cerrado %}
+                <span class="tag-cerrado">Cerrado</span>
+              {% else %}
+                <span class="tag-abierto">Abierto</span>
+              {% endif %}
+            </div>
+
+            <!-- Equipos + marcador tiempo reglamentario -->
+            <div class="partido-row">
+              <div class="equipo equipo--local">
+                <img class="equipo-flag" src="https://flagcdn.com/w80/{{ iso_l }}.png" alt="{{ partido.equipo_local }}">
+                <span class="equipo-codigo">{{ partido.equipo_local }}</span>
+              </div>
+
+              <div class="marcador">
+                <input type="number" min="0" max="20"
+                       class="gol-input gol-local elim-score"
+                       value="{{ pred.goles_local if pred else '' }}"
+                       placeholder="–"
+                       {% if cerrado %}disabled{% endif %}
+                       data-partido="{{ partido.id }}">
+                <span class="marcador-sep">:</span>
+                <input type="number" min="0" max="20"
+                       class="gol-input gol-visita elim-score"
+                       value="{{ pred.goles_visita if pred else '' }}"
+                       placeholder="–"
+                       {% if cerrado %}disabled{% endif %}
+                       data-partido="{{ partido.id }}">
+              </div>
+
+              <div class="equipo equipo--visita">
+                <img class="equipo-flag" src="https://flagcdn.com/w80/{{ iso_v }}.png" alt="{{ partido.equipo_visita }}">
+                <span class="equipo-codigo">{{ partido.equipo_visita }}</span>
+              </div>
+            </div>
+
+            <!-- Penales (aparece con JS si es empate) -->
+            <div class="penales-row {% if not pred_es_empate %}penales-row--hidden{% endif %}"
+                 id="penales-{{ partido.id }}">
+              <div class="penales-label">Penales</div>
+              <div class="penales-inputs">
+                <div class="equipo-pen-name">{{ partido.equipo_local }}</div>
+                <input type="number" min="0" max="30"
+                       class="gol-input gol-pen-local"
+                       value="{{ pred.penales_local if pred and pred.penales_local is not none else '' }}"
+                       placeholder="–"
+                       {% if cerrado %}disabled{% endif %}
+                       data-partido="{{ partido.id }}">
+                <span class="marcador-sep">–</span>
+                <input type="number" min="0" max="30"
+                       class="gol-input gol-pen-visita"
+                       value="{{ pred.penales_visita if pred and pred.penales_visita is not none else '' }}"
+                       placeholder="–"
+                       {% if cerrado %}disabled{% endif %}
+                       data-partido="{{ partido.id }}">
+                <div class="equipo-pen-name">{{ partido.equipo_visita }}</div>
+              </div>
+              <div class="penales-hint">¿Quién gana en penales?</div>
+            </div>
+
+            <!-- Botón guardar + status -->
+            <div class="elim-footer">
+              {% if not cerrado %}
+                <button class="btn-guardar-elim" data-partido="{{ partido.id }}">
+                  Guardar
+                </button>
+              {% endif %}
+              <div class="partido-status" id="status-{{ partido.id }}">
+                {% if pred %}
+                  <span class="status-guardado">
+                    ✓ {{ pred.goles_local }} – {{ pred.goles_visita }}
+                    {% if pred.penales_local is not none %}
+                      · Pen: {{ pred.penales_local }} – {{ pred.penales_visita }}
+                    {% endif %}
+                  </span>
+                {% elif cerrado %}
+                  <span class="status-sin-pred">Sin predicción</span>
+                {% else %}
+                  <span class="status-pendiente">Pendiente</span>
+                {% endif %}
+              </div>
+            </div>
+
+          </div>
+        {% endfor %}
+      </div>
+    </div>
+    {% endif %}
+  {% endfor %}
+
+  {% endif %}
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+(function () {
+  'use strict';
+
+  // Mostrar/ocultar fila de penales segun empate
+  function checkEmpate(card) {
+    var localInput  = card.querySelector('.gol-local');
+    var visitaInput = card.querySelector('.gol-visita');
+    if (!localInput || !visitaInput) return;
+    var vl = localInput.value;
+    var vv = visitaInput.value;
+    var penRow = card.querySelector('.penales-row');
+    if (!penRow) return;
+
+    if (vl !== '' && vv !== '' && parseInt(vl) === parseInt(vv)) {
+      penRow.classList.remove('penales-row--hidden');
+    } else {
+      penRow.classList.add('penales-row--hidden');
+      // Limpiar penales si ya no aplica
+      var pl = card.querySelector('.gol-pen-local');
+      var pv = card.querySelector('.gol-pen-visita');
+      if (pl && !pl.disabled) { pl.value = ''; }
+      if (pv && !pv.disabled) { pv.value = ''; }
+    }
+  }
+
+  // Guardar prediccion individual
+  function guardarElim(btn) {
+    var card = btn.closest('.partido-card');
+    var pid  = btn.dataset.partido;
+    var gl   = card.querySelector('.gol-local').value;
+    var gv   = card.querySelector('.gol-visita').value;
+
+    if (gl === '' || gv === '') {
+      alert('Ingresa el marcador de tiempo reglamentario.');
+      return;
+    }
+
+    var esEmpate = parseInt(gl) === parseInt(gv);
+    var payload  = {
+      partido_id:   parseInt(pid),
+      goles_local:  parseInt(gl),
+      goles_visita: parseInt(gv),
+    };
+
+    if (esEmpate) {
+      var pl = card.querySelector('.gol-pen-local').value;
+      var pv = card.querySelector('.gol-pen-visita').value;
+      if (pl === '' || pv === '') {
+        alert('Si hay empate, ingresa el marcador en penales.');
+        return;
+      }
+      if (parseInt(pl) === parseInt(pv)) {
+        alert('En penales no puede haber empate. Revisa el marcador.');
+        return;
+      }
+      payload.penales_local  = parseInt(pl);
+      payload.penales_visita = parseInt(pv);
+    }
+
+    btn.disabled = true;
+    btn.textContent = 'Guardando...';
+
+    fetch('/predicciones/guardar', {
+      method:  'POST',
+      headers: {'Content-Type': 'application/json'},
+      body:    JSON.stringify(payload),
+    })
+    .then(function(r){ return r.json(); })
+    .then(function(data) {
+      var statusEl = document.getElementById('status-' + pid);
+      if (data.ok) {
+        var txt = gl + ' - ' + gv;
+        if (payload.penales_local !== undefined) {
+          txt += ' · Pen: ' + payload.penales_local + ' - ' + payload.penales_visita;
+        }
+        statusEl.innerHTML = '<span class="status-guardado">✓ ' + txt + '</span>';
+        card.dataset.estado = 'guardado';
+        btn.textContent = 'Guardar';
+        btn.disabled = false;
+      } else {
+        statusEl.innerHTML = '<span class="status-sin-pred">' + (data.error || 'Error') + '</span>';
+        btn.textContent = 'Guardar';
+        btn.disabled = false;
+      }
+    })
+    .catch(function() {
+      btn.textContent = 'Guardar';
+      btn.disabled = false;
+    });
+  }
+
+  // Event listeners
+  document.querySelectorAll('.partido-card--elim').forEach(function(card) {
+    // Detectar empate en tiempo real
+    card.querySelectorAll('.elim-score').forEach(function(input) {
+      input.addEventListener('input', function() { checkEmpate(card); });
+    });
+
+    // Guardar
+    var btn = card.querySelector('.btn-guardar-elim');
+    if (btn) {
+      btn.addEventListener('click', function() { guardarElim(btn); });
+    }
+  });
+})();
+</script>
+{% endblock %}

@@ -328,7 +328,7 @@
 }
 .campeon-row {
   display: grid;
-  grid-template-columns: 28px 52px 1fr 28px;
+  grid-template-columns: 28px 80px 1fr 28px;
   align-items: center;
   gap: .4rem;
 }
@@ -408,3 +408,4 @@
   color: var(--gris);
 }
 .empty-state span { font-size: 3rem; display: block; margin-bottom: 1rem; }
+ 

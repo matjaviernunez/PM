@@ -12,6 +12,20 @@
     </div>
   </div>
 
+
+  <!-- ── Pestañas de fase ────────────────────────────────────────── -->
+  <div class="pred-tabs">
+    <a href="{{ url_for('predicciones.index') }}"
+       class="pred-tab {% if tab_activa == 'grupos' %}pred-tab--activa{% endif %}">
+      ⚽ Grupos
+    </a>
+    {% if fases_elim %}
+    <a href="{{ url_for('predicciones.eliminatorias') }}"
+       class="pred-tab {% if tab_activa == 'eliminatorias' %}pred-tab--activa{% endif %}">
+      ⚔️ Eliminatorias
+    </a>
+    {% endif %}
+  </div>
   <!-- ── Countdown al Mundial ────────────────────────────────────── -->
   <div class="countdown-banner" id="countdown-banner">
     <span class="countdown-label">⚽ El Mundial empieza en</span>

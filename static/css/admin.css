@@ -410,3 +410,27 @@
   font-size: .9rem;
 }
 .admin-form input:focus { outline: none; border-color: var(--dorado); }
+
+/* ── Penales en admin ─────────────────────────────────────────── */
+.admin-penales-row {
+  display: flex;
+  align-items: center;
+  gap: .75rem;
+  padding: .5rem .75rem;
+  background: rgba(155,89,182,.08);
+  border: 1px solid rgba(155,89,182,.25);
+  border-radius: 10px;
+  margin-top: .4rem;
+}
+.admin-penales-label {
+  font-size: .72rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: .8px;
+  color: #9b59b6;
+  flex-shrink: 0;
+}
+.admin-penales-hint {
+  font-size: .7rem;
+  color: var(--gris);
+}

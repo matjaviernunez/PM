@@ -95,16 +95,36 @@ def cargar_resultado():
     partido_id   = data.get("partido_id")
     goles_local  = data.get("goles_local")
     goles_visita = data.get("goles_visita")
+    pen_local    = data.get("penales_local")
+    pen_visita   = data.get("penales_visita")
 
     if partido_id is None or goles_local is None or goles_visita is None:
         return jsonify({"ok": False, "error": "Datos incompletos"}), 400
 
+    gl = int(goles_local)
+    gv = int(goles_visita)
+    pl = int(pen_local)  if pen_local  is not None else None
+    pv = int(pen_visita) if pen_visita is not None else None
+
+    # Si hay empate en tiempo reglamentario deben venir los penales
+    if gl == gv and (pl is None or pv is None):
+        return jsonify({"ok": False, "error": "Partido empatado: ingresa el marcador en penales"}), 400
+
+    # Derivar ganador en penales para backward compat
+    if pl is not None and pv is not None:
+        pen_ganador = "local" if pl > pv else "visita"
+    else:
+        pen_ganador = None
+
     with get_db() as conn:
         conn.execute("""
             UPDATE partidos
-            SET goles_local = ?, goles_visita = ?, abierto = FALSE
+            SET goles_local = ?, goles_visita = ?,
+                penales_local = ?, penales_visita = ?,
+                penales_ganador = ?,
+                abierto = FALSE
             WHERE id = ?
-        """, (int(goles_local), int(goles_visita), int(partido_id)))
+        """, (gl, gv, pl, pv, pen_ganador, int(partido_id)))
         conn.commit()
 
     procesadas = recalcular_partido(int(partido_id))
@@ -396,13 +416,4 @@ def actualizar_usuario_ligas():
     return jsonify({"ok": True})
 
 
-# ── Hacerse admin (solo primera vez via CLI) ───────────────────────────────
-
-@admin_bp.route("/make-admin/<int:usuario_id>", methods=["POST"])
-@login_required
-@admin_required
-def make_admin(usuario_id):
-    with get_db() as conn:
-        conn.execute("UPDATE usuarios SET es_admin = TRUE WHERE id = ?", (usuario_id,))
-        conn.commit()
-    return jsonify({"ok": True})
+# ── Hacerse admin (solo primer

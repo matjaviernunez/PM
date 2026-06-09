@@ -1,12 +1,12 @@
 """
-game/models.py — Queries de partidos y predicciones.
+game/models.py -- Queries de partidos y predicciones.
 """
 
 from datetime import datetime, date
 from db import get_db
 
 
-# ── Partidos ───────────────────────────────────────────────────────────────
+# -- Partidos ---------------------------------------------------------------
 
 def get_partidos_por_grupo(grupo: str) -> list[dict]:
     """Retorna los 6 partidos de un grupo ordenados por fecha/hora."""
@@ -30,9 +30,46 @@ def get_todos_partidos_grupos() -> list[dict]:
     return [dict(r) for r in rows]
 
 
+def get_partidos_eliminatorias() -> list[dict]:
+    """
+    Retorna todos los partidos de fases knockout (no grupos)
+    ordenados por fase, fecha, hora.
+    Solo incluye fases que ya tienen partidos en la DB.
+    """
+    fases_orden = ['16avos', 'octavos', 'cuartos', 'semis', '3er_puesto', 'final']
+    with get_db() as conn:
+        rows = conn.execute("""
+            SELECT * FROM partidos
+            WHERE fase != 'grupos'
+            ORDER BY fecha, hora
+        """).fetchall()
+    partidos = [dict(r) for r in rows]
+
+    # Ordenar por fase segun jerarquia definida
+    def fase_key(p):
+        try:
+            return fases_orden.index(p['fase'])
+        except ValueError:
+            return 99
+
+    partidos.sort(key=lambda p: (fase_key(p), p['fecha'] or '', p['hora'] or ''))
+    return partidos
+
+
+def get_fases_eliminatorias_disponibles() -> list[str]:
+    """Retorna lista de fases knockout que ya tienen partidos en DB."""
+    fases_orden = ['16avos', 'octavos', 'cuartos', 'semis', '3er_puesto', 'final']
+    with get_db() as conn:
+        rows = conn.execute("""
+            SELECT DISTINCT fase FROM partidos WHERE fase != 'grupos'
+        """).fetchall()
+    fases = [r['fase'] for r in rows]
+    return [f for f in fases_orden if f in fases]
+
+
 def guardar_predicciones_lote(usuario_id: int, predicciones: list[dict]) -> dict:
     """
-    Guarda múltiples predicciones de una vez.
+    Guarda multiples predicciones de una vez.
     predicciones: [{partido_id, goles_local, goles_visita}, ...]
     Retorna {guardados: N, cerrados: N}
     """
@@ -41,19 +78,19 @@ def guardar_predicciones_lote(usuario_id: int, predicciones: list[dict]) -> dict
     for p in predicciones:
         ok = guardar_prediccion(
             usuario_id=usuario_id,
-            partido_id=p["partido_id"],
-            goles_local=p["goles_local"],
-            goles_visita=p["goles_visita"],
+            partido_id=p['partido_id'],
+            goles_local=p['goles_local'],
+            goles_visita=p['goles_visita'],
         )
         if ok:
             guardados += 1
         else:
             cerrados += 1
-    return {"guardados": guardados, "cerrados": cerrados}
+    return {'guardados': guardados, 'cerrados': cerrados}
 
 
 def cerrar_partidos_vencidos():
-    """Marca como cerrados los partidos cuya fecha/hora ya pasó."""
+    """Marca como cerrados los partidos cuya fecha/hora ya paso."""
     ahora = datetime.now()
     with get_db() as conn:
         conn.execute("""
@@ -61,11 +98,11 @@ def cerrar_partidos_vencidos():
             SET abierto = FALSE
             WHERE abierto = TRUE
               AND datetime(fecha || ' ' || hora) <= ?
-        """, (ahora.strftime("%Y-%m-%d %H:%M"),))
+        """, (ahora.strftime('%Y-%m-%d %H:%M'),))
         conn.commit()
 
 
-# ── Predicciones ───────────────────────────────────────────────────────────
+# -- Predicciones -----------------------------------------------------------
 
 def get_predicciones_usuario(usuario_id: int, partido_ids: list[int]) -> dict:
     """
@@ -73,38 +110,43 @@ def get_predicciones_usuario(usuario_id: int, partido_ids: list[int]) -> dict:
     """
     if not partido_ids:
         return {}
-    placeholders = ",".join("?" * len(partido_ids))
+    placeholders = ','.join('?' * len(partido_ids))
     with get_db() as conn:
         rows = conn.execute(f"""
             SELECT * FROM predicciones
             WHERE usuario_id = ? AND partido_id IN ({placeholders})
         """, (usuario_id, *partido_ids)).fetchall()
-    return {r["partido_id"]: dict(r) for r in rows}
+    return {r['partido_id']: dict(r) for r in rows}
 
 
 def guardar_prediccion(usuario_id: int, partido_id: int,
                        goles_local: int, goles_visita: int,
-                       penales_ganador: str = None) -> bool:
+                       penales_local: int = None,
+                       penales_visita: int = None) -> bool:
     """
-    Inserta o actualiza una predicción.
-    Retorna False si el partido ya cerró.
+    Inserta o actualiza una prediccion.
+    Para eliminatorias: si goles_local == goles_visita, se esperan penales_local/visita.
+    Retorna False si el partido ya cerro.
     """
     with get_db() as conn:
         partido = conn.execute(
-            "SELECT abierto FROM partidos WHERE id = ?", (partido_id,)
+            'SELECT abierto FROM partidos WHERE id = ?', (partido_id,)
         ).fetchone()
 
-        if not partido or not partido["abierto"]:
+        if not partido or not partido['abierto']:
             return False
 
         conn.execute("""
             INSERT INTO predicciones
-                (usuario_id, partido_id, goles_local, goles_visita, penales_ganador)
-            VALUES (?, ?, ?, ?, ?)
+                (usuario_id, partido_id, goles_local, goles_visita,
+                 penales_local, penales_visita)
+            VALUES (?, ?, ?, ?, ?, ?)
             ON CONFLICT(usuario_id, partido_id) DO UPDATE SET
-                goles_local     = excluded.goles_local,
-                goles_visita    = excluded.goles_visita,
-                penales_ganador = excluded.penales_ganador
-        """, (usuario_id, partido_id, goles_local, goles_visita, penales_ganador))
+                goles_local    = excluded.goles_local,
+                goles_visita   = excluded.goles_visita,
+                penales_local  = excluded.penales_local,
+                penales_visita = excluded.penales_visita
+        """, (usuario_id, partido_id, goles_local, goles_visita,
+              penales_local, penales_visita))
         conn.commit()
     return True

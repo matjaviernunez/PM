@@ -370,3 +370,142 @@
   .pred-page { padding-top: 1rem; }
   .filtros-wrapper { top: 50px; }  /* desktop: navbar fijo arriba */
 }
+
+
+/* ── Pestanas de fase ─────────────────────────────────────────── */
+.pred-tabs {
+  display: flex;
+  gap: .4rem;
+  padding: .6rem .75rem .3rem;
+  border-bottom: 1px solid rgba(255,255,255,.07);
+  background: var(--azul-oscuro);
+  position: sticky;
+  top: 0;
+  z-index: 20;
+}
+.pred-tab {
+  padding: .4rem .9rem;
+  border-radius: 20px;
+  font-size: .82rem;
+  font-weight: 700;
+  color: var(--gris);
+  text-decoration: none;
+  border: 1px solid rgba(255,255,255,.1);
+  transition: all .18s;
+}
+.pred-tab:hover {
+  color: var(--blanco);
+  border-color: rgba(255,255,255,.25);
+  text-decoration: none;
+}
+.pred-tab--activa {
+  background: var(--dorado);
+  color: var(--azul-oscuro);
+  border-color: var(--dorado);
+  font-weight: 800;
+}
+
+/* ── Secciones por fase (eliminatorias) ──────────────────────── */
+.fase-section {
+  margin-bottom: 1.5rem;
+}
+.fase-header {
+  padding: .6rem .75rem .3rem;
+}
+.fase-label {
+  font-size: .78rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--dorado);
+  border-left: 3px solid var(--dorado);
+  padding-left: .5rem;
+}
+
+/* ── Card eliminatoria ────────────────────────────────────────── */
+.partido-card--elim {
+  border-color: rgba(243,156,18,.2);
+}
+
+/* Tag fase */
+.tag-fase {
+  font-size: .68rem;
+  font-weight: 700;
+  background: rgba(243,156,18,.15);
+  color: var(--dorado);
+  border-radius: 6px;
+  padding: .1rem .45rem;
+  text-transform: uppercase;
+  letter-spacing: .5px;
+}
+
+/* ── Fila de penales ──────────────────────────────────────────── */
+.penales-row {
+  margin: .5rem .25rem 0;
+  padding: .6rem .75rem;
+  background: rgba(155,89,182,.08);
+  border: 1px solid rgba(155,89,182,.25);
+  border-radius: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: .35rem;
+  transition: opacity .2s;
+}
+.penales-row--hidden {
+  display: none;
+}
+.penales-label {
+  font-size: .72rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: .8px;
+  color: #9b59b6;
+}
+.penales-inputs {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: .4rem;
+}
+.equipo-pen-name {
+  font-size: .7rem;
+  color: var(--gris);
+  min-width: 28px;
+  text-align: center;
+  font-weight: 700;
+}
+.penales-hint {
+  font-size: .68rem;
+  color: var(--gris);
+  text-align: center;
+}
+
+/* ── Footer de card elim ──────────────────────────────────────── */
+.elim-footer {
+  display: flex;
+  align-items: center;
+  gap: .75rem;
+  margin-top: .5rem;
+  padding-top: .4rem;
+  border-top: 1px solid rgba(255,255,255,.05);
+}
+.btn-guardar-elim {
+  padding: .35rem .9rem;
+  border-radius: 20px;
+  border: none;
+  background: var(--dorado);
+  color: var(--azul-oscuro);
+  font-size: .82rem;
+  font-weight: 800;
+  cursor: pointer;
+  transition: all .18s;
+  flex-shrink: 0;
+}
+.btn-guardar-elim:hover:not(:disabled) {
+  background: var(--dorado-claro);
+  transform: scale(1.04);
+}
+.btn-guardar-elim:disabled {
+  opacity: .55;
+  cursor: not-allowed;
+}

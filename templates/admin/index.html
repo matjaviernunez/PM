@@ -98,10 +98,12 @@
           </span>
           <div class="admin-inputs">
             <input type="number" min="0" max="20" class="gol-input"
-                   id="gl-{{ p.id }}" placeholder="–">
+                   id="gl-{{ p.id }}" placeholder="–"
+                   oninput="checkEmpateAdmin({{ p.id }})">
             <span class="marcador-sep">:</span>
             <input type="number" min="0" max="20" class="gol-input"
-                   id="gv-{{ p.id }}" placeholder="–">
+                   id="gv-{{ p.id }}" placeholder="–"
+                   oninput="checkEmpateAdmin({{ p.id }})">
           </div>
           <span class="admin-equipo admin-equipo--visita">
             {{ p.equipo_visita }}
@@ -110,6 +112,15 @@
           <button class="btn-guardar-resultado" onclick="guardarResultado({{ p.id }})">
             Guardar
           </button>
+        </div>
+        <div class="admin-penales-row" id="penrow-{{ p.id }}" style="display:none">
+          <span class="admin-penales-label">Penales</span>
+          <div class="admin-inputs">
+            <input type="number" min="0" max="30" class="gol-input" id="pl-{{ p.id }}" placeholder="–">
+            <span class="marcador-sep">–</span>
+            <input type="number" min="0" max="30" class="gol-input" id="pv-{{ p.id }}" placeholder="–">
+          </div>
+          <span class="admin-penales-hint">{{ p.equipo_local }} – {{ p.equipo_visita }}</span>
         </div>
 
         <div class="admin-status" id="astatus-{{ p.id }}"></div>
@@ -384,15 +395,37 @@ function filtrarUsuarios() {
 }
 
 // ── Guardar resultado ────────────────────────────────────────────
+function checkEmpateAdmin(id) {
+  const gl = document.getElementById(`gl-${id}`).value;
+  const gv = document.getElementById(`gv-${id}`).value;
+  const penRow = document.getElementById(`penrow-${id}`);
+  if (penRow && gl !== '' && gv !== '' && parseInt(gl) === parseInt(gv)) {
+    penRow.style.display = 'flex';
+  } else if (penRow) {
+    penRow.style.display = 'none';
+  }
+}
+
 async function guardarResultado(id) {
   const gl = document.getElementById(`gl-${id}`).value;
   const gv = document.getElementById(`gv-${id}`).value;
   const st = document.getElementById(`astatus-${id}`);
   if (gl === '' || gv === '') { st.innerHTML = '<span class="status-error">Completa ambos campos</span>'; return; }
+
+  const payload = {partido_id: id, goles_local: parseInt(gl), goles_visita: parseInt(gv)};
+  if (parseInt(gl) === parseInt(gv)) {
+    const pl = document.getElementById(`pl-${id}`).value;
+    const pv = document.getElementById(`pv-${id}`).value;
+    if (pl === '' || pv === '') { st.innerHTML = '<span class="status-error">Ingresa marcador en penales</span>'; return; }
+    if (parseInt(pl) === parseInt(pv)) { st.innerHTML = '<span class="status-error">En penales no puede haber empate</span>'; return; }
+    payload.penales_local  = parseInt(pl);
+    payload.penales_visita = parseInt(pv);
+  }
+
   st.innerHTML = '<span class="status-guardando">⏳ Guardando...</span>';
   const res  = await fetch('/admin/resultado', {
     method: 'POST', headers: {'Content-Type': 'application/json'},
-    body: JSON.stringify({partido_id: id, goles_local: parseInt(gl), goles_visita: parseInt(gv)})
+    body: JSON.stringify(payload)
   });
   const data = await res.json();
   if (data.ok) {

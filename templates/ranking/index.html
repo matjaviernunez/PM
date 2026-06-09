@@ -177,31 +177,6 @@
 
   </div>
 
-  <!-- ── El más botado ──────────────────────────────────────────── -->
-  {% if tabla and tabla | length > 1 %}
-  {% set botado = tabla[-1] %}
-  <div class="botado-card">
-    <div class="botado-header">
-      <span class="botado-trophy">🥄</span>
-      <div>
-        <div class="botado-title">El Más Botado</div>
-        <div class="botado-sub">Cuchara de palo · última posición</div>
-      </div>
-    </div>
-    <div class="botado-jugador">
-      <span class="botado-nombre">{{ botado.nickname }}</span>
-      <span class="botado-pts">{{ botado.total }} <span class="botado-pts-label">pts</span></span>
-    </div>
-    {% if botado.campeon_favorito %}
-    <div class="botado-detail">
-      Apostó por <strong>{{ botado.campeon_favorito }}</strong> como campeón 🤞
-    </div>
-    {% endif %}
-    <div class="botado-mensaje">
-      "Todavía hay tiempo... ¿o no?" 😅
-    </div>
-  </div>
-  {% endif %}
 
 </div>
 {% endblock %}
