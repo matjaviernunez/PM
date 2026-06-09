@@ -185,7 +185,8 @@ def perfil():
 
         # Top 3 mejores predicciones
         top = conn.execute("""
-            SELECT pa.local, pa.visita, pa.fecha, pa.fase,
+            SELECT pa.equipo_local AS local, pa.equipo_visita AS visita,
+                   pa.fecha, pa.fase,
                    pr.goles_local, pr.goles_visita, pr.puntos_obtenidos
             FROM predicciones pr
             JOIN partidos pa ON pa.id = pr.partido_id
