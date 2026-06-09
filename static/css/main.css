@@ -84,13 +84,34 @@ a:hover { color: var(--dorado-claro); text-decoration: underline; }
   50%       { transform: translateY(-8px); }
 }
 .auth-logo h1 {
-  font-size: 1.6rem;
-  font-weight: 800;
+  font-size: 2.2rem;
+  font-family: 'Bebas Neue', 'Oswald', var(--font-main);
+  font-weight: 400;
   color: var(--blanco);
-  letter-spacing: -0.5px;
+  letter-spacing: 3px;
 }
 .auth-logo h1 .year {
   color: var(--dorado);
+}
+
+/* ── Maple en login ───────────────────────────────────────────── */
+.auth-wrapper--maple {
+  background:
+    radial-gradient(ellipse at top, #1e3a5f 0%, var(--azul-oscuro) 60%),
+    url('/static/img/maple.avif') right bottom / 320px auto no-repeat;
+  background-blend-mode: normal, normal;
+}
+
+.auth-mascota {
+  width: 130px;
+  height: 130px;
+  object-fit: cover;
+  object-position: center 20%;
+  border-radius: 50%;
+  border: 3px solid var(--rojo);
+  display: block;
+  margin: 0 auto .75rem;
+  box-shadow: 0 0 0 4px rgba(192,57,43,.2);
 }
 
 /* ── Auth — form ──────────────────────────────────────────────── */

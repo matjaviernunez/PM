@@ -7,11 +7,28 @@
 }
 
 .ranking-header {
-  padding: 1rem 1rem .25rem;
+  padding: 0;
+  position: relative;
+  height: 110px;
+  overflow: hidden;
+  background: url('/static/img/clutch.avif') center 30% / cover no-repeat;
+  display: flex;
+  align-items: flex-end;
+}
+.ranking-header::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, rgba(10,22,40,.92) 55%, transparent 100%);
 }
 .ranking-header h1 {
-  font-size: 1.4rem;
-  font-weight: 800;
+  font-size: 2rem;
+  font-family: 'Bebas Neue', 'Oswald', var(--font-main);
+  font-weight: 400;
+  letter-spacing: 3px;
+  padding: .75rem 1rem;
+  position: relative;
+  z-index: 1;
 }
 
 /* ── Cards de jugador ─────────────────────────────────────────── */
@@ -32,9 +49,30 @@
   grid-template-rows: auto auto;
   gap: .3rem .75rem;
   align-items: center;
+  position: relative;
+  overflow: hidden;
+}
+.ranking-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    135deg,
+    transparent, transparent 8px,
+    rgba(255,255,255,.022) 8px, rgba(255,255,255,.022) 16px
+  );
+  border-radius: inherit;
+  pointer-events: none;
 }
 
 .ranking-card--oro   { border-color: #f39c12; background: rgba(243,156,18,.08); }
+.ranking-card--oro::before {
+  background: repeating-linear-gradient(
+    135deg,
+    transparent, transparent 8px,
+    rgba(243,156,18,.07) 8px, rgba(243,156,18,.07) 16px
+  );
+}
 .ranking-card--plata { border-color: #bdc3c7; background: rgba(189,195,199,.06); }
 .ranking-card--bronce{ border-color: #cd6133; background: rgba(205,97,51,.06); }
 
@@ -76,10 +114,12 @@
   align-items: flex-end;
 }
 .ranking-pts {
-  font-size: 1.8rem;
-  font-weight: 900;
+  font-size: 2rem;
+  font-family: 'Bebas Neue', 'Oswald', var(--font-main);
+  font-weight: 400;
   color: var(--blanco);
   line-height: 1;
+  letter-spacing: 1px;
 }
 .ranking-pts-label {
   font-size: .7rem;

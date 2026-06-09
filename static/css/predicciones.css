@@ -8,6 +8,44 @@
   padding: 0 0 6rem;
 }
 
+/* ── Header con Zayu ─────────────────────────────────────────── */
+.pred-header {
+  position: relative;
+  height: 110px;
+  overflow: hidden;
+  background: url('/static/img/zayu.avif') center 25% / cover no-repeat;
+  display: flex;
+  align-items: flex-end;
+}
+.pred-header::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, rgba(10,22,40,.92) 55%, transparent 100%);
+}
+.pred-header-text {
+  padding: .75rem 1rem;
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  gap: .1rem;
+}
+.pred-header-text h1 {
+  font-size: 2rem;
+  font-family: 'Bebas Neue', 'Oswald', var(--font-main);
+  font-weight: 400;
+  letter-spacing: 3px;
+  line-height: 1;
+}
+.pred-header-text span {
+  font-size: .75rem;
+  color: var(--dorado);
+  font-weight: 700;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+}
+
 /* ── Countdown ────────────────────────────────────────────────── */
 .countdown-banner {
   display: flex;
@@ -41,11 +79,12 @@
   min-width: 48px;
 }
 .countdown-block span:first-child {
-  font-size: 1.4rem;
-  font-weight: 900;
+  font-size: 1.6rem;
+  font-family: 'Bebas Neue', 'Oswald', var(--font-main);
+  font-weight: 400;
   color: var(--blanco);
   line-height: 1;
-  font-variant-numeric: tabular-nums;
+  letter-spacing: 1px;
 }
 .cd-unit {
   font-size: .6rem;
