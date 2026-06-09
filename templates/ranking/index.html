@@ -125,6 +125,32 @@
       {% endif %}
     </div>
 
+
+    <!-- Jugador favorito más elegido -->
+    <div class="stats-card">
+      <h2 class="stats-title">&#11088; Jugador favorito</h2>
+      <p class="stats-sub">El jugador más elegido al registrarse</p>
+
+      {% if jugador_stats %}
+        {% set max_votos_j = jugador_stats[0].votos %}
+        <div class="campeon-chart">
+          {% for item in jugador_stats %}
+            {% set pct = (item.votos / max_votos_j * 100) | int %}
+            <div class="campeon-row">
+              <span class="campeon-flag" style="font-size:1.1rem">&#9917;</span>
+              <span class="campeon-nombre" style="min-width:90px;font-size:.8rem">{{ item.jugador }}</span>
+              <div class="campeon-bar-wrap">
+                <div class="campeon-bar" style="width:{{ pct }}%;background:var(--dorado-claro)"></div>
+              </div>
+              <span class="campeon-votos">{{ item.votos }}</span>
+            </div>
+          {% endfor %}
+        </div>
+      {% else %}
+        <p class="stats-empty">Sin datos aun. Completa tu perfil para aparecer aqui.</p>
+      {% endif %}
+    </div>
+
     <!-- Marcadores más predichos -->
     <div class="stats-card">
       <h2 class="stats-title">📊 Marcadores más predichos</h2>

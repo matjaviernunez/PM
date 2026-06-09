@@ -43,6 +43,16 @@ def index():
             LIMIT 12
         """).fetchall()
 
+        # Distribución de jugador favorito
+        jugador_stats = conn.execute("""
+            SELECT jugador_favorito AS jugador, COUNT(*) AS votos
+            FROM usuarios
+            WHERE jugador_favorito IS NOT NULL AND jugador_favorito != ''
+            GROUP BY jugador_favorito
+            ORDER BY votos DESC
+            LIMIT 10
+        """).fetchall()
+
         # Marcadores más predichos
         marcadores_stats = conn.execute("""
             SELECT goles_local, goles_visita, COUNT(*) AS total
@@ -63,6 +73,7 @@ def index():
         liga_id=liga_id,
         fases=FASES,
         campeon_stats=[dict(r) for r in campeon_stats],
+        jugador_stats=[dict(r) for r in jugador_stats],
         marcadores_stats=[dict(r) for r in marcadores_stats],
         equipos_iso=equipos_iso,
     )
