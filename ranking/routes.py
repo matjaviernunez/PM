@@ -102,7 +102,21 @@ def index():
             LIMIT 8
         """).fetchall()
 
-    liga_id    = request.args.get("liga", type=int)
+    liga_id = request.args.get("liga", type=int)
+
+    # Si no se especificó liga, inferir la default del usuario
+    if liga_id is None:
+        ligas_usuario = current_user.ligas()
+        if ligas_usuario:
+            ids_usuario = [l["id"] for l in ligas_usuario]
+            # Buscar "Todos contra todos" primero
+            tct = next((l for l in ligas_usuario if "todos" in l["nombre"].lower()), None)
+            if tct:
+                liga_id = tct["id"]
+            elif len(ids_usuario) == 1:
+                liga_id = ids_usuario[0]
+            # Si tiene varias ligas (sin Todos contra todos) → sin default
+
     tabla      = get_ranking(liga_id=liga_id)
     equipos_iso = _equipos_iso()
 
