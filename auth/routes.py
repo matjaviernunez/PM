@@ -3,8 +3,9 @@ auth/routes.py — Rutas de registro, login y logout.
 """
 
 import json
+import logging
 import os
-from flask import Blueprint, render_template, redirect, url_for, request, flash
+from flask import Blueprint, render_template, redirect, url_for, request, flash, session as flask_session
 from flask_login import login_user, logout_user, login_required, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
 
@@ -101,6 +102,48 @@ def login():
             flash("Usuario o contraseña incorrectos.", "error")
         else:
             login_user(usuario, remember=True)
+
+            # ── Popup de ranking ─────────────────────────────────────────
+            try:
+                from game.scoring import get_ranking
+                from db import get_db
+
+                # Liga de referencia: primera privada (no "todos"), o general
+                ligas_u       = usuario.ligas()
+                ligas_privadas = [l for l in ligas_u if 'todos' not in l['nombre'].lower()]
+                liga_ref_id   = ligas_privadas[0]['id'] if ligas_privadas else (ligas_u[0]['id'] if ligas_u else None)
+
+                tabla   = get_ranking(liga_id=liga_ref_id)
+                total   = len(tabla)
+                mi_pos  = next((i + 1 for i, j in enumerate(tabla) if j['usuario_id'] == usuario.id), None)
+
+                if mi_pos is not None:
+                    prev_pos = usuario.ultima_posicion
+                    if prev_pos is not None and prev_pos != mi_pos:
+                        delta = prev_pos - mi_pos  # positivo = subió
+                        if mi_pos == 1:
+                            msg = "👑 ¡Eres el primero! Disfrútalo mientras dure 😏"
+                        elif delta > 0 and prev_pos == total:
+                            msg = f"🎉 ¡Ya no eres el colero! Ahora vas {mi_pos}° — algo es algo ¿no? 😄"
+                        elif delta > 0:
+                            msg = f"🚀 ¡Subiste {delta} puesto{'s' if delta > 1 else ''}! Ahora vas {mi_pos}°"
+                        elif mi_pos == total:
+                            msg = "💀 ¡Te fuiste al fondo! Último... pero aún hay tiempo 😅"
+                        elif prev_pos == 1:
+                            msg = "😤 ¡Te bajaron del trono! Eso no puede quedar así"
+                        else:
+                            msg = f"📉 Bajaste {abs(delta)} puesto{'s' if abs(delta) > 1 else ''}, ahora vas {mi_pos}°. ¡A despertar!"
+                        flask_session['ranking_popup'] = msg
+
+                    # Actualizar posición guardada
+                    with get_db() as conn:
+                        conn.execute("UPDATE usuarios SET ultima_posicion = ? WHERE id = ?",
+                                     (mi_pos, usuario.id))
+                        conn.commit()
+            except Exception as _e:
+                logging.getLogger(__name__).warning('Ranking popup error: %s', _e)
+            # ─────────────────────────────────────────────────────────────
+
             next_page = request.args.get("next")
             return redirect(next_page or url_for("index"))
 

@@ -184,10 +184,12 @@
             <td>{{ u.nickname }}</td>
             <td>{{ u.username }}</td>
             <td>
-              <button class="btn-sm" onclick="verPrediccionesUsuario({{ u.id }}, '{{ u.nickname }}')">Ver</button>
-              <button class="btn-sm" onclick="toggleLigasPanel({{ u.id }})">🏆 Ligas</button>
-              <button class="btn-sm btn-naranja" onclick="resetPassword({{ u.id }}, '{{ u.nickname }}')">🔑 Reset</button>
-              <button class="btn-sm btn-rojo" onclick="eliminarUsuario({{ u.id }}, '{{ u.nickname }}')">Eliminar</button>
+              <div class="acciones-btns">
+                <button class="btn-sm btn-azul"    onclick="verPrediccionesUsuario({{ u.id }}, '{{ u.nickname }}')">👁️ Ver</button>
+                <button class="btn-sm btn-dorado"  onclick="toggleLigasPanel({{ u.id }})">🏆 Ligas</button>
+                <button class="btn-sm btn-naranja" onclick="resetPassword({{ u.id }}, '{{ u.nickname }}')">🔑 Reset</button>
+                <button class="btn-sm btn-rojo"    onclick="eliminarUsuario({{ u.id }}, '{{ u.nickname }}')">🗑️ Eliminar</button>
+              </div>
             </td>
           </tr>
           <!-- Panel de predicciones -->

@@ -55,6 +55,25 @@
   </nav>
   {% endif %}
 
+  {% if ranking_popup %}
+  <div class="ranking-popup" id="ranking-popup">
+    <div class="ranking-popup-body">
+      <span class="ranking-popup-msg">{{ ranking_popup }}</span>
+      <a href="{{ url_for('ranking.index') }}" class="ranking-popup-link">Ver Ranking →</a>
+    </div>
+    <button class="ranking-popup-close" onclick="cerrarRankingPopup()">✕</button>
+  </div>
+  <script>
+    setTimeout(cerrarRankingPopup, 6000);
+    function cerrarRankingPopup() {
+      const p = document.getElementById('ranking-popup');
+      if (!p) return;
+      p.classList.add('ranking-popup--out');
+      setTimeout(() => p.remove(), 400);
+    }
+  </script>
+  {% endif %}
+
   {% block extra_js %}{% endblock %}
 </body>
 </html>

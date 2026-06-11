@@ -48,6 +48,21 @@ def index():
         return redirect(url_for("predicciones.index"))
     return redirect(url_for("auth.login"))
 
+# -- Migración: ultima_posicion --------------------------------------------
+from db import get_db as _get_db
+with _get_db() as _conn:
+    try:
+        _conn.execute("ALTER TABLE usuarios ADD COLUMN ultima_posicion INTEGER DEFAULT NULL")
+        _conn.commit()
+    except Exception:
+        pass  # columna ya existe
+
+# -- Context processor: ranking popup --------------------------------------
+from flask import session as _flask_session
+@app.context_processor
+def _inject_ranking_popup():
+    return {'ranking_popup': _flask_session.pop('ranking_popup', None)}
+
 # -- Globals Jinja ---------------------------------------------------------
 app.jinja_env.globals["enumerate"] = enumerate
 

@@ -217,6 +217,16 @@
 .btn-sm.btn-rojo:hover { background: rgba(192,57,43,.15); }
 .btn-sm.btn-naranja { border-color: #e67e22; color: #e67e22; }
 .btn-sm.btn-naranja:hover { background: rgba(230,126,34,.15); }
+.btn-sm.btn-azul    { border-color: #3498db; color: #3498db; }
+.btn-sm.btn-azul:hover    { background: rgba(52,152,219,.15); }
+.btn-sm.btn-dorado  { border-color: #f0b000; color: #f0b000; }
+.btn-sm.btn-dorado:hover  { background: rgba(240,176,0,.15); }
+
+.acciones-btns {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: .3rem;
+}
 
 .btn-guardar-resultado {
   background: var(--verde);
