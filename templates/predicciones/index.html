@@ -197,6 +197,38 @@
               {% endif %}
             </div>
 
+            <!-- Resultado real + puntos obtenidos -->
+            {% if partido.goles_local is not none %}
+              {% set pts = pred.puntos_obtenidos if pred and pred.puntos_obtenidos is not none else none %}
+              {% if pts is not none %}
+                {% if pts >= 4 %}{% set res_cls = 'partido-resultado--exacto' %}
+                {% elif pts > 0 %}{% set res_cls = 'partido-resultado--parcial' %}
+                {% else %}{% set res_cls = 'partido-resultado--fallo' %}
+                {% endif %}
+              {% else %}
+                {% set res_cls = '' %}
+              {% endif %}
+              <div class="partido-resultado {{ res_cls }}">
+                <span>
+                  <span class="resultado-label">Final</span>
+                  <span class="resultado-marcador">
+                    {{ partido.equipo_local }} {{ partido.goles_local }} – {{ partido.goles_visita }} {{ partido.equipo_visita }}
+                  </span>
+                </span>
+                {% if pred %}
+                  {% if pts is not none %}
+                    <span class="resultado-pts {% if pts >= 4 %}resultado-pts--exacto{% elif pts > 0 %}resultado-pts--bueno{% endif %}">
+                      {{ '+' if pts > 0 else '' }}{{ pts }} pts
+                    </span>
+                  {% else %}
+                    <span class="resultado-pts">– pts</span>
+                  {% endif %}
+                {% else %}
+                  <span class="resultado-pts">Sin pred</span>
+                {% endif %}
+              </div>
+            {% endif %}
+
           </div>
         {% endfor %}
       </div>
