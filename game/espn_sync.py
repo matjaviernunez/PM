@@ -32,12 +32,22 @@ last_sync_time: datetime | None = None
 def _fetch_scoreboard() -> list[dict]:
     """Descarga el scoreboard de ESPN y retorna la lista de eventos."""
     try:
-        req = urllib.request.Request(
-            ESPN_SCOREBOARD,
-            headers={'User-Agent': 'Mozilla/5.0 PollaMundial/1.0'},
-        )
-        with urllib.request.urlopen(req, timeout=10) as resp:
-            data = json.loads(resp.read())
+        # Intentar con requests (maneja proxy de PythonAnywhere automáticamente)
+        try:
+            import requests as _req
+            resp = _req.get(ESPN_SCOREBOARD,
+                            headers={'User-Agent': 'Mozilla/5.0 PollaMundial/1.0'},
+                            timeout=10)
+            resp.raise_for_status()
+            data = resp.json()
+        except ImportError:
+            # Fallback a urllib si requests no está disponible
+            req = urllib.request.Request(
+                ESPN_SCOREBOARD,
+                headers={'User-Agent': 'Mozilla/5.0 PollaMundial/1.0'},
+            )
+            with urllib.request.urlopen(req, timeout=10) as r:
+                data = json.loads(r.read())
         return data.get('events', [])
     except Exception as exc:
         logger.warning('ESPN sync — fetch error: %s', exc)

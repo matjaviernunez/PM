@@ -11,13 +11,7 @@
   <!-- Indicador de sincronización en vivo -->
   <div class="sync-bar" id="sync-bar">
     <span class="sync-dot" id="sync-dot">●</span>
-    <span id="sync-label">
-      {% if last_sync %}
-        Actualizado {{ last_sync }} ECT · se refresca automáticamente
-      {% else %}
-        En espera de resultados ESPN
-      {% endif %}
-    </span>
+    <span id="sync-label">Conectando con ESPN…</span>
   </div>
 
   <!-- Filtro por liga -->
@@ -339,29 +333,90 @@
 
 {% block extra_js %}
 <script>
-// ── Auto-refresh cada 60 s mientras hay partidos en curso ─────────────
-(function () {
-  let countdown = 60;
-  const label   = document.getElementById('sync-label');
-  const dot     = document.getElementById('sync-dot');
+// ── Sincronización cliente → servidor ────────────────────────────────
+// El cliente fetchea ESPN (sin pasar por proxy de PythonAnywhere)
+// y envía los resultados al backend para actualizar DB y puntajes.
 
-  function tick() {
-    countdown--;
-    if (countdown <= 0) {
-      window.location.reload();
-      return;
-    }
+const ESPN_SB   = 'https://site.api.espn.com/apis/site/v2/sports/soccer/fifa.world/scoreboard';
+const PUSH_URL  = '{{ url_for("ranking.push_scores") }}';
+const label     = document.getElementById('sync-label');
+const dot       = document.getElementById('sync-dot');
+
+function utcToEct(dateStr) {
+  if (!dateStr) return null;
+  try {
+    const d = new Date(dateStr);
+    // ECT = UTC-5
+    const ect = new Date(d.getTime() - 5 * 3600 * 1000);
+    const yy  = ect.getUTCFullYear();
+    const mm  = String(ect.getUTCMonth() + 1).padStart(2, '0');
+    const dd  = String(ect.getUTCDate()).padStart(2, '0');
+    return `${yy}-${mm}-${dd}`;
+  } catch { return null; }
+}
+
+async function syncEspn() {
+  try {
+    const r    = await fetch(ESPN_SB);
+    const data = await r.json();
+    const events = (data.events || []).filter(e => {
+      const s = e.status?.type?.state;
+      return s === 'in' || s === 'post';
+    });
+
+    if (!events.length) return;
+
+    const payload = events.map(ev => {
+      const comp = ev.competitions?.[0] || {};
+      const home = comp.competitors?.find(c => c.homeAway === 'home') || {};
+      const away = comp.competitors?.find(c => c.homeAway === 'away') || {};
+      return {
+        home:       home.team?.abbreviation || '',
+        away:       away.team?.abbreviation || '',
+        home_score: parseInt(home.score ?? 0),
+        away_score: parseInt(away.score ?? 0),
+        state:      ev.status?.type?.state || '',
+        fecha_ect:  utcToEct(ev.date || comp.date || ''),
+      };
+    });
+
+    const resp = await fetch(PUSH_URL, {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body:    JSON.stringify({ events: payload }),
+    });
+    const result = await resp.json();
+
+    const now = new Date().toLocaleTimeString('es-MX', {hour:'2-digit', minute:'2-digit', second:'2-digit'});
     if (label) {
-      label.textContent =
-        '{% if last_sync %}Actualizado {{ last_sync }} ECT · {% endif %}' +
-        'refrescando en ' + countdown + ' s';
+      if (result.actualizados > 0) {
+        label.textContent = `✓ Actualizado ${now} · ${result.recalculados} partido(s) recalculado(s)`;
+        // Recargar la tabla después de un update para mostrar nuevos puntos
+        setTimeout(() => window.location.reload(), 1500);
+      } else {
+        label.textContent = `● Sin cambios · ${now}`;
+      }
     }
-    // Pulso animado en el dot
-    if (dot) dot.classList.toggle('sync-dot--pulse');
+  } catch (err) {
+    console.warn('ESPN sync error:', err);
+    if (label) label.textContent = '● Sin conexión a ESPN';
   }
+  if (dot) dot.classList.toggle('sync-dot--pulse');
+}
 
-  setInterval(tick, 1000);
-})();
+// Ejecutar inmediatamente al cargar y luego cada 60 s
+syncEspn();
+setInterval(syncEspn, 60000);
+
+// Contador visual
+let countdown = 60;
+setInterval(() => {
+  countdown--;
+  if (countdown <= 0) countdown = 60;
+  if (label && !label.textContent.includes('recalculado')) {
+    // Solo actualizar el contador si no hay un mensaje de update activo
+  }
+}, 1000);
 </script>
 {% endblock %}
 {% endblock %}
