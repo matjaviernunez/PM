@@ -531,6 +531,7 @@
 .live-event-icon { font-size: .85rem; flex-shrink: 0; }
 .live-event-player { font-size: .78rem; color: var(--blanco); }
 .live-event-sub-out { font-size: .7rem; color: var(--gris); }
+.live-event-extra   { font-size: .7rem; color: var(--gris); margin-left: .2rem; }
 
 /* Lineups */
 .live-lineups {

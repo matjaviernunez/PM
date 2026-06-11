@@ -379,51 +379,46 @@ function renderMatchDetail(data) {
   const homeAbbr = homeTeam.team?.abbreviation || homeTeam.team?.shortDisplayName || '???';
   const awayAbbr = awayTeam.team?.abbreviation || awayTeam.team?.shortDisplayName || '???';
 
-  // ── Events timeline ─────────────────────────────────────────
-  const plays = comp.scoringPlays || [];
-  const allPlays = data.plays || [];
-
-  // Build event list from plays (goals, cards, subs)
-  const GOAL_IDS  = [55, 57, 58, 59, 67, 68, 69]; // ESPN type IDs for goals
-  const CARD_IDS  = [47, 48, 49, 50];               // yellow, red, etc.
-  const SUB_ID    = [30];
-
-  // Try to get events from competitions details
-  const details = comp.details || [];
+  // ── Events timeline — from keyEvents ────────────────────────
+  // keyEvents has team.id, participants[].athlete.displayName, type.type
+  // Goals, yellow/red cards, subs — all in one array with correct team attribution
+  const homeTeamId = homeTeam.team?.id;
+  const awayTeamId = awayTeam.team?.id;
+  const SHOW_TYPES = new Set(['goal','goal---header','yellow-card','red-card','substitution']);
+  const keyEvents  = (data.keyEvents || []).filter(e => SHOW_TYPES.has(e.type?.type));
 
   let eventsHtml = '';
-  if (details.length) {
-    eventsHtml = details.map(d => {
-      const min   = d.clock?.displayValue || '';
-      const type  = d.type?.text || '';
-      const team  = d.team?.id === homeTeam.team?.id ? 'home' : 'away';
-      const athlete = d.athletesInvolved?.[0]?.shortName || d.athletesInvolved?.[0]?.displayName || '';
-      const athlete2 = d.athletesInvolved?.[1]?.shortName || '';
-      const txt   = type.toLowerCase();
+  if (keyEvents.length) {
+    eventsHtml = keyEvents.map(e => {
+      const typeType = e.type?.type || '';
+      const min      = e.clock?.displayValue || '';
+      const teamId   = e.team?.id;
+      const side     = teamId === homeTeamId ? 'home' : teamId === awayTeamId ? 'away' : 'home';
+      const players  = (e.participants || []).map(p => p.athlete?.displayName || '').filter(Boolean);
+      const p1       = players[0] || '';
+      const p2       = players[1] || '';
 
-      let icon = '';
-      let extra = '';
-      if (txt.includes('goal') || txt.includes('gol')) {
+      let icon = '', extra = '';
+      if (typeType === 'goal' || typeType === 'goal---header') {
         icon = '⚽';
-      } else if (txt.includes('yellow') || txt.includes('amarilla')) {
+        if (typeType === 'goal---header') extra += `<span class="live-event-extra">cabeza</span>`;
+        if (p2) extra += `<span class="live-event-extra">🅰 ${p2}</span>`;
+      } else if (typeType === 'yellow-card') {
         icon = '🟨';
-      } else if (txt.includes('red') || txt.includes('roja')) {
+      } else if (typeType === 'red-card') {
         icon = '🟥';
-      } else if (txt.includes('substitut') || txt.includes('cambio') || txt.includes('sub')) {
+      } else if (typeType === 'substitution') {
         icon = '↕️';
-        extra = athlete2 ? `<span class="live-event-sub-out">(↓ ${athlete2})</span>` : '';
-      } else {
-        return '';  // skip unknown events
+        extra = p2 ? `<span class="live-event-sub-out">↓ ${p2}</span>` : '';
       }
 
-      const minStr = min ? `${min}'` : '';
-      return `<div class="live-event live-event--${team}">
-        <span class="live-event-min">${minStr}</span>
+      return `<div class="live-event live-event--${side}">
+        <span class="live-event-min">${min}</span>
         <span class="live-event-icon">${icon}</span>
-        <span class="live-event-player">${athlete}</span>
+        <span class="live-event-player">${p1}</span>
         ${extra}
       </div>`;
-    }).filter(Boolean).join('');
+    }).join('');
   }
 
   const evSection = eventsHtml
