@@ -279,6 +279,9 @@ function refrescar() {
 
 // ── Live Board ────────────────────────────────────────────────
 const ESPN_SCOREBOARD = 'https://site.api.espn.com/apis/site/v2/sports/soccer/fifa.world/scoreboard';
+const ESPN_SUMMARY    = 'https://site.api.espn.com/apis/site/v2/sports/soccer/fifa.world/summary?event=';
+
+let expandedEventId = null;
 
 async function fetchLiveMatches() {
   try {
@@ -313,20 +316,166 @@ function renderLiveBoard(events) {
     const asc  = away.score ?? '-';
     const hfl  = home.team?.flag || '';
     const afl  = away.team?.flag || '';
+    const isExpanded = ev.id === expandedEventId;
 
     const flagH = hfl ? `<img src="${hfl}" alt="${hl}" onerror="this.style.display='none'">` : '';
     const flagA = afl ? `<img src="${afl}" alt="${al}" onerror="this.style.display='none'">` : '';
 
     return `
-    <div class="live-match-card">
+    <div class="live-match-card${isExpanded ? ' live-match-card--active' : ''}"
+         onclick="toggleMatchDetail('${ev.id}', this)" data-event-id="${ev.id}">
       <div class="live-team">${flagH}<span class="live-team-name">${hl}</span></div>
       <div class="live-score-box">
         <span class="live-score">${hsc} · ${asc}</span>
         <span class="live-minute">${min}</span>
       </div>
       <div class="live-team live-team--right">${flagA}<span class="live-team-name">${al}</span></div>
+    </div>
+    <div class="live-detail-panel" id="detail-${ev.id}" style="display:${isExpanded ? 'block' : 'none'}">
+      <div class="live-detail-loading">Cargando…</div>
     </div>`;
   }).join('');
+}
+
+async function toggleMatchDetail(eventId, cardEl) {
+  const panel = document.getElementById('detail-' + eventId);
+  if (!panel) return;
+
+  // Collapse if already open
+  if (expandedEventId === eventId) {
+    expandedEventId = null;
+    panel.style.display = 'none';
+    cardEl.classList.remove('live-match-card--active');
+    return;
+  }
+
+  // Close any previously open panel
+  if (expandedEventId) {
+    const prev = document.getElementById('detail-' + expandedEventId);
+    if (prev) prev.style.display = 'none';
+    const prevCard = document.querySelector(`[data-event-id="${expandedEventId}"]`);
+    if (prevCard) prevCard.classList.remove('live-match-card--active');
+  }
+
+  expandedEventId = eventId;
+  cardEl.classList.add('live-match-card--active');
+  panel.style.display = 'block';
+  panel.innerHTML = '<div class="live-detail-loading">Cargando detalles…</div>';
+
+  try {
+    const r = await fetch(ESPN_SUMMARY + eventId);
+    const data = await r.json();
+    panel.innerHTML = renderMatchDetail(data);
+  } catch(err) {
+    panel.innerHTML = '<div class="live-detail-loading">No se pudo cargar el detalle.</div>';
+    console.warn('Summary fetch error:', err);
+  }
+}
+
+function renderMatchDetail(data) {
+  const comp = data.header?.competitions?.[0] || {};
+  const homeTeam = (comp.competitors || []).find(c => c.homeAway === 'home') || {};
+  const awayTeam = (comp.competitors || []).find(c => c.homeAway === 'away') || {};
+  const homeAbbr = homeTeam.team?.abbreviation || homeTeam.team?.shortDisplayName || '???';
+  const awayAbbr = awayTeam.team?.abbreviation || awayTeam.team?.shortDisplayName || '???';
+
+  // ── Events timeline ─────────────────────────────────────────
+  const plays = comp.scoringPlays || [];
+  const allPlays = data.plays || [];
+
+  // Build event list from plays (goals, cards, subs)
+  const GOAL_IDS  = [55, 57, 58, 59, 67, 68, 69]; // ESPN type IDs for goals
+  const CARD_IDS  = [47, 48, 49, 50];               // yellow, red, etc.
+  const SUB_ID    = [30];
+
+  // Try to get events from competitions details
+  const details = comp.details || [];
+
+  let eventsHtml = '';
+  if (details.length) {
+    eventsHtml = details.map(d => {
+      const min   = d.clock?.displayValue || '';
+      const type  = d.type?.text || '';
+      const team  = d.team?.id === homeTeam.team?.id ? 'home' : 'away';
+      const athlete = d.athletesInvolved?.[0]?.shortName || d.athletesInvolved?.[0]?.displayName || '';
+      const athlete2 = d.athletesInvolved?.[1]?.shortName || '';
+      const txt   = type.toLowerCase();
+
+      let icon = '';
+      let extra = '';
+      if (txt.includes('goal') || txt.includes('gol')) {
+        icon = '⚽';
+      } else if (txt.includes('yellow') || txt.includes('amarilla')) {
+        icon = '🟨';
+      } else if (txt.includes('red') || txt.includes('roja')) {
+        icon = '🟥';
+      } else if (txt.includes('substitut') || txt.includes('cambio') || txt.includes('sub')) {
+        icon = '↕️';
+        extra = athlete2 ? `<span class="live-event-sub-out">(↓ ${athlete2})</span>` : '';
+      } else {
+        return '';  // skip unknown events
+      }
+
+      const minStr = min ? `${min}'` : '';
+      return `<div class="live-event live-event--${team}">
+        <span class="live-event-min">${minStr}</span>
+        <span class="live-event-icon">${icon}</span>
+        <span class="live-event-player">${athlete}</span>
+        ${extra}
+      </div>`;
+    }).filter(Boolean).join('');
+  }
+
+  const evSection = eventsHtml
+    ? `<div class="live-events">${eventsHtml}</div>`
+    : `<div class="live-events-empty">Sin eventos registrados aún</div>`;
+
+  // ── Lineups ──────────────────────────────────────────────────
+  const rosters = data.rosters || [];
+  const homeRoster = rosters.find(r => r.homeAway === 'home') || {};
+  const awayRoster = rosters.find(r => r.homeAway === 'away') || {};
+
+  function renderLineup(rosterObj, abbr) {
+    const formation = rosterObj.formation?.name || '';
+    const players   = rosterObj.roster || [];
+    const starters  = players.filter(p => p.starter);
+    const bench     = players.filter(p => !p.starter);
+
+    const formLabel = formation ? `<span class="live-formation">(${formation})</span>` : '';
+
+    const renderPlayer = (p) => {
+      const name = p.athlete?.shortName || p.athlete?.displayName || '?';
+      const num  = p.jersey || '';
+      const subbedOut = p.subbedOut?.didSub;
+      const badge = subbedOut ? '↕️' : '';
+      return `<div class="live-player${subbedOut ? ' live-player--out' : ''}">
+        <span class="live-player-num">${num}</span>
+        <span class="live-player-name">${name}</span>
+        ${badge ? `<span class="live-player-badge">${badge}</span>` : ''}
+      </div>`;
+    };
+
+    if (!starters.length && !bench.length) {
+      return `<div>
+        <div class="live-lineup-header">${abbr} ${formLabel}</div>
+        <div class="live-player" style="color:var(--gris);font-size:.7rem">Sin alineación disponible</div>
+      </div>`;
+    }
+
+    return `<div>
+      <div class="live-lineup-header">${abbr} ${formLabel}</div>
+      ${starters.map(renderPlayer).join('')}
+      ${bench.length ? `<div class="live-bench-label">Suplentes</div>${bench.map(renderPlayer).join('')}` : ''}
+    </div>`;
+  }
+
+  const lineupsHtml = `
+    <div class="live-lineups">
+      ${renderLineup(homeRoster, homeAbbr)}
+      ${renderLineup(awayRoster, awayAbbr)}
+    </div>`;
+
+  return evSection + lineupsHtml;
 }
 
 // Fetch inmediato + cada 60 s

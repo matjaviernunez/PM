@@ -1,19 +1,22 @@
 """
 game/scoring.py -- Motor de puntuacion de la polla.
 
-Reglas (tiempo reglamentario):
-  - Acertar resultado (W/D/L o quien avanza)  -> 1 pt
-  - + Diferencia de goles exacta              -> 1 pt adicional
-  - + Marcador exacto                         -> 2 pts adicionales
+Reglas base (todas las fases, tiempo reglamentario):
+  - Acertar resultado (W/D/L)    -> 1 pt
+  - + Diferencia de goles exacta -> 1 pt adicional (requiere resultado correcto)
+  - + Marcador exacto            -> 2 pts adicionales (requiere diferencia correcta)
   Maximo base: 4 pts
 
-Eliminatorias con penales (cuando goles_local == goles_visita en tiempo reglamentario):
-  - Acertar ganador en penales                -> ya cubierto por criterio 1 via penales_ganador
-  - + Marcador exacto en penales              -> 1 pt adicional (con multiplicador)
+Eliminatorias CON penales (empate en tiempo reglamentario):
+  Los criterios de tiempo reglamentario y el criterio de penales son INDEPENDIENTES:
+  - Ganador en penales (+1p): predice empate Y acierta quien gana en penales
+  - Diferencia correcta en TR (+1p): pred_diff == real_diff (ambos 0 si es empate)
+  - Marcador exacto en TR (+2p): requiere diferencia correcta
+  Maximo base: 4 pts (1 + 1 + 2)
 
 Multiplicadores por fase:
-  grupos / 16avos      -> x1
-  octavos / cuartos    -> x2
+  grupos / 16avos            -> x1
+  octavos / cuartos          -> x2
   semis / 3er_puesto / final -> x3
 """
 
@@ -38,37 +41,25 @@ def calcular_puntos(
     pred_res = (pred_local > pred_visita) - (pred_local < pred_visita)
     real_res = (real_local > real_visita) - (real_local < real_visita)
 
-    # Para eliminatorias con penales: el resultado "real" es empate en tiempo
-    # pero hay un ganador real en penales. El usuario debe predecir empate Y
-    # el ganador correcto via sus penales.
     partido_fue_a_penales = (real_res == 0 and real_pen_local is not None
                              and real_pen_visita is not None)
 
     if partido_fue_a_penales:
-        # Criterio 1: acerto que iriana penales (pred empate) Y acierta ganador en penales
-        pred_tambien_empate = (pred_res == 0)
-        if pred_tambien_empate:
-            # Derivar ganador en penales predicho
-            if pred_pen_local is not None and pred_pen_visita is not None:
-                pred_gan_pen = 'local' if pred_pen_local > pred_pen_visita else 'visita'
-            else:
-                pred_gan_pen = None  # no ingreso penales -> no acierta
+        real_gan_pen = 'local' if real_pen_local > real_pen_visita else 'visita'
 
-            real_gan_pen = 'local' if real_pen_local > real_pen_visita else 'visita'
-
+        # Criterio independiente: ganador via penales
+        # Requiere haber predicho empate Y el ganador correcto en penales
+        pred_empate = (pred_res == 0)
+        if pred_empate and pred_pen_local is not None and pred_pen_visita is not None:
+            pred_gan_pen = 'local' if pred_pen_local > pred_pen_visita else 'visita'
             if pred_gan_pen == real_gan_pen:
-                puntos += 1  # acierto resultado (via penales)
+                puntos += 1  # +1 por acertar quien avanza
 
-                if (pred_local - pred_visita) == (real_local - real_visita):
-                    puntos += 1  # diferencia exacta en tiempo reglamentario
-
-                    if pred_local == real_local and pred_visita == real_visita:
-                        puntos += 2  # marcador exacto en tiempo reglamentario
-
-                # Bonus: marcador exacto en penales
-                if (pred_pen_local == real_pen_local
-                        and pred_pen_visita == real_pen_visita):
-                    puntos += 1
+        # Criterios independientes: marcador en tiempo reglamentario
+        if (pred_local - pred_visita) == (real_local - real_visita):
+            puntos += 1  # +1 diferencia correcta en TR
+            if pred_local == real_local and pred_visita == real_visita:
+                puntos += 2  # +2 marcador exacto en TR
     else:
         # Partido normal (sin penales)
         if pred_res == real_res:
