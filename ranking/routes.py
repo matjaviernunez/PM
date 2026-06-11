@@ -16,6 +16,115 @@ _sync_lock      = threading.Lock()
 _SYNC_INTERVAL  = 45  # segundos mínimos entre syncs
 
 
+@ranking_bp.route("/debug")
+@login_required
+def debug():
+    """Diagnóstico: ESPN raw → DB → puntajes. Solo para admins."""
+    from flask_login import current_user
+    if not getattr(current_user, 'es_admin', False):
+        from flask import abort; abort(403)
+
+    import urllib.request, json as _json
+    from datetime import datetime, timedelta, timezone
+    from game.espn_sync import ESPN_SCOREBOARD, _espn_date_to_ect
+    from game.scoring import recalcular_partido
+
+    out = []
+
+    # 1. ESPN raw
+    out.append("=== 1. ESPN SCOREBOARD ===")
+    try:
+        req = urllib.request.Request(ESPN_SCOREBOARD,
+              headers={'User-Agent': 'Mozilla/5.0 PollaMundial/1.0'})
+        with urllib.request.urlopen(req, timeout=10) as r:
+            data = _json.loads(r.read())
+        events = data.get('events', [])
+        out.append(f"Total eventos: {len(events)}")
+        for e in events:
+            state = e.get('status', {}).get('type', {}).get('state', '?')
+            comp  = e.get('competitions', [{}])[0]
+            teams = comp.get('competitors', [])
+            home  = next((c for c in teams if c.get('homeAway') == 'home'), {})
+            away  = next((c for c in teams if c.get('homeAway') == 'away'), {})
+            ha    = home.get('team', {}).get('abbreviation', '?')
+            aa    = away.get('team', {}).get('abbreviation', '?')
+            hs    = home.get('score', '?')
+            as_   = away.get('score', '?')
+            fecha = _espn_date_to_ect(e.get('date', '') or comp.get('date', ''))
+            out.append(f"  [{state}] {ha} {hs}-{as_} {aa}  fecha_ect={fecha}  espn_date={e.get('date','?')}")
+    except Exception as ex:
+        out.append(f"ERROR ESPN: {ex}")
+
+    # 2. Partidos en DB con resultado
+    out.append("\n=== 2. PARTIDOS EN DB CON RESULTADO ===")
+    with get_db() as conn:
+        partidos_res = conn.execute("""
+            SELECT id, equipo_local, equipo_visita, fecha, hora,
+                   goles_local, goles_visita, penales_local, penales_visita, fase
+            FROM partidos
+            WHERE goles_local IS NOT NULL
+            ORDER BY fecha, hora
+        """).fetchall()
+        if not partidos_res:
+            out.append("  (ninguno)")
+        for p in partidos_res:
+            out.append(f"  id={p['id']} {p['equipo_local']} {p['goles_local']}-{p['goles_visita']} {p['equipo_visita']}  fecha={p['fecha']}  fase={p['fase']}")
+
+        # 3. Predicciones para esos partidos
+        out.append("\n=== 3. PREDICCIONES DE PARTIDOS CON RESULTADO ===")
+        for p in partidos_res:
+            preds = conn.execute("""
+                SELECT pr.id, u.nickname, pr.goles_local, pr.goles_visita,
+                       pr.penales_local, pr.penales_visita, pr.puntos_obtenidos
+                FROM predicciones pr
+                JOIN usuarios u ON u.id = pr.usuario_id
+                WHERE pr.partido_id = ?
+            """, (p['id'],)).fetchall()
+            out.append(f"  Partido {p['id']} ({p['equipo_local']} vs {p['equipo_visita']}):")
+            if not preds:
+                out.append("    (sin predicciones)")
+            for pr in preds:
+                out.append(f"    {pr['nickname']}: pred={pr['goles_local']}-{pr['goles_visita']}  pts_obtenidos={pr['puntos_obtenidos']}")
+
+        # 4. puntajes_fase
+        out.append("\n=== 4. PUNTAJES_FASE ===")
+        pf = conn.execute("""
+            SELECT u.nickname, pf.fase, pf.puntos
+            FROM puntajes_fase pf
+            JOIN usuarios u ON u.id = pf.usuario_id
+            ORDER BY u.nickname, pf.fase
+        """).fetchall()
+        if not pf:
+            out.append("  (vacío)")
+        for row in pf:
+            out.append(f"  {row['nickname']} / {row['fase']}: {row['puntos']} pts")
+
+        # 5. Forzar sync y mostrar resultado
+        out.append("\n=== 5. FORZAR SYNC AHORA ===")
+        try:
+            from game.espn_sync import sync_scores
+            result = sync_scores()
+            out.append(f"  Resultado: {result}")
+        except Exception as ex:
+            out.append(f"  ERROR: {ex}")
+
+        # 6. puntajes_fase DESPUÉS del sync
+        out.append("\n=== 6. PUNTAJES_FASE DESPUÉS DEL SYNC ===")
+        pf2 = conn.execute("""
+            SELECT u.nickname, pf.fase, pf.puntos
+            FROM puntajes_fase pf
+            JOIN usuarios u ON u.id = pf.usuario_id
+            ORDER BY u.nickname, pf.fase
+        """).fetchall()
+        if not pf2:
+            out.append("  (sigue vacío)")
+        for row in pf2:
+            out.append(f"  {row['nickname']} / {row['fase']}: {row['puntos']} pts")
+
+    from flask import Response
+    return Response('\n'.join(out), mimetype='text/plain')
+
+
 def _sync_if_due():
     """Corre sync_scores() si pasaron más de _SYNC_INTERVAL segundos."""
     global _last_sync_ts
