@@ -215,6 +215,8 @@
 .btn-sm:hover    { background: rgba(255,255,255,.1); }
 .btn-sm.btn-rojo { border-color: var(--rojo); color: var(--rojo); }
 .btn-sm.btn-rojo:hover { background: rgba(192,57,43,.15); }
+.btn-sm.btn-naranja { border-color: #e67e22; color: #e67e22; }
+.btn-sm.btn-naranja:hover { background: rgba(230,126,34,.15); }
 
 .btn-guardar-resultado {
   background: var(--verde);

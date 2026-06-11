@@ -188,6 +188,7 @@
             <td>
               <button class="btn-sm" onclick="verPrediccionesUsuario({{ u.id }}, '{{ u.nickname }}')">Ver</button>
               <button class="btn-sm" onclick="toggleLigasPanel({{ u.id }})">🏆 Ligas</button>
+              <button class="btn-sm btn-naranja" onclick="resetPassword({{ u.id }}, '{{ u.nickname }}')">🔑 Reset</button>
               <button class="btn-sm btn-rojo" onclick="eliminarUsuario({{ u.id }}, '{{ u.nickname }}')">Eliminar</button>
             </td>
           </tr>
@@ -535,6 +536,19 @@ async function togglePartido(id, abierto) {
     body: JSON.stringify({partido_id: id, abierto})
   });
   location.reload();
+}
+
+async function resetPassword(uid, nickname) {
+  const nueva = prompt(`Nueva contraseña para ${nickname} (mín. 6 caracteres):`);
+  if (!nueva) return;
+  if (nueva.length < 6) { alert('Mínimo 6 caracteres.'); return; }
+  const res  = await fetch('/admin/reset-password', {
+    method: 'POST', headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({usuario_id: uid, nueva_password: nueva})
+  });
+  const data = await res.json();
+  if (data.ok) alert(`✓ Contraseña de ${nickname} actualizada.`);
+  else alert('Error: ' + data.error);
 }
 
 async function eliminarUsuario(id, nombre) {

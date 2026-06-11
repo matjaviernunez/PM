@@ -416,4 +416,30 @@ def actualizar_usuario_ligas():
     return jsonify({"ok": True})
 
 
+# ── Reset contraseña de usuario ───────────────────────────────────────────
+
+@admin_bp.route("/reset-password", methods=["POST"])
+@login_required
+@admin_required
+def reset_password():
+    from werkzeug.security import generate_password_hash
+    data           = request.get_json()
+    usuario_id     = data.get("usuario_id")
+    nueva_password = (data.get("nueva_password") or "").strip()
+
+    if not usuario_id or not nueva_password:
+        return jsonify({"ok": False, "error": "Datos incompletos"}), 400
+    if len(nueva_password) < 6:
+        return jsonify({"ok": False, "error": "Mínimo 6 caracteres"}), 400
+
+    nuevo_hash = generate_password_hash(nueva_password)
+    with get_db() as conn:
+        conn.execute(
+            "UPDATE usuarios SET password_hash = ? WHERE id = ?",
+            (nuevo_hash, int(usuario_id))
+        )
+        conn.commit()
+    return jsonify({"ok": True})
+
+
 # ── Hacerse admin (solo primer
