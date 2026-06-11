@@ -2,13 +2,40 @@
 ranking/routes.py — Tabla de posiciones general y por liga.
 """
 
-import json, os
+import json, os, time, threading
 from flask import Blueprint, render_template, request, jsonify
 from flask_login import login_required, current_user
 
 from game.scoring import get_ranking
 from db import get_db
 from config import FASES, BASE_DIR
+
+# Rate-limit para no llamar ESPN en cada clic consecutivo
+_last_sync_ts   = 0.0
+_sync_lock      = threading.Lock()
+_SYNC_INTERVAL  = 45  # segundos mínimos entre syncs
+
+
+def _sync_if_due():
+    """Corre sync_scores() si pasaron más de _SYNC_INTERVAL segundos."""
+    global _last_sync_ts
+    now = time.monotonic()
+    if now - _last_sync_ts < _SYNC_INTERVAL:
+        return
+    if not _sync_lock.acquire(blocking=False):
+        return  # otra request ya está sincronizando
+    try:
+        _last_sync_ts = now
+        from game.espn_sync import sync_scores
+        result = sync_scores()
+        if result['actualizados']:
+            import logging
+            logging.getLogger(__name__).info('Ranking sync: %s', result)
+    except Exception as exc:
+        import logging
+        logging.getLogger(__name__).warning('Ranking sync error: %s', exc)
+    finally:
+        _sync_lock.release()
 
 ranking_bp = Blueprint("ranking", __name__,
                        template_folder="../templates/ranking")
@@ -28,6 +55,9 @@ def _equipos_iso():
 @ranking_bp.route("/")
 @login_required
 def index():
+    # Sincronizar con ESPN si corresponde (rate-limited a cada 45 s)
+    _sync_if_due()
+
     with get_db() as conn:
         ligas = conn.execute(
             "SELECT id, nombre FROM ligas ORDER BY nombre"
