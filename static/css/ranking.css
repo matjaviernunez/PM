@@ -46,6 +46,24 @@
   z-index: 1;
 }
 
+/* ── Barra de sincronización ESPN ─────────────────────────────── */
+.sync-bar {
+  display: flex;
+  align-items: center;
+  gap: .45rem;
+  padding: .35rem 1rem;
+  font-size: .72rem;
+  color: var(--gris);
+  border-bottom: 1px solid rgba(255,255,255,.05);
+  background: rgba(255,255,255,.02);
+}
+.sync-dot {
+  font-size: .55rem;
+  color: var(--verde);
+  transition: opacity .4s;
+}
+.sync-dot--pulse { opacity: .3; }
+
 /* ── Filtro liga (select) ─────────────────────────────────────── */
 .ranking-filtros {
   position: sticky;

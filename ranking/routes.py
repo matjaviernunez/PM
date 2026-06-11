@@ -3,7 +3,7 @@ ranking/routes.py — Tabla de posiciones general y por liga.
 """
 
 import json, os
-from flask import Blueprint, render_template, request
+from flask import Blueprint, render_template, request, jsonify
 from flask_login import login_required, current_user
 
 from game.scoring import get_ranking
@@ -120,8 +120,13 @@ def index():
     tabla      = get_ranking(liga_id=liga_id)
     equipos_iso = _equipos_iso()
 
+    # Ultima sincronizacion con ESPN
+    from game import espn_sync as _sync
+    last_sync = _sync.last_sync_time.strftime('%H:%M:%S') if _sync.last_sync_time else None
+
     return render_template(
         "ranking/index.html",
+        last_sync=last_sync,
         tabla=tabla,
         ligas=[dict(l) for l in ligas],
         liga_id=liga_id,

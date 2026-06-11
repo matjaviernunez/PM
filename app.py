@@ -1,6 +1,9 @@
+import logging
 from flask import Flask, redirect, url_for
 from flask_login import LoginManager
 import config
+
+logging.basicConfig(level=logging.INFO)
 
 # -- Inicializacion Flask --------------------------------------------------
 app = Flask(__name__, template_folder="templates", static_folder="static")
@@ -61,6 +64,19 @@ def _slot_label(slot):
     return slot
 
 app.jinja_env.globals["_slot_label"] = _slot_label
+
+# -- Scheduler: sincronizar resultados ESPN cada 60 s ---------------------
+try:
+    from apscheduler.schedulers.background import BackgroundScheduler
+    from game.espn_sync import sync_scores
+
+    _scheduler = BackgroundScheduler(daemon=True)
+    _scheduler.add_job(sync_scores, 'interval', seconds=60, id='espn_sync',
+                       misfire_grace_time=30)
+    _scheduler.start()
+    logging.getLogger(__name__).info('ESPN sync scheduler iniciado (cada 60 s)')
+except Exception as _e:
+    logging.getLogger(__name__).warning('No se pudo iniciar el scheduler: %s', _e)
 
 if __name__ == "__main__":
     app.run(debug=config.DEBUG, host="0.0.0.0", port=5000)

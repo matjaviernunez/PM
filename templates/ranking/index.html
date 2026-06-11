@@ -8,6 +8,18 @@
     <h1>🏆 Ranking</h1>
   </div>
 
+  <!-- Indicador de sincronización en vivo -->
+  <div class="sync-bar" id="sync-bar">
+    <span class="sync-dot" id="sync-dot">●</span>
+    <span id="sync-label">
+      {% if last_sync %}
+        Actualizado {{ last_sync }} ECT · se refresca automáticamente
+      {% else %}
+        En espera de resultados ESPN
+      {% endif %}
+    </span>
+  </div>
+
   <!-- Filtro por liga -->
   <div class="filtros-wrapper ranking-filtros">
     <div class="filtros-selects">
@@ -324,4 +336,32 @@
 
 
 </div>
+
+{% block extra_js %}
+<script>
+// ── Auto-refresh cada 60 s mientras hay partidos en curso ─────────────
+(function () {
+  let countdown = 60;
+  const label   = document.getElementById('sync-label');
+  const dot     = document.getElementById('sync-dot');
+
+  function tick() {
+    countdown--;
+    if (countdown <= 0) {
+      window.location.reload();
+      return;
+    }
+    if (label) {
+      label.textContent =
+        '{% if last_sync %}Actualizado {{ last_sync }} ECT · {% endif %}' +
+        'refrescando en ' + countdown + ' s';
+    }
+    // Pulso animado en el dot
+    if (dot) dot.classList.toggle('sync-dot--pulse');
+  }
+
+  setInterval(tick, 1000);
+})();
+</script>
+{% endblock %}
 {% endblock %}

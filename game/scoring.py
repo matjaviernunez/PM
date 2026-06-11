@@ -78,8 +78,9 @@ def calcular_puntos(
 
 def recalcular_partido(partido_id: int) -> int:
     """
-    Cuando se carga el resultado real de un partido, recalcula los puntos
-    de todas las predicciones de ese partido y actualiza puntajes_fase.
+    Recalcula los puntos de todas las predicciones de un partido.
+    Idempotente: resta los puntos anteriores antes de agregar los nuevos,
+    por lo que puede llamarse multiples veces sin duplicar puntajes.
     Retorna el numero de predicciones procesadas.
     """
     with get_db() as conn:
@@ -98,6 +99,14 @@ def recalcular_partido(partido_id: int) -> int:
 
         procesadas = 0
         for pred in predicciones:
+            # Restar puntos anteriores de puntajes_fase (si existian)
+            old_pts = pred['puntos_obtenidos'] or 0
+            if old_pts:
+                conn.execute("""
+                    UPDATE puntajes_fase SET puntos = MAX(0, puntos - ?)
+                    WHERE usuario_id = ? AND fase = ?
+                """, (old_pts, pred['usuario_id'], partido['fase']))
+
             puntos = calcular_puntos(
                 pred_local=pred['goles_local'],
                 pred_visita=pred['goles_visita'],
