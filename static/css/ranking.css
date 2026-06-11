@@ -555,3 +555,8 @@
   font-style: italic;
 }
 .sc-example strong { color: var(--dorado, #f0b000); font-style: normal; }
+
+/* Flechas de posición */
+.pos-delta      { display: block; font-size: .6rem; font-weight: 700; line-height: 1; }
+.pos-delta--up  { color: #2ecc71; }
+.pos-delta--down{ color: #e74c3c; }

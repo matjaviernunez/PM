@@ -172,7 +172,7 @@
     <div class="admin-table-wrapper">
       <table class="admin-table">
         <thead>
-          <tr><th>Nickname</th><th>Usuario</th><th>Pts</th><th>Admin</th><th>Acciones</th></tr>
+          <tr><th>Nickname</th><th>Usuario</th><th>Acciones</th></tr>
         </thead>
         <tbody>
           {% for u in usuarios %}
@@ -183,8 +183,6 @@
               data-ligas="{{ ligas_user | join(',') }}">
             <td>{{ u.nickname }}</td>
             <td>{{ u.username }}</td>
-            <td id="pts-{{ u.id }}">–</td>
-            <td>{{ '✓' if u.es_admin else '–' }}</td>
             <td>
               <button class="btn-sm" onclick="verPrediccionesUsuario({{ u.id }}, '{{ u.nickname }}')">Ver</button>
               <button class="btn-sm" onclick="toggleLigasPanel({{ u.id }})">🏆 Ligas</button>
@@ -194,13 +192,13 @@
           </tr>
           <!-- Panel de predicciones -->
           <tr id="upreds-row-{{ u.id }}" style="display:none">
-            <td colspan="5">
+            <td colspan="3">
               <div class="upreds-container" id="upreds-{{ u.id }}"></div>
             </td>
           </tr>
           <!-- Panel de ligas -->
           <tr id="ligas-row-{{ u.id }}" style="display:none">
-            <td colspan="5">
+            <td colspan="3">
               <div class="admin-ligas-panel">
                 <span class="admin-ligas-label">Ligas de {{ u.nickname }}:</span>
                 <div class="admin-ligas-checks">

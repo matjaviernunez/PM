@@ -43,7 +43,8 @@
   {% else %}
     <div class="ranking-lista">
       {% for jugador in tabla %}{% set i = loop.index0 %}
-        <div class="ranking-card {% if i == 0 %}ranking-card--oro{% elif i == 1 %}ranking-card--plata{% elif i == 2 %}ranking-card--bronce{% endif %}">
+        <div class="ranking-card {% if i == 0 %}ranking-card--oro{% elif i == 1 %}ranking-card--plata{% elif i == 2 %}ranking-card--bronce{% endif %}"
+             data-uid="{{ jugador.nickname }}" data-pos="{{ loop.index }}">
 
           <!-- Posición -->
           <div class="ranking-pos">
@@ -52,6 +53,7 @@
             {% elif i == 2 %}🥉
             {% else %}<span class="pos-num">{{ i + 1 }}</span>
             {% endif %}
+            <span class="pos-delta"></span>
           </div>
 
           <!-- Info del jugador -->
@@ -391,7 +393,8 @@ async function syncEspn() {
     if (label) {
       if (result.actualizados > 0) {
         label.textContent = `✓ Actualizado ${now} · ${result.recalculados} partido(s) recalculado(s)`;
-        // Recargar la tabla después de un update para mostrar nuevos puntos
+        // Registrar momento del último cambio de score y recargar
+        sessionStorage.setItem('rank_last_update', Date.now().toString());
         setTimeout(() => window.location.reload(), 1500);
       } else {
         label.textContent = `● Sin cambios · ${now}`;
@@ -407,6 +410,66 @@ async function syncEspn() {
 // Ejecutar inmediatamente al cargar y luego cada 60 s
 syncEspn();
 setInterval(syncEspn, 60000);
+
+// ── Flechas de posición ──────────────────────────────────────────
+// Compara la posición actual con la guardada en sessionStorage del
+// render anterior (la page recarga cuando hay cambio de score).
+(function() {
+  const KEY   = 'ranking_pos_{{ liga_id or "all" }}';
+  const cards = document.querySelectorAll('.ranking-card[data-uid]');
+  if (!cards.length) return;
+
+  // Posiciones actuales
+  const current = {};
+  cards.forEach(c => { current[c.dataset.uid] = parseInt(c.dataset.pos); });
+
+  // Posiciones del render anterior
+  let prev = {};
+  try { prev = JSON.parse(sessionStorage.getItem(KEY) || '{}'); } catch {}
+
+  // Mostrar deltas
+  cards.forEach(card => {
+    const uid     = card.dataset.uid;
+    const currPos = current[uid];
+    const prevPos = prev[uid];
+    const el      = card.querySelector('.pos-delta');
+    if (!el || !prevPos || prevPos === currPos) return;
+
+    const delta = prevPos - currPos; // positivo = subió
+    if (delta > 0) {
+      el.textContent = `▲${delta}`;
+      el.className   = 'pos-delta pos-delta--up';
+    } else {
+      el.textContent = `▼${Math.abs(delta)}`;
+      el.className   = 'pos-delta pos-delta--down';
+    }
+  });
+
+  // Guardar posiciones actuales para el próximo render
+  sessionStorage.setItem(KEY, JSON.stringify(current));
+
+  // Limpiar flechas 5 minutos después del último cambio de score
+  const EXPIRY_MS  = 5 * 60 * 1000;
+  const lastUpdate = parseInt(sessionStorage.getItem('rank_last_update') || '0');
+  if (lastUpdate) {
+    const remaining = EXPIRY_MS - (Date.now() - lastUpdate);
+    if (remaining <= 0) {
+      // Ya pasaron 5 min — limpiar inmediatamente
+      sessionStorage.removeItem(KEY);
+      document.querySelectorAll('.pos-delta').forEach(el => {
+        el.textContent = ''; el.className = 'pos-delta';
+      });
+    } else {
+      // Programar limpieza exacta
+      setTimeout(() => {
+        sessionStorage.removeItem(KEY);
+        document.querySelectorAll('.pos-delta').forEach(el => {
+          el.textContent = ''; el.className = 'pos-delta';
+        });
+      }, remaining);
+    }
+  }
+})();
 
 // Contador visual
 let countdown = 60;
