@@ -18,6 +18,22 @@ ranking_bp = Blueprint("ranking", __name__,
                        template_folder="../templates/ranking")
 
 
+def _posicion_usuario(usuario_id: int) -> tuple[int, int]:
+    """Retorna (posicion_1based, total_usuarios) en el ranking global."""
+    with get_db() as conn:
+        total_usuarios = conn.execute("SELECT COUNT(*) FROM usuarios").fetchone()[0]
+        my_total = conn.execute("""
+            SELECT COALESCE(SUM(puntos), 0) FROM puntajes_fase WHERE usuario_id = ?
+        """, (usuario_id,)).fetchone()[0]
+        mejor_count = conn.execute("""
+            SELECT COUNT(*) FROM (
+                SELECT usuario_id, SUM(COALESCE(puntos, 0)) as total
+                FROM puntajes_fase GROUP BY usuario_id HAVING total > ?
+            )
+        """, (my_total,)).fetchone()[0]
+    return mejor_count + 1, total_usuarios
+
+
 def _equipos_iso():
     path = os.path.join(BASE_DIR, "data", "equipos.json")
     with open(path, encoding="utf-8") as f:
@@ -39,6 +55,8 @@ def push_scores():
     """
     data = request.get_json(silent=True) or {}
     events = data.get("events", [])
+
+    pos_antes, total_usuarios = _posicion_usuario(current_user.id)
 
     actualizados = 0
     recalculados = 0
@@ -105,7 +123,18 @@ def push_scores():
             recalcular_partido(partido["id"])
             recalculados += 1
 
-    return jsonify({"ok": True, "actualizados": actualizados, "recalculados": recalculados})
+    pos_despues = pos_antes
+    if recalculados > 0:
+        pos_despues, _ = _posicion_usuario(current_user.id)
+
+    return jsonify({
+        "ok": True,
+        "actualizados": actualizados,
+        "recalculados": recalculados,
+        "pos_antes": pos_antes,
+        "pos_despues": pos_despues,
+        "total_usuarios": total_usuarios,
+    })
 
 
 @ranking_bp.route("/")

@@ -333,6 +333,37 @@
 
 </div>
 
+{% block extra_css %}
+<style>
+  @keyframes arrowUp {
+    0%   { transform: translateY(0); opacity: 1; }
+    40%  { transform: translateY(-4px); opacity: 1; }
+    70%  { transform: translateY(-2px); }
+    100% { transform: translateY(0); opacity: 1; }
+  }
+  @keyframes arrowDown {
+    0%   { transform: translateY(0); opacity: 1; }
+    40%  { transform: translateY(4px); opacity: 1; }
+    70%  { transform: translateY(2px); }
+    100% { transform: translateY(0); opacity: 1; }
+  }
+  .pos-delta--up {
+    color: #2ecc71;
+    font-size: 0.7rem;
+    font-weight: 700;
+    display: block;
+    animation: arrowUp 0.6s ease 0.2s both, arrowUp 1.2s ease 3s infinite;
+  }
+  .pos-delta--down {
+    color: #e74c3c;
+    font-size: 0.7rem;
+    font-weight: 700;
+    display: block;
+    animation: arrowDown 0.6s ease 0.2s both, arrowDown 1.2s ease 3s infinite;
+  }
+</style>
+{% endblock %}
+
 {% block extra_js %}
 <script>
 // ── Sincronización cliente → servidor ────────────────────────────────
@@ -469,27 +500,7 @@ setInterval(syncEspn, 60000);
   // Guardar posiciones actuales para el próximo render
   sessionStorage.setItem(KEY, JSON.stringify(current));
 
-  // Limpiar flechas 5 minutos después del último cambio de score
-  const EXPIRY_MS  = 5 * 60 * 1000;
-  const lastUpdate = parseInt(sessionStorage.getItem('rank_last_update') || '0');
-  if (lastUpdate) {
-    const remaining = EXPIRY_MS - (Date.now() - lastUpdate);
-    if (remaining <= 0) {
-      // Ya pasaron 5 min — limpiar inmediatamente
-      sessionStorage.removeItem(KEY);
-      document.querySelectorAll('.pos-delta').forEach(el => {
-        el.textContent = ''; el.className = 'pos-delta';
-      });
-    } else {
-      // Programar limpieza exacta
-      setTimeout(() => {
-        sessionStorage.removeItem(KEY);
-        document.querySelectorAll('.pos-delta').forEach(el => {
-          el.textContent = ''; el.className = 'pos-delta';
-        });
-      }, remaining);
-    }
-  }
+  // Las flechas persisten hasta que la posición vuelva a cambiar
 })();
 
 // Contador visual
