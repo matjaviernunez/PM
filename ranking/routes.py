@@ -66,18 +66,23 @@ def push_scores():
             # Buscar partido en DB
             if fecha_ect:
                 partido = conn.execute("""
-                    SELECT id, goles_local, goles_visita
+                    SELECT id, goles_local, goles_visita, estado
                     FROM partidos
                     WHERE equipo_local = ? AND equipo_visita = ? AND fecha = ?
                 """, (home_abbr, away_abbr, fecha_ect)).fetchone()
             else:
                 partido = conn.execute("""
-                    SELECT id, goles_local, goles_visita
+                    SELECT id, goles_local, goles_visita, estado
                     FROM partidos
                     WHERE equipo_local = ? AND equipo_visita = ?
                 """, (home_abbr, away_abbr)).fetchone()
 
             if not partido:
+                continue
+
+            # Nunca sobreescribir un partido ya marcado como 'post' en DB.
+            # Evita que datos cacheados/viejos de ESPN corrompan el resultado final.
+            if partido["estado"] == "post":
                 continue
 
             # Solo actualizar si el marcador cambió

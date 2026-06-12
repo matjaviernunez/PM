@@ -125,7 +125,7 @@ def sync_scores() -> dict:
                 if espn_date:
                     partido = conn.execute("""
                         SELECT id, goles_local, goles_visita, penales_local,
-                               penales_visita, fase
+                               penales_visita, fase, estado
                         FROM partidos
                         WHERE equipo_local = ? AND equipo_visita = ?
                           AND fecha = ?
@@ -133,7 +133,7 @@ def sync_scores() -> dict:
                 else:
                     partido = conn.execute("""
                         SELECT id, goles_local, goles_visita, penales_local,
-                               penales_visita, fase
+                               penales_visita, fase, estado
                         FROM partidos
                         WHERE equipo_local = ? AND equipo_visita = ?
                     """, (home_abbr, away_abbr)).fetchone()
@@ -143,6 +143,10 @@ def sync_scores() -> dict:
                         'ESPN sync — partido no encontrado: %s vs %s (%s)',
                         home_abbr, away_abbr, espn_date
                     )
+                    continue
+
+                # Nunca sobreescribir un partido ya finalizado en DB
+                if partido['estado'] == 'post':
                     continue
 
                 pid   = partido['id']
