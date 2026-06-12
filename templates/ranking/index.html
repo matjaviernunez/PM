@@ -446,7 +446,7 @@ async function syncEspn() {
       if (result.actualizados > 0) {
         label.textContent = `✓ Actualizado ${now} · ${result.recalculados} partido(s) recalculado(s)`;
         // Registrar momento del último cambio de score y recargar
-        sessionStorage.setItem('rank_last_update', Date.now().toString());
+        localStorage.setItem('rank_last_update', Date.now().toString());
         setTimeout(() => window.location.reload(), 1500);
       } else {
         label.textContent = `● Sin cambios · ${now}`;
@@ -464,7 +464,7 @@ syncEspn();
 setInterval(syncEspn, 60000);
 
 // ── Flechas de posición ──────────────────────────────────────────
-// Compara la posición actual con la guardada en sessionStorage del
+// Compara la posición actual con la guardada en localStorage del
 // render anterior (la page recarga cuando hay cambio de score).
 (function() {
   const KEY   = 'ranking_pos_{{ liga_id or "all" }}';
@@ -477,7 +477,7 @@ setInterval(syncEspn, 60000);
 
   // Posiciones del render anterior
   let prev = {};
-  try { prev = JSON.parse(sessionStorage.getItem(KEY) || '{}'); } catch {}
+  try { prev = JSON.parse(localStorage.getItem(KEY) || '{}'); } catch {}
 
   // Mostrar deltas
   cards.forEach(card => {
@@ -498,7 +498,7 @@ setInterval(syncEspn, 60000);
   });
 
   // Guardar posiciones actuales para el próximo render
-  sessionStorage.setItem(KEY, JSON.stringify(current));
+  localStorage.setItem(KEY, JSON.stringify(current));
 
   // Las flechas persisten hasta que la posición vuelva a cambiar
 })();
