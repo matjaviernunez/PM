@@ -339,8 +339,10 @@
 // El cliente fetchea ESPN (sin pasar por proxy de PythonAnywhere)
 // y envía los resultados al backend para actualizar DB y puntajes.
 
-const ESPN_SB   = 'https://site.api.espn.com/apis/site/v2/sports/soccer/fifa.world/scoreboard';
-const PUSH_URL  = '{{ url_for("ranking.push_scores") }}';
+window._rankingSyncActive = true; // evita que el sync global de base.html duplique
+const ESPN_SB      = 'https://site.api.espn.com/apis/site/v2/sports/soccer/fifa.world/scoreboard';
+const ESPN_SUMMARY = 'https://site.api.espn.com/apis/site/v2/sports/soccer/fifa.world/summary?event=';
+const PUSH_URL     = '{{ url_for("ranking.push_scores") }}';
 const label     = document.getElementById('sync-label');
 const dot       = document.getElementById('sync-dot');
 
@@ -368,19 +370,38 @@ async function syncEspn() {
 
     if (!events.length) return;
 
-    const payload = events.map(ev => {
-      const comp = ev.competitions?.[0] || {};
-      const home = comp.competitors?.find(c => c.homeAway === 'home') || {};
-      const away = comp.competitors?.find(c => c.homeAway === 'away') || {};
+    // Para partidos 'post': usar summary API que siempre tiene el score final definitivo
+    const payloadItems = await Promise.all(events.map(async ev => {
+      const comp  = ev.competitions?.[0] || {};
+      const home  = comp.competitors?.find(c => c.homeAway === 'home') || {};
+      const away  = comp.competitors?.find(c => c.homeAway === 'away') || {};
+      const state = ev.status?.type?.state || '';
+      let homeScore = home.score;
+      let awayScore = away.score;
+
+      if (state === 'post') {
+        try {
+          const sr = await fetch(ESPN_SUMMARY + ev.id);
+          const sd = await sr.json();
+          const sc = sd.header?.competitions?.[0] || {};
+          const sh = (sc.competitors || []).find(c => c.homeAway === 'home') || {};
+          const sa = (sc.competitors || []).find(c => c.homeAway === 'away') || {};
+          if (sh.score != null) homeScore = sh.score;
+          if (sa.score != null) awayScore = sa.score;
+        } catch(_) { /* fallback al score del scoreboard */ }
+      }
+
+      if (homeScore == null || awayScore == null) return null;
       return {
         home:       home.team?.abbreviation || '',
         away:       away.team?.abbreviation || '',
-        home_score: parseInt(home.score ?? 0),
-        away_score: parseInt(away.score ?? 0),
-        state:      ev.status?.type?.state || '',
+        home_score: parseInt(homeScore),
+        away_score: parseInt(awayScore),
+        state,
         fecha_ect:  utcToEct(ev.date || comp.date || ''),
       };
-    });
+    }));
+    const payload = payloadItems.filter(Boolean);
 
     const resp = await fetch(PUSH_URL, {
       method:  'POST',

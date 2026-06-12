@@ -75,5 +75,82 @@
   {% endif %}
 
   {% block extra_js %}{% endblock %}
+
+  {% if current_user.is_authenticated %}
+  <script>
+  // Sync global silencioso — corre en todas las páginas autenticadas.
+  // No recarga la página ni muestra UI; solo mantiene la DB actualizada.
+  // La página de ranking tiene su propio sync con recarga y UI.
+  (function() {
+    if (window._rankingSyncActive) return; // ranking ya tiene su propio sync
+    const ESPN_SB      = 'https://site.api.espn.com/apis/site/v2/sports/soccer/fifa.world/scoreboard';
+    const ESPN_SUMMARY = 'https://site.api.espn.com/apis/site/v2/sports/soccer/fifa.world/summary?event=';
+    const PUSH_URL     = '/ranking/push-scores';
+
+    function utcToEctGlobal(s) {
+      if (!s) return null;
+      try {
+        const d   = new Date(s);
+        const ect = new Date(d.getTime() - 5 * 3600 * 1000);
+        return `${ect.getUTCFullYear()}-${String(ect.getUTCMonth()+1).padStart(2,'0')}-${String(ect.getUTCDate()).padStart(2,'0')}`;
+      } catch { return null; }
+    }
+
+    async function syncGlobal() {
+      try {
+        const r    = await fetch(ESPN_SB);
+        const data = await r.json();
+        const events = (data.events || []).filter(e => {
+          const s = e.status?.type?.state;
+          return s === 'in' || s === 'post';
+        });
+        if (!events.length) return;
+
+        const payloadItems = await Promise.all(events.map(async ev => {
+          const comp  = ev.competitions?.[0] || {};
+          const home  = comp.competitors?.find(c => c.homeAway === 'home') || {};
+          const away  = comp.competitors?.find(c => c.homeAway === 'away') || {};
+          const state = ev.status?.type?.state || '';
+          let homeScore = home.score;
+          let awayScore = away.score;
+
+          if (state === 'post') {
+            try {
+              const sr = await fetch(ESPN_SUMMARY + ev.id);
+              const sd = await sr.json();
+              const sc = sd.header?.competitions?.[0] || {};
+              const sh = (sc.competitors || []).find(c => c.homeAway === 'home') || {};
+              const sa = (sc.competitors || []).find(c => c.homeAway === 'away') || {};
+              if (sh.score != null) homeScore = sh.score;
+              if (sa.score != null) awayScore = sa.score;
+            } catch(_) { /* fallback to scoreboard score */ }
+          }
+
+          if (homeScore == null || awayScore == null) return null;
+          return {
+            home:       home.team?.abbreviation || '',
+            away:       away.team?.abbreviation || '',
+            home_score: parseInt(homeScore),
+            away_score: parseInt(awayScore),
+            state,
+            fecha_ect:  utcToEctGlobal(ev.date || comp.date || ''),
+          };
+        }));
+        const payload = payloadItems.filter(Boolean);
+        if (!payload.length) return;
+
+        await fetch(PUSH_URL, {
+          method:  'POST',
+          headers: {'Content-Type': 'application/json'},
+          body:    JSON.stringify({events: payload}),
+        });
+      } catch(_) {}
+    }
+
+    syncGlobal();
+    setInterval(syncGlobal, 60000);
+  })();
+  </script>
+  {% endif %}
 </body>
 </html>

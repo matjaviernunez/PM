@@ -107,9 +107,13 @@ def sync_scores() -> dict:
                 if not home_abbr or not away_abbr:
                     continue
 
+                score_h = home.get('score')
+                score_a = away.get('score')
+                if score_h is None or score_a is None:
+                    continue  # ESPN aún no tiene score — ignorar
                 try:
-                    gl = int(home.get('score') or 0)
-                    gv = int(away.get('score') or 0)
+                    gl = int(score_h)
+                    gv = int(score_a)
                 except (ValueError, TypeError):
                     continue
 

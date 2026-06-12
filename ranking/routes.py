@@ -85,6 +85,11 @@ def push_scores():
             if partido["estado"] == "post":
                 continue
 
+            # Nunca dejar que el total de goles baje (datos viejos/erróneos de ESPN)
+            existing_total = (partido["goles_local"] or 0) + (partido["goles_visita"] or 0)
+            if gl + gv < existing_total:
+                continue
+
             # Solo actualizar si el marcador cambió
             if partido["goles_local"] == gl and partido["goles_visita"] == gv:
                 continue
