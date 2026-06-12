@@ -90,13 +90,19 @@ def guardar_predicciones_lote(usuario_id: int, predicciones: list[dict]) -> dict
 
 
 def cerrar_partidos_vencidos():
-    """Marca como cerrados los partidos cuya fecha/hora ya paso (hora Ecuador UTC-5)."""
+    """Marca como cerrados los partidos cuya fecha/hora ya paso (hora Ecuador UTC-5).
+    También actualiza estado a 'in' para los que acaban de empezar (sin resultado aún).
+    """
     # El servidor corre en UTC; los horarios en la DB estan en hora Ecuador (UTC-5)
     ahora_ecuador = datetime.utcnow() - timedelta(hours=5)
     with get_db() as conn:
         conn.execute("""
             UPDATE partidos
-            SET abierto = FALSE
+            SET abierto = FALSE,
+                estado  = CASE
+                    WHEN estado = 'pre' THEN 'in'
+                    ELSE estado
+                END
             WHERE abierto = TRUE
               AND datetime(fecha || ' ' || hora) <= ?
         """, (ahora_ecuador.strftime('%Y-%m-%d %H:%M'),))

@@ -80,6 +80,17 @@ def index():
     for p in partidos:
         por_fecha.setdefault(p['fecha'], []).append(p)
 
+    # Dentro de cada fecha: pre/in primero, post al final
+    for fecha in por_fecha:
+        por_fecha[fecha].sort(key=lambda p: (p.get('estado', 'pre') == 'post', p.get('hora', '')))
+
+    # Fechas con todos los partidos 'post' van al fondo
+    def _fecha_sort(f):
+        todos_post = all(p.get('estado', 'pre') == 'post' for p in por_fecha[f])
+        return (todos_post, f)
+
+    por_fecha = {f: por_fecha[f] for f in sorted(por_fecha.keys(), key=_fecha_sort)}
+
     fechas_label = {f: _formato_fecha(f) for f in por_fecha}
     hoy = (datetime.utcnow() - timedelta(hours=5)).date().isoformat()  # hora Ecuador UTC-5
     fases_elim = get_fases_eliminatorias_disponibles()

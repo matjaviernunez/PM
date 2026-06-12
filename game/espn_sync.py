@@ -154,11 +154,11 @@ def sync_scores() -> dict:
 
                 _last_known[pid] = curr
 
-                # Actualizar marcador en DB
+                # Actualizar marcador y estado en DB
                 conn.execute("""
-                    UPDATE partidos SET goles_local = ?, goles_visita = ?
+                    UPDATE partidos SET goles_local = ?, goles_visita = ?, estado = ?
                     WHERE id = ?
-                """, (gl, gv, pid))
+                """, (gl, gv, state, pid))
                 conn.commit()
                 actualizados += 1
 
