@@ -122,7 +122,8 @@ def cargar_resultado():
             SET goles_local = ?, goles_visita = ?,
                 penales_local = ?, penales_visita = ?,
                 penales_ganador = ?,
-                abierto = FALSE
+                abierto = FALSE,
+                estado = 'post'
             WHERE id = ?
         """, (gl, gv, pl, pv, pen_ganador, int(partido_id)))
         conn.commit()

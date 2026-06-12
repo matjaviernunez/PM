@@ -143,6 +143,39 @@
       </div>
       <div class="admin-card-body" style="display:none">
         <button class="btn-sm" onclick="togglePredicciones({{ p.id }})">👁 Ver predicciones</button>
+        <button class="btn-sm btn-naranja" onclick="toggleEditScore({{ p.id }})">✏️ Editar score</button>
+        <div class="admin-resultado-row" id="edit-score-{{ p.id }}" style="display:none;margin-top:.5rem">
+          {% set iso_l = equipos[p.equipo_local]['iso']  if p.equipo_local  in equipos else p.equipo_local|lower %}
+          {% set iso_v = equipos[p.equipo_visita]['iso'] if p.equipo_visita in equipos else p.equipo_visita|lower %}
+          <span class="admin-equipo">
+            <img class="admin-flag" src="https://flagcdn.com/w40/{{ iso_l }}.png" alt="{{ p.equipo_local }}">
+            {{ p.equipo_local }}
+          </span>
+          <div class="admin-inputs">
+            <input type="number" min="0" max="20" class="gol-input"
+                   id="gl-{{ p.id }}" value="{{ p.goles_local }}"
+                   oninput="checkEmpateAdmin({{ p.id }})">
+            <span class="marcador-sep">:</span>
+            <input type="number" min="0" max="20" class="gol-input"
+                   id="gv-{{ p.id }}" value="{{ p.goles_visita }}"
+                   oninput="checkEmpateAdmin({{ p.id }})">
+          </div>
+          <span class="admin-equipo admin-equipo--visita">
+            {{ p.equipo_visita }}
+            <img class="admin-flag" src="https://flagcdn.com/w40/{{ iso_v }}.png" alt="{{ p.equipo_visita }}">
+          </span>
+          <button class="btn-guardar-resultado" onclick="guardarResultado({{ p.id }})">Guardar</button>
+        </div>
+        <div class="admin-penales-row" id="penrow-{{ p.id }}" style="display:none">
+          <span class="admin-penales-label">Penales</span>
+          <div class="admin-inputs">
+            <input type="number" min="0" max="30" class="gol-input" id="pl-{{ p.id }}" placeholder="–">
+            <span class="marcador-sep">–</span>
+            <input type="number" min="0" max="30" class="gol-input" id="pv-{{ p.id }}" placeholder="–">
+          </div>
+          <span class="admin-penales-hint">{{ p.equipo_local }} – {{ p.equipo_visita }}</span>
+        </div>
+        <div class="admin-status" id="astatus-{{ p.id }}"></div>
         <div class="pred-lista" id="preds-{{ p.id }}" style="display:none"></div>
       </div>
     </div>
@@ -401,6 +434,11 @@ async function guardarResultado(id) {
 }
 
 // ── Toggle predicciones de un partido ───────────────────────────
+function toggleEditScore(id) {
+  const row = document.getElementById(`edit-score-${id}`);
+  if (row) row.style.display = row.style.display === 'none' ? '' : 'none';
+}
+
 async function togglePredicciones(id) {
   const div = document.getElementById(`preds-${id}`);
   if (div.style.display !== 'none') { div.style.display = 'none'; return; }

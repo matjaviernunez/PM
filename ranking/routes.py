@@ -90,9 +90,10 @@ def push_scores():
                 continue
 
             conn.execute("""
-                UPDATE partidos SET goles_local = ?, goles_visita = ?
+                UPDATE partidos SET goles_local = ?, goles_visita = ?,
+                    estado = CASE WHEN ? = 'post' THEN 'post' ELSE estado END
                 WHERE id = ?
-            """, (gl, gv, partido["id"]))
+            """, (gl, gv, state, partido["id"]))
             conn.commit()
             actualizados += 1
 
