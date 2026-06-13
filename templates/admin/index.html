@@ -499,12 +499,28 @@ async function verPrediccionesUsuario(id, nombre) {
   const ptsEl = document.getElementById(`pts-${id}`);
   if (ptsEl) ptsEl.textContent = data.total_puntos;
 
-  if (!data.predicciones.length) {
-    div.innerHTML = '<p class="admin-empty">Sin predicciones.</p>'; return;
-  }
+  // Formulario para agregar/editar una prediccion (incluso en partidos cerrados)
+  const partidos = await _getPartidos();
+  const opts = partidos.map(pt => {
+    const etq = pt.fase && pt.fase !== 'grupos' ? ' [' + pt.fase + ']' : '';
+    return `<option value="${pt.id}">${pt.fecha} · ${pt.equipo_local} vs ${pt.equipo_visita}${etq}</option>`;
+  }).join('');
+  const formHtml = `
+    <div class="agregar-pred" style="margin:.4rem 0;padding:.5rem;border:1px solid var(--dorado);border-radius:8px">
+      <div style="font-weight:700;color:var(--dorado);margin-bottom:.35rem">➕ Agregar / editar predicción</div>
+      <div style="display:flex;flex-wrap:wrap;gap:.4rem;align-items:center">
+        <select id="ap-partido-${id}" style="max-width:230px">${opts}</select>
+        <input id="ap-gl-${id}" type="number" min="0" max="20" style="width:46px" placeholder="L">
+        <span>:</span>
+        <input id="ap-gv-${id}" type="number" min="0" max="20" style="width:46px" placeholder="V">
+        <button class="btn-sm btn-naranja" onclick="agregarPrediccion(${id})">Guardar</button>
+        <span id="ap-status-${id}" style="font-size:.85rem"></span>
+      </div>
+    </div>`;
 
-  div.innerHTML = `
-    <h4 style="color:var(--dorado);margin:.5rem 0">${nombre} — ${data.total_puntos} pts</h4>
+  const tablaHtml = !data.predicciones.length
+    ? '<p class="admin-empty">Sin predicciones aún.</p>'
+    : `
     <table class="pred-tabla">
       <thead><tr><th>Partido</th><th>Predicción</th><th>Real</th><th>Pts</th><th></th></tr></thead>
       <tbody>
@@ -519,6 +535,55 @@ async function verPrediccionesUsuario(id, nombre) {
         `).join('')}
       </tbody>
     </table>`;
+
+  div.innerHTML = `
+    <h4 style="color:var(--dorado);margin:.5rem 0">${nombre} — ${data.total_puntos} pts</h4>
+    ${formHtml}
+    ${tablaHtml}`;
+}
+
+// ── Lista de partidos (cache) + agregar prediccion ──────────────────────
+let _partidosCache = null;
+async function _getPartidos() {
+  if (_partidosCache) return _partidosCache;
+  try {
+    const r = await fetch('/admin/partidos-lista');
+    const d = await r.json();
+    _partidosCache = d.partidos || [];
+  } catch (e) { _partidosCache = []; }
+  return _partidosCache;
+}
+
+async function agregarPrediccion(usuarioId) {
+  const sel = document.getElementById(`ap-partido-${usuarioId}`);
+  const gl  = document.getElementById(`ap-gl-${usuarioId}`).value;
+  const gv  = document.getElementById(`ap-gv-${usuarioId}`).value;
+  const st  = document.getElementById(`ap-status-${usuarioId}`);
+  if (!sel || !sel.value || gl === '' || gv === '') {
+    if (st) st.textContent = '⚠ Elige partido y marcador';
+    return;
+  }
+  if (st) st.textContent = '⏳ Guardando...';
+  try {
+    const r = await fetch('/admin/set-prediccion', {
+      method: 'POST', headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({
+        usuario_id: usuarioId,
+        partido_id: parseInt(sel.value),
+        goles_local: parseInt(gl),
+        goles_visita: parseInt(gv),
+      }),
+    });
+    const d = await r.json();
+    if (d.ok) {
+      if (st) st.textContent = '✓ Guardada';
+      setTimeout(() => location.reload(), 900);
+    } else {
+      if (st) st.textContent = '✗ ' + (d.error || 'error');
+    }
+  } catch (e) {
+    if (st) st.textContent = '✗ ' + e.message;
+  }
 }
 
 async function scrapeResultados() {

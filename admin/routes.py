@@ -454,3 +454,74 @@ def reset_password():
         )
         conn.commit()
     return jsonify({"ok": True})
+
+
+# ── Lista de partidos (para selector de predicciones) ──────────────────────
+
+@admin_bp.route("/partidos-lista")
+@login_required
+@admin_required
+def partidos_lista():
+    with get_db() as conn:
+        rows = conn.execute("""
+            SELECT id, equipo_local, equipo_visita, fecha, hora, fase, grupo
+            FROM partidos
+            ORDER BY fecha, hora, id
+        """).fetchall()
+    return jsonify({"partidos": [dict(r) for r in rows]})
+
+
+# ── Agregar / editar predicción de un usuario (accion admin) ───────────────
+# Permite cargar una prediccion aunque el partido este cerrado. Util para
+# corregir omisiones. Tras guardar, recalcula los puntos del partido.
+
+@admin_bp.route("/set-prediccion", methods=["POST"])
+@login_required
+@admin_required
+def set_prediccion():
+    data       = request.get_json() or {}
+    usuario_id = data.get("usuario_id")
+    partido_id = data.get("partido_id")
+    gl         = data.get("goles_local")
+    gv         = data.get("goles_visita")
+    pen_l      = data.get("penales_local")
+    pen_v      = data.get("penales_visita")
+
+    if usuario_id is None or partido_id is None or gl is None or gv is None:
+        return jsonify({"ok": False, "error": "Datos incompletos"}), 400
+
+    try:
+        usuario_id = int(usuario_id)
+        partido_id = int(partido_id)
+        gl = int(gl)
+        gv = int(gv)
+        pl = int(pen_l) if pen_l not in (None, "") else None
+        pv = int(pen_v) if pen_v not in (None, "") else None
+    except (ValueError, TypeError):
+        return jsonify({"ok": False, "error": "Valores invalidos"}), 400
+
+    with get_db() as conn:
+        part = conn.execute("SELECT id FROM partidos WHERE id = ?", (partido_id,)).fetchone()
+        usr  = conn.execute("SELECT id FROM usuarios WHERE id = ?", (usuario_id,)).fetchone()
+        if not part:
+            return jsonify({"ok": False, "error": "Partido no encontrado"}), 404
+        if not usr:
+            return jsonify({"ok": False, "error": "Usuario no encontrado"}), 404
+
+        # Upsert ignorando 'abierto' (accion administrativa deliberada)
+        conn.execute("""
+            INSERT INTO predicciones
+                (usuario_id, partido_id, goles_local, goles_visita,
+                 penales_local, penales_visita)
+            VALUES (?, ?, ?, ?, ?, ?)
+            ON CONFLICT(usuario_id, partido_id) DO UPDATE SET
+                goles_local    = excluded.goles_local,
+                goles_visita   = excluded.goles_visita,
+                penales_local  = excluded.penales_local,
+                penales_visita = excluded.penales_visita
+        """, (usuario_id, partido_id, gl, gv, pl, pv))
+        conn.commit()
+
+    # Recalcular puntos del partido (idempotente): si ya tiene resultado, suma.
+    procesadas = recalcular_partido(partido_id)
+    return jsonify({"ok": True, "predicciones_procesadas": procesadas})
