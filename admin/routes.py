@@ -106,14 +106,27 @@ def cargar_resultado():
     pl = int(pen_local)  if pen_local  is not None else None
     pv = int(pen_visita) if pen_visita is not None else None
 
-    # Si hay empate en tiempo reglamentario deben venir los penales
-    if gl == gv and (pl is None or pv is None):
-        return jsonify({"ok": False, "error": "Partido empatado: ingresa el marcador en penales"}), 400
+    # Saber la fase: los penales SOLO existen en eliminatorias.
+    with get_db() as conn:
+        row = conn.execute(
+            "SELECT fase FROM partidos WHERE id = ?", (int(partido_id),)
+        ).fetchone()
+    if not row:
+        return jsonify({"ok": False, "error": "Partido no encontrado"}), 404
 
-    # Derivar ganador en penales para backward compat
-    if pl is not None and pv is not None:
+    es_knockout = row["fase"] != "grupos"
+
+    # En fase de grupos un empate es un resultado valido SIN penales.
+    # Solo en eliminatorias un empate en tiempo reglamentario va a penales.
+    if gl == gv and es_knockout:
+        if pl is None or pv is None:
+            return jsonify({"ok": False, "error": "Eliminatoria empatada: ingresa el marcador en penales"}), 400
+        if pl == pv:
+            return jsonify({"ok": False, "error": "En penales no puede haber empate"}), 400
         pen_ganador = "local" if pl > pv else "visita"
     else:
+        # Grupos, o partido sin empate: no hay penales
+        pl = pv = None
         pen_ganador = None
 
     with get_db() as conn:
@@ -431,7 +444,7 @@ def reset_password():
     if not usuario_id or not nueva_password:
         return jsonify({"ok": False, "error": "Datos incompletos"}), 400
     if len(nueva_password) < 6:
-        return jsonify({"ok": False, "error": "Mínimo 6 caracteres"}), 400
+        return jsonify({"ok": False, "error": "Minimo 6 caracteres"}), 400
 
     nuevo_hash = generate_password_hash(nueva_password)
     with get_db() as conn:
@@ -441,6 +454,3 @@ def reset_password():
         )
         conn.commit()
     return jsonify({"ok": True})
-
-
-# ── Hacerse admin (solo primer

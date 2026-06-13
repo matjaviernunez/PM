@@ -99,17 +99,17 @@
           <div class="admin-inputs">
             <input type="number" min="0" max="20" class="gol-input"
                    id="gl-{{ p.id }}" placeholder="–"
-                   oninput="checkEmpateAdmin({{ p.id }})">
+                   oninput="checkEmpateAdmin({{ p.id }}, '{{ p.fase }}')">
             <span class="marcador-sep">:</span>
             <input type="number" min="0" max="20" class="gol-input"
                    id="gv-{{ p.id }}" placeholder="–"
-                   oninput="checkEmpateAdmin({{ p.id }})">
+                   oninput="checkEmpateAdmin({{ p.id }}, '{{ p.fase }}')">
           </div>
           <span class="admin-equipo admin-equipo--visita">
             {{ p.equipo_visita }}
             <img class="admin-flag" src="https://flagcdn.com/w40/{{ iso_v }}.png" alt="{{ p.equipo_visita }}">
           </span>
-          <button class="btn-guardar-resultado" onclick="guardarResultado({{ p.id }})">
+          <button class="btn-guardar-resultado" onclick="guardarResultado({{ p.id }}, '{{ p.fase }}')">
             Guardar
           </button>
         </div>
@@ -154,17 +154,17 @@
           <div class="admin-inputs">
             <input type="number" min="0" max="20" class="gol-input"
                    id="gl-{{ p.id }}" value="{{ p.goles_local }}"
-                   oninput="checkEmpateAdmin({{ p.id }})">
+                   oninput="checkEmpateAdmin({{ p.id }}, '{{ p.fase }}')">
             <span class="marcador-sep">:</span>
             <input type="number" min="0" max="20" class="gol-input"
                    id="gv-{{ p.id }}" value="{{ p.goles_visita }}"
-                   oninput="checkEmpateAdmin({{ p.id }})">
+                   oninput="checkEmpateAdmin({{ p.id }}, '{{ p.fase }}')">
           </div>
           <span class="admin-equipo admin-equipo--visita">
             {{ p.equipo_visita }}
             <img class="admin-flag" src="https://flagcdn.com/w40/{{ iso_v }}.png" alt="{{ p.equipo_visita }}">
           </span>
-          <button class="btn-guardar-resultado" onclick="guardarResultado({{ p.id }})">Guardar</button>
+          <button class="btn-guardar-resultado" onclick="guardarResultado({{ p.id }}, '{{ p.fase }}')">Guardar</button>
         </div>
         <div class="admin-penales-row" id="penrow-{{ p.id }}" style="display:none">
           <span class="admin-penales-label">Penales</span>
@@ -392,25 +392,28 @@ function filtrarUsuarios() {
 }
 
 // ── Guardar resultado ────────────────────────────────────────────
-function checkEmpateAdmin(id) {
+function checkEmpateAdmin(id, fase) {
   const gl = document.getElementById(`gl-${id}`).value;
   const gv = document.getElementById(`gv-${id}`).value;
   const penRow = document.getElementById(`penrow-${id}`);
-  if (penRow && gl !== '' && gv !== '' && parseInt(gl) === parseInt(gv)) {
+  const esKnockout = fase && fase !== 'grupos';
+  // Los penales solo existen en eliminatorias: en grupos un empate no los pide.
+  if (penRow && esKnockout && gl !== '' && gv !== '' && parseInt(gl) === parseInt(gv)) {
     penRow.style.display = 'flex';
   } else if (penRow) {
     penRow.style.display = 'none';
   }
 }
 
-async function guardarResultado(id) {
+async function guardarResultado(id, fase) {
   const gl = document.getElementById(`gl-${id}`).value;
   const gv = document.getElementById(`gv-${id}`).value;
   const st = document.getElementById(`astatus-${id}`);
   if (gl === '' || gv === '') { st.innerHTML = '<span class="status-error">Completa ambos campos</span>'; return; }
 
   const payload = {partido_id: id, goles_local: parseInt(gl), goles_visita: parseInt(gv)};
-  if (parseInt(gl) === parseInt(gv)) {
+  const esKnockout = fase && fase !== 'grupos';
+  if (esKnockout && parseInt(gl) === parseInt(gv)) {
     const pl = document.getElementById(`pl-${id}`).value;
     const pv = document.getElementById(`pv-${id}`).value;
     if (pl === '' || pv === '') { st.innerHTML = '<span class="status-error">Ingresa marcador en penales</span>'; return; }
