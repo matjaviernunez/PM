@@ -484,11 +484,20 @@ async function verPrediccionesUsuario(id, nombre) {
   if (div.dataset.loaded) return;
   div.innerHTML = '<span class="status-guardando">⏳ Cargando...</span>';
 
-  const res  = await fetch(`/admin/predicciones-usuario/${id}`);
-  const data = await res.json();
+  let data;
+  try {
+    const res = await fetch(`/admin/predicciones-usuario/${id}`);
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    data = await res.json();
+  } catch (err) {
+    div.innerHTML = `<p class="admin-empty">No se pudieron cargar las predicciones (${err.message}).</p>`;
+    return;
+  }
   div.dataset.loaded = '1';
 
-  document.getElementById(`pts-${id}`).textContent = data.total_puntos;
+  // El total ya se muestra en el encabezado de la tabla; pts-<id> es opcional.
+  const ptsEl = document.getElementById(`pts-${id}`);
+  if (ptsEl) ptsEl.textContent = data.total_puntos;
 
   if (!data.predicciones.length) {
     div.innerHTML = '<p class="admin-empty">Sin predicciones.</p>'; return;
