@@ -15,6 +15,8 @@ from game.models import (
     guardar_prediccion,
     guardar_predicciones_lote,
     cerrar_partidos_vencidos,
+    estado_partido,
+    ORDEN_ESTADO,
 )
 from config import GRUPOS, BASE_DIR
 
@@ -80,14 +82,19 @@ def index():
     for p in partidos:
         por_fecha.setdefault(p['fecha'], []).append(p)
 
-    # Dentro de cada fecha: pre/in primero, post al final
-    for fecha in por_fecha:
-        por_fecha[fecha].sort(key=lambda p: (p.get('estado', 'pre') == 'post', p.get('hora', '')))
+    # Clasificacion unica por tiempo (game.models.estado_partido):
+    # en vivo (0) y proximos (1) arriba, finalizados (2) al fondo.
+    ahora_ect = datetime.utcnow() - timedelta(hours=5)  # hora Ecuador UTC-5
 
-    # Fechas con todos los partidos 'post' van al fondo
+    for fecha in por_fecha:
+        por_fecha[fecha].sort(
+            key=lambda p: (ORDEN_ESTADO[estado_partido(p, ahora_ect)], p.get('hora', ''))
+        )
+
+    # Fechas con TODOS los partidos finalizados van al fondo de la lista
     def _fecha_sort(f):
-        todos_post = all(p.get('estado', 'pre') == 'post' for p in por_fecha[f])
-        return (todos_post, f)
+        todos_final = all(estado_partido(p, ahora_ect) == 'final' for p in por_fecha[f])
+        return (todos_final, f)
 
     por_fecha = {f: por_fecha[f] for f in sorted(por_fecha.keys(), key=_fecha_sort)}
 

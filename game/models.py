@@ -157,3 +157,45 @@ def guardar_prediccion(usuario_id: int, partido_id: int,
               penales_local, penales_visita))
         conn.commit()
     return True
+
+
+# -- Clasificacion unica de estado de un partido --------------------------
+# Fuente unica de verdad para UI y orden. Basada en el TIEMPO (kickoff en
+# hora Ecuador), no en la columna 'estado' (que puede quedar desincronizada).
+#   - 'proximo' : aun no empieza
+#   - 'en_vivo' : empezo y esta dentro de la ventana de juego
+#   - 'final'   : termino (paso la ventana) o estado='post' explicito
+DUR_PARTIDO_MIN = 150  # ventana de "en vivo" tras el kickoff (minutos)
+
+ORDEN_ESTADO = {'en_vivo': 0, 'proximo': 1, 'final': 2}
+
+
+def estado_partido(p, ahora_ect=None) -> str:
+    """Retorna 'proximo' | 'en_vivo' | 'final' para un partido (dict o Row)."""
+    if ahora_ect is None:
+        ahora_ect = datetime.utcnow() - timedelta(hours=5)  # hora Ecuador UTC-5
+
+    estado = (p['estado'] if 'estado' in p.keys() else None) if hasattr(p, 'keys') else None
+    if estado is None:
+        try:
+            estado = p.get('estado')
+        except AttributeError:
+            estado = None
+    if estado == 'post':
+        return 'final'
+
+    fecha = p['fecha'] if hasattr(p, 'keys') else p.get('fecha')
+    hora  = p['hora']  if hasattr(p, 'keys') else p.get('hora')
+    goles = p['goles_local'] if hasattr(p, 'keys') else p.get('goles_local')
+
+    try:
+        kickoff = datetime.strptime(f"{fecha} {hora}", '%Y-%m-%d %H:%M')
+    except (ValueError, TypeError):
+        # Sin hora fiable: usar el resultado como proxy
+        return 'final' if goles is not None else 'proximo'
+
+    if ahora_ect < kickoff:
+        return 'proximo'
+    if ahora_ect < kickoff + timedelta(minutes=DUR_PARTIDO_MIN):
+        return 'en_vivo'
+    return 'final'
