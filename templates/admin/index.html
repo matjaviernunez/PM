@@ -13,6 +13,8 @@
       <button class="btn-scrape btn-generar" onclick="generarCruces()" style="background:var(--dorado);color:var(--azul-oscuro);margin-left:.5rem;">
         ⚽ Generar 16avos
       </button>
+      <a class="btn-scrape" href="{{ url_for('admin.descargar_backup') }}"
+         style="background:#2c3e50;color:#fff;text-decoration:none;margin-left:.5rem;display:inline-block">💾 Respaldo</a>
       <span id="scrape-status"></span>
       <span id="generar-status" style="font-size:.82rem;margin-left:.5rem;"></span>
     </div>

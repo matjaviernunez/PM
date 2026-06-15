@@ -515,3 +515,45 @@ def set_prediccion():
     # Recalcular puntos del partido (idempotente): si ya tiene resultado, suma.
     procesadas = recalcular_partido(partido_id)
     return jsonify({"ok": True, "predicciones_procesadas": procesadas})
+
+
+# ── Descargar respaldo de la DB ────────────────────────────────────────────
+
+@admin_bp.route("/backup")
+@login_required
+@admin_required
+def descargar_backup():
+    """Genera un snapshot consistente de la DB y lo envia como descarga."""
+    import sqlite3, tempfile
+    from datetime import datetime, timedelta
+    from flask import send_file, after_this_request
+    from config import DB_PATH
+
+    ts = (datetime.utcnow() - timedelta(hours=5)).strftime("%Y%m%d_%H%M")
+    fd, tmp = tempfile.mkstemp(suffix=".db", prefix="backup_")
+    os.close(fd)
+
+    src = sqlite3.connect(DB_PATH)
+    try:
+        dst = sqlite3.connect(tmp)
+        try:
+            src.backup(dst)
+        finally:
+            dst.close()
+    finally:
+        src.close()
+
+    @after_this_request
+    def _limpiar(resp):
+        try:
+            os.remove(tmp)
+        except OSError:
+            pass
+        return resp
+
+    return send_file(
+        tmp,
+        as_attachment=True,
+        download_name=f"mundial2026_{ts}.db",
+        mimetype="application/octet-stream",
+    )
