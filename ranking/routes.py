@@ -7,7 +7,7 @@ proxy de PythonAnywhere que bloquea llamadas salientes a ESPN.
 """
 
 import json, os
-from flask import Blueprint, render_template, request, jsonify, Response, abort
+from flask import Blueprint, render_template, request, jsonify, Response, abort, session
 from flask_login import login_required, current_user
 
 from game.scoring import get_ranking, recalcular_partido
@@ -43,6 +43,81 @@ def _equipos_iso():
         for e in equipos:
             m[e["codigo"]] = e["iso"]
     return m
+
+
+# -- Liga de referencia del usuario (para popup y default del filtro) -------
+# Prioridad (menor = mas prioritaria). TcT (todos contra todos) siempre ultimo.
+_PRIORIDAD_LIGAS = ["theocup", "kamchatka", "adeptos", "losdelfondo"]
+
+
+def _norm(s: str) -> str:
+    return (s or "").strip().lower().replace(" ", "")
+
+
+def _prioridad_liga(nombre: str) -> int:
+    if "todos" in (nombre or "").lower():
+        return 100  # Todos contra Todos: ultimo recurso
+    n = _norm(nombre)
+    for i, name in enumerate(_PRIORIDAD_LIGAS):
+        if n == name or name in n:
+            return i
+    return 50  # liga menor no listada: antes que TcT
+
+
+def _liga_referencia(usuario):
+    """Id de la liga de referencia del usuario (o None si no tiene ligas)."""
+    ligas = usuario.ligas()
+    if not ligas:
+        return None
+    elegida = min(ligas, key=lambda l: (_prioridad_liga(l["nombre"]), _norm(l["nombre"])))
+    return elegida["id"]
+
+
+def _mensaje_posicion(antes, despues, total):
+    if antes == despues:
+        return None
+    delta = abs(antes - despues)
+    if despues < antes:  # subio
+        if despues == 1:
+            return "\U0001F451 ¡Eres el primero! Disfrútalo mientras dure 😏"
+        if antes == total:
+            return f"🎉 ¡Ya no eres el colero! Ahora vas {despues}° — algo es algo ¿no? 😄"
+        if delta > 1:
+            return f"🚀 ¡Subiste {delta} puestos! Ahora vas {despues}°"
+        return f"📈 Subiste un puesto, ahora vas {despues}°"
+    else:  # bajo
+        if despues == total:
+            return "💀 ¡Te fuiste al fondo! Último... pero aún hay tiempo 😅"
+        if antes == 1:
+            return "😤 ¡Te bajaron del trono! Eso no puede quedar así"
+        if delta > 1:
+            return f"📉 Bajaste {delta} puestos, ahora vas {despues}°. ¡A despertar!"
+        return f"😬 Bajaste un puesto, ahora vas {despues}°"
+
+
+def actualizar_popup_posicion(usuario):
+    """Compara la posicion del usuario en su liga de referencia con la ultima
+    vista (usuarios.ultima_posicion). Si cambio, deja el popup en sesion.
+    Siempre actualiza ultima_posicion. Desacoplado del sync en vivo."""
+    liga_ref = _liga_referencia(usuario)
+    tabla = get_ranking(liga_id=liga_ref)
+    total = len(tabla)
+    pos = next((i + 1 for i, r in enumerate(tabla) if r["usuario_id"] == usuario.id), None)
+    if pos is None:
+        return
+    with get_db() as conn:
+        row = conn.execute(
+            "SELECT ultima_posicion FROM usuarios WHERE id = ?", (usuario.id,)
+        ).fetchone()
+        prev = row["ultima_posicion"] if row else None
+        if prev is not None and prev != pos:
+            msg = _mensaje_posicion(prev, pos, total)
+            if msg:
+                session["ranking_popup"] = msg
+        conn.execute(
+            "UPDATE usuarios SET ultima_posicion = ? WHERE id = ?", (pos, usuario.id)
+        )
+        conn.commit()
 
 
 @ranking_bp.route("/push-scores", methods=["POST"])
@@ -168,6 +243,7 @@ def push_scores():
 @ranking_bp.route("/")
 @login_required
 def index():
+    actualizar_popup_posicion(current_user)
     with get_db() as conn:
         ligas = conn.execute(
             "SELECT id, nombre FROM ligas ORDER BY nombre"
@@ -217,14 +293,7 @@ def index():
 
     liga_id = request.args.get("liga", type=int)
     if liga_id is None:
-        ligas_usuario = current_user.ligas()
-        if ligas_usuario:
-            ids_usuario = [l["id"] for l in ligas_usuario]
-            tct = next((l for l in ligas_usuario if "todos" in l["nombre"].lower()), None)
-            if tct:
-                liga_id = tct["id"]
-            elif len(ids_usuario) == 1:
-                liga_id = ids_usuario[0]
+        liga_id = _liga_referencia(current_user)
 
     tabla       = get_ranking(liga_id=liga_id)
     equipos_iso = _equipos_iso()

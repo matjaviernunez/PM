@@ -74,6 +74,13 @@ def _formato_fecha(fecha_str: str) -> str:
 def index():
     cerrar_partidos_vencidos()
 
+    # Popup de cambio de posicion al entrar (helper unico en ranking.routes)
+    try:
+        from ranking.routes import actualizar_popup_posicion
+        actualizar_popup_posicion(current_user)
+    except Exception:
+        pass
+
     partidos = get_todos_partidos_grupos()
     partido_ids = [p['id'] for p in partidos]
     predicciones = get_predicciones_usuario(current_user.id, partido_ids)

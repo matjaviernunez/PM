@@ -408,36 +408,40 @@ setInterval(syncEspn, 60000);
   const cards = document.querySelectorAll('.ranking-card[data-uid]');
   if (!cards.length) return;
 
-  // Posiciones actuales
-  const current = {};
-  cards.forEach(c => { current[c.dataset.uid] = parseInt(c.dataset.pos); });
+  // Estado guardado del render anterior: posiciones Y deltas por jugador.
+  // El delta solo se recalcula cuando la posicion cambia; si no, PERSISTE.
+  let store = { pos: {}, delta: {} };
+  try {
+    const raw = JSON.parse(localStorage.getItem(KEY) || '{}');
+    if (raw && raw.pos) store = { pos: raw.pos || {}, delta: raw.delta || {} };
+  } catch {}
 
-  // Posiciones del render anterior
-  let prev = {};
-  try { prev = JSON.parse(localStorage.getItem(KEY) || '{}'); } catch {}
-
-  // Mostrar deltas
   cards.forEach(card => {
     const uid     = card.dataset.uid;
-    const currPos = current[uid];
-    const prevPos = prev[uid];
-    const el      = card.querySelector('.pos-delta');
-    if (!el || !prevPos || prevPos === currPos) return;
+    const currPos = parseInt(card.dataset.pos);
+    const prevPos = store.pos[uid];
 
-    const delta = prevPos - currPos; // positivo = subió
-    if (delta > 0) {
-      el.textContent = `▲${delta}`;
-      el.className   = 'pos-delta pos-delta--up';
-    } else {
-      el.textContent = `▼${Math.abs(delta)}`;
-      el.className   = 'pos-delta pos-delta--down';
+    if (prevPos != null && prevPos !== currPos) {
+      store.delta[uid] = prevPos - currPos; // positivo = subio
+    }
+    store.pos[uid] = currPos;
+
+    const d  = store.delta[uid] || 0;
+    const el = card.querySelector('.pos-delta');
+    if (el && d) {
+      if (d > 0) {
+        el.textContent = `▲${d}`;
+        el.className   = 'pos-delta pos-delta--up';
+      } else {
+        el.textContent = `▼${Math.abs(d)}`;
+        el.className   = 'pos-delta pos-delta--down';
+      }
     }
   });
 
-  // Guardar posiciones actuales para el próximo render
-  localStorage.setItem(KEY, JSON.stringify(current));
-
-  // Las flechas persisten hasta que la posición vuelva a cambiar
+  // Guardar posiciones + deltas para el proximo render.
+  // Las flechas persisten hasta que la posicion del jugador vuelva a cambiar.
+  localStorage.setItem(KEY, JSON.stringify(store));
 })();
 
 // Contador visual
