@@ -212,7 +212,7 @@
 <script>
 // Auto-actualiza goleadores/tarjetas desde ESPN (client-side, throttle 15 min).
 (function () {
-  const KEY = 'hub_stats_last';
+  const KEY = 'hub_stats_v2';
   const last = parseInt(localStorage.getItem(KEY) || '0', 10);
   if (Date.now() - last < 15 * 60 * 1000) return;
 
@@ -269,15 +269,21 @@
       const goleadores = Object.values(golMap).sort((a, b) => b.goles - a.goles).slice(0, 30);
       const tarjetas = Object.values(tarMap).sort((a, b) => (b.rojas - a.rojas) || (b.amarillas - a.amarillas)).slice(0, 30);
 
-      localStorage.setItem(KEY, Date.now().toString());
-      if (!goleadores.length && !tarjetas.length) return;
+      if (!goleadores.length && !tarjetas.length) {
+        localStorage.setItem(KEY, Date.now().toString());
+        return;
+      }
 
-      const resp = await fetch('/hub/push-stats', {
+      const resp = await fetch('/mundial/push-stats', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ goleadores, tarjetas }),
       });
       await resp.json();
+
+      // Solo marcar el throttle si el push tuvo exito (si no, reintenta luego).
+      if (!resp.ok) return;
+      localStorage.setItem(KEY, Date.now().toString());
 
       // Si la pagina estaba vacia y ahora hay datos, recargar para mostrarlos.
       if (!document.querySelector('.hub-table') && (goleadores.length || tarjetas.length)) {
