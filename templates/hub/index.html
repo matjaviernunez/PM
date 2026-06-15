@@ -208,4 +208,86 @@
     {% endif %}
   </section>
 
+
+<script>
+// Auto-actualiza goleadores/tarjetas desde ESPN (client-side, throttle 15 min).
+(function () {
+  const KEY = 'hub_stats_last';
+  const last = parseInt(localStorage.getItem(KEY) || '0', 10);
+  if (Date.now() - last < 15 * 60 * 1000) return;
+
+  const SB = 'https://site.api.espn.com/apis/site/v2/sports/soccer/fifa.world/scoreboard?dates=';
+
+  function ymd(t) {
+    const d = new Date(t);
+    return `${d.getUTCFullYear()}${String(d.getUTCMonth() + 1).padStart(2, '0')}${String(d.getUTCDate()).padStart(2, '0')}`;
+  }
+
+  // Ventanas de 7 dias desde el 11-jun hasta hoy (hora Ecuador), robusto ante cap de ESPN.
+  function ventanas() {
+    const start = Date.UTC(2026, 5, 11);
+    const e = new Date(Date.now() - 5 * 3600 * 1000);
+    const end = Date.UTC(e.getUTCFullYear(), e.getUTCMonth(), e.getUTCDate());
+    const out = [];
+    for (let t = start; t <= end; t += 7 * 86400000) {
+      const b = Math.min(t + 6 * 86400000, end);
+      out.push(ymd(t) + '-' + ymd(b));
+    }
+    return out;
+  }
+
+  function agregar(data, golMap, tarMap) {
+    (data.events || []).forEach(ev => {
+      const comp = (ev.competitions && ev.competitions[0]) || {};
+      const abbr = {};
+      (comp.competitors || []).forEach(c => { if (c.team) abbr[c.team.id] = c.team.abbreviation; });
+      (comp.details || []).forEach(d => {
+        const who = d.athletesInvolved && d.athletesInvolved[0] && d.athletesInvolved[0].displayName;
+        if (!who) return;
+        const team = abbr[d.team && d.team.id] || '';
+        const k = who + '|' + team;
+        if (d.scoringPlay && !d.shootout && !d.ownGoal) {
+          (golMap[k] = golMap[k] || { jugador: who, equipo: team, goles: 0 }).goles++;
+        }
+        if (d.yellowCard || d.redCard) {
+          const t = (tarMap[k] = tarMap[k] || { jugador: who, equipo: team, amarillas: 0, rojas: 0 });
+          if (d.yellowCard) t.amarillas++;
+          if (d.redCard) t.rojas++;
+        }
+      });
+    });
+  }
+
+  (async () => {
+    try {
+      const golMap = {}, tarMap = {};
+      for (const v of ventanas()) {
+        const r = await fetch(SB + v);
+        if (!r.ok) continue;
+        agregar(await r.json(), golMap, tarMap);
+      }
+      const goleadores = Object.values(golMap).sort((a, b) => b.goles - a.goles).slice(0, 30);
+      const tarjetas = Object.values(tarMap).sort((a, b) => (b.rojas - a.rojas) || (b.amarillas - a.amarillas)).slice(0, 30);
+
+      localStorage.setItem(KEY, Date.now().toString());
+      if (!goleadores.length && !tarjetas.length) return;
+
+      const resp = await fetch('/hub/push-stats', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ goleadores, tarjetas }),
+      });
+      await resp.json();
+
+      // Si la pagina estaba vacia y ahora hay datos, recargar para mostrarlos.
+      if (!document.querySelector('.hub-table') && (goleadores.length || tarjetas.length)) {
+        location.reload();
+      }
+    } catch (e) {
+      console.warn('Hub stats sync error:', e);
+    }
+  })();
+})();
+</script>
+
 {% endblock %}

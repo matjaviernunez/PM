@@ -557,3 +557,49 @@ def descargar_backup():
         download_name=f"mundial2026_{ts}.db",
         mimetype="application/octet-stream",
     )
+
+
+# ── Importar partidos de una fase de eliminatorias (desde ESPN, client-side) ─
+# El navegador trae los cruces reales del scoreboard de ESPN y los envia aqui.
+# Idempotente: no duplica partidos ya existentes (misma fase + equipos).
+
+_FASES_KO = {"16avos", "octavos", "cuartos", "semis", "3er_puesto", "final"}
+
+
+@admin_bp.route("/importar-fase", methods=["POST"])
+@login_required
+@admin_required
+def importar_fase():
+    data = request.get_json(silent=True) or {}
+    fase = (data.get("fase") or "").strip()
+    partidos = data.get("partidos", [])
+
+    if fase not in _FASES_KO:
+        return jsonify({"ok": False, "error": "Fase invalida"}), 400
+
+    creados = 0
+    existentes = 0
+    with get_db() as conn:
+        for p in partidos:
+            home  = (p.get("home") or "").strip()
+            away  = (p.get("away") or "").strip()
+            fecha = (p.get("fecha") or "").strip()
+            hora  = (p.get("hora") or "").strip()
+            if not home or not away:
+                continue
+            ya = conn.execute(
+                "SELECT id FROM partidos WHERE fase = ? AND equipo_local = ? AND equipo_visita = ?",
+                (fase, home, away)
+            ).fetchone()
+            if ya:
+                existentes += 1
+                continue
+            conn.execute("""
+                INSERT INTO partidos
+                    (fase, grupo, fecha, hora, equipo_local, equipo_visita, abierto, estado)
+                VALUES (?, NULL, ?, ?, ?, ?, 1, 'pre')
+            """, (fase, fecha, hora, home, away))
+            creados += 1
+        conn.commit()
+
+    return jsonify({"ok": True, "creados": creados, "existentes": existentes})

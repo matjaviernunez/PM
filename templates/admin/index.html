@@ -616,20 +616,44 @@ async function scrapeResultados() {
 async function generarCruces() {
   const btn = document.querySelector('.btn-generar');
   const st  = document.getElementById('generar-status');
-  if (!confirm('¿Generar los 16 cruces de 16avos? Esta acción no se puede deshacer fácilmente.')) return;
+  if (!confirm('¿Importar los cruces de 16avos (Ronda de 32) desde ESPN? Solo se agregan partidos con ambos equipos ya definidos; puedes re-ejecutarlo sin duplicar.')) return;
   btn.disabled = true;
-  st.innerHTML = '<span class="status-guardando">⏳ Generando...</span>';
+  st.innerHTML = '<span class="status-guardando">⏳ Consultando ESPN...</span>';
   try {
-    const res  = await fetch('/admin/generar-16avos', { method: 'POST' });
-    const data = await res.json();
-    if (data.ok) {
-      st.innerHTML = `<span class="status-guardado">✓ ${data.mensaje}</span>`;
+    // Ronda de 32 (16avos): 28 jun - 3 jul 2026
+    const r = await fetch('https://site.api.espn.com/apis/site/v2/sports/soccer/fifa.world/scoreboard?dates=20260628-20260703');
+    const data = await r.json();
+    const partidos = [];
+    (data.events || []).forEach(ev => {
+      const comp = (ev.competitions && ev.competitions[0]) || {};
+      const home = (comp.competitors || []).find(c => c.homeAway === 'home') || {};
+      const away = (comp.competitors || []).find(c => c.homeAway === 'away') || {};
+      const h = home.team && home.team.abbreviation;
+      const a = away.team && away.team.abbreviation;
+      if (!h || !a) return;  // equipos aun no definidos -> se ignora
+      const d = new Date(ev.date);
+      const ect = new Date(d.getTime() - 5 * 3600 * 1000);  // hora Ecuador
+      const fecha = `${ect.getUTCFullYear()}-${String(ect.getUTCMonth()+1).padStart(2,'0')}-${String(ect.getUTCDate()).padStart(2,'0')}`;
+      const hora  = `${String(ect.getUTCHours()).padStart(2,'0')}:${String(ect.getUTCMinutes()).padStart(2,'0')}`;
+      partidos.push({ home: h, away: a, fecha, hora });
+    });
+    if (!partidos.length) {
+      st.innerHTML = '<span class="status-pendiente">ESPN aún no tiene los cruces de 16avos definidos.</span>';
+      return;
+    }
+    const resp = await fetch('/admin/importar-fase', {
+      method: 'POST', headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({ fase: '16avos', partidos })
+    });
+    const res = await resp.json();
+    if (res.ok) {
+      st.innerHTML = `<span class="status-guardado">✓ ${res.creados} creado(s), ${res.existentes} ya existían</span>`;
       setTimeout(() => location.reload(), 2000);
     } else {
-      st.innerHTML = `<span class="status-error">⚠ ${data.mensaje}</span>`;
+      st.innerHTML = `<span class="status-error">✗ ${res.error || 'error'}</span>`;
     }
-  } catch {
-    st.innerHTML = '<span class="status-error">✗ Error de conexión</span>';
+  } catch (e) {
+    st.innerHTML = '<span class="status-error">✗ Error: ' + e.message + '</span>';
   } finally {
     btn.disabled = false;
   }
