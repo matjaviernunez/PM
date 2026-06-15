@@ -67,6 +67,8 @@ def push_scores():
             away_abbr  = ev.get("away", "")
             home_score = ev.get("home_score")
             away_score = ev.get("away_score")
+            pen_home   = ev.get("pen_home")
+            pen_away   = ev.get("pen_away")
             state      = ev.get("state", "")
             fecha_ect  = ev.get("fecha_ect", "")
 
@@ -81,16 +83,25 @@ def push_scores():
             except (ValueError, TypeError):
                 continue
 
+            # Penales de la tanda (solo eliminatorias decididas por penales)
+            try:
+                pl = int(pen_home) if pen_home is not None else None
+                pv = int(pen_away) if pen_away is not None else None
+            except (ValueError, TypeError):
+                pl = pv = None
+
             # Buscar partido en DB
             if fecha_ect:
                 partido = conn.execute("""
-                    SELECT id, goles_local, goles_visita, estado
+                    SELECT id, goles_local, goles_visita, penales_local,
+                           penales_visita, estado, fase
                     FROM partidos
                     WHERE equipo_local = ? AND equipo_visita = ? AND fecha = ?
                 """, (home_abbr, away_abbr, fecha_ect)).fetchone()
             else:
                 partido = conn.execute("""
-                    SELECT id, goles_local, goles_visita, estado
+                    SELECT id, goles_local, goles_visita, penales_local,
+                           penales_visita, estado, fase
                     FROM partidos
                     WHERE equipo_local = ? AND equipo_visita = ?
                 """, (home_abbr, away_abbr)).fetchone()
@@ -103,20 +114,37 @@ def push_scores():
             if partido["estado"] == "post":
                 continue
 
-            # Nunca dejar que el total de goles baje (datos viejos/erróneos de ESPN)
+            # Nunca dejar que el total de goles baje (datos viejos/erroneos de ESPN)
             existing_total = (partido["goles_local"] or 0) + (partido["goles_visita"] or 0)
             if gl + gv < existing_total:
                 continue
 
-            # Solo actualizar si el marcador cambió
-            if partido["goles_local"] == gl and partido["goles_visita"] == gv:
+            # Penales solo aplican en eliminatorias
+            es_knockout  = partido["fase"] != "grupos"
+            incoming_pen = es_knockout and pl is not None and pv is not None
+            pen_ganador  = ("local" if pl > pv else "visita") if incoming_pen else None
+
+            # Hay algo nuevo que guardar si: cambia el marcador, llegan penales
+            # nuevos/distintos, o el partido pasa a 'post' (congelar resultado).
+            score_cambio = (partido["goles_local"] != gl or partido["goles_visita"] != gv)
+            pen_cambio   = incoming_pen and (partido["penales_local"] != pl or partido["penales_visita"] != pv)
+            va_a_post    = (state == "post" and partido["estado"] != "post")
+            if not (score_cambio or pen_cambio or va_a_post):
                 continue
 
-            conn.execute("""
-                UPDATE partidos SET goles_local = ?, goles_visita = ?,
-                    estado = CASE WHEN ? = 'post' THEN 'post' ELSE estado END
-                WHERE id = ?
-            """, (gl, gv, state, partido["id"]))
+            if incoming_pen:
+                conn.execute("""
+                    UPDATE partidos SET goles_local = ?, goles_visita = ?,
+                        penales_local = ?, penales_visita = ?, penales_ganador = ?,
+                        estado = CASE WHEN ? = 'post' THEN 'post' ELSE estado END
+                    WHERE id = ?
+                """, (gl, gv, pl, pv, pen_ganador, state, partido["id"]))
+            else:
+                conn.execute("""
+                    UPDATE partidos SET goles_local = ?, goles_visita = ?,
+                        estado = CASE WHEN ? = 'post' THEN 'post' ELSE estado END
+                    WHERE id = ?
+                """, (gl, gv, state, partido["id"]))
             conn.commit()
             actualizados += 1
 

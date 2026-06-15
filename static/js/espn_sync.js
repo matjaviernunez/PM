@@ -55,11 +55,17 @@
         }
 
         if (hs == null || as == null) return null;
+        // Tanda de penales (solo en eliminatorias decididas por penales).
+        // ESPN expone el marcador de la tanda en competitor.shootoutScore.
+        const ph = home.shootoutScore;
+        const pa = away.shootoutScore;
         return {
           home: home.team?.abbreviation || '',
           away: away.team?.abbreviation || '',
           home_score: parseInt(hs),
           away_score: parseInt(as),
+          pen_home: ph != null ? parseInt(ph) : null,
+          pen_away: pa != null ? parseInt(pa) : null,
           state,
           fecha_ect: utcToEct(ev.date || comp.date || ''),
         };
