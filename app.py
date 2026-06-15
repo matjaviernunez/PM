@@ -82,10 +82,8 @@ app.jinja_env.globals["_slot_label"] = _slot_label
 
 # -- Sync de resultados ESPN -----------------------------------------------
 # NOTA: el sync NO corre en el servidor. PythonAnywhere (free tier) bloquea
-# las salidas HTTP a ESPN, asi que el APScheduler nunca funciono aqui.
-# El sync vive en el cliente (JS en el navegador) -> /ranking/push-scores.
-# Si algun dia se migra a un host con salida a internet, reactivar un worker
-# server-side (ver game/espn_sync.py) en un proceso aparte, no en el web worker.
+# las salidas HTTP a ESPN. El sync vive en el cliente (navegador,
+# static/js/espn_sync.js) y escribe via /ranking/push-scores.
 
 if __name__ == "__main__":
     app.run(debug=config.DEBUG, host="0.0.0.0", port=5000)
