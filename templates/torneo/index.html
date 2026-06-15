@@ -282,12 +282,15 @@ const ESPN_SCOREBOARD = 'https://site.api.espn.com/apis/site/v2/sports/soccer/fi
 const ESPN_SUMMARY    = 'https://site.api.espn.com/apis/site/v2/sports/soccer/fifa.world/summary?event=';
 
 let expandedEventId = null;
+let liveEventsById  = {};
 
 async function fetchLiveMatches() {
   try {
     const r = await fetch(ESPN_SCOREBOARD);
     const data = await r.json();
     const events = (data.events || []).filter(e => e.status?.type?.state === 'in');
+    liveEventsById = {};
+    events.forEach(e => { liveEventsById[e.id] = e; });
     renderLiveBoard(events);
   } catch(err) {
     console.warn('Live board fetch error:', err);
@@ -295,11 +298,11 @@ async function fetchLiveMatches() {
 }
 
 function renderLiveBoard(events) {
-  const board  = document.getElementById('live-board');
-  const cont   = document.getElementById('live-matches');
-  const upd    = document.getElementById('live-update-time');
+  const board = document.getElementById('live-board');
+  const cont  = document.getElementById('live-matches');
+  const upd   = document.getElementById('live-update-time');
 
-  if (!events.length) { board.style.display = 'none'; return; }
+  if (!events.length) { board.style.display = 'none'; expandedEventId = null; return; }
 
   board.style.display = 'block';
   const now = new Date();
@@ -317,10 +320,8 @@ function renderLiveBoard(events) {
     const hfl  = home.team?.flag || '';
     const afl  = away.team?.flag || '';
     const isExpanded = ev.id === expandedEventId;
-
     const flagH = hfl ? `<img src="${hfl}" alt="${hl}" onerror="this.style.display='none'">` : '';
     const flagA = afl ? `<img src="${afl}" alt="${al}" onerror="this.style.display='none'">` : '';
-
     return `
     <div class="live-match-card${isExpanded ? ' live-match-card--active' : ''}"
          onclick="toggleMatchDetail('${ev.id}', this)" data-event-id="${ev.id}">
@@ -331,146 +332,179 @@ function renderLiveBoard(events) {
       </div>
       <div class="live-team live-team--right">${flagA}<span class="live-team-name">${al}</span></div>
     </div>
-    <div class="live-detail-panel" id="detail-${ev.id}" style="display:${isExpanded ? 'block' : 'none'}">
-      <div class="live-detail-loading">Cargando…</div>
-    </div>`;
+    <div class="live-detail-panel" id="detail-${ev.id}" style="display:${isExpanded ? 'block' : 'none'}"></div>`;
   }).join('');
+
+  // Auto-refrescar el panel abierto con los datos frescos (arregla el "stuck").
+  if (expandedEventId && liveEventsById[expandedEventId]) {
+    renderDetail(expandedEventId);
+  } else {
+    expandedEventId = null;
+  }
 }
 
-async function toggleMatchDetail(eventId, cardEl) {
-  const panel = document.getElementById('detail-' + eventId);
-  if (!panel) return;
-
-  // Collapse if already open
+function toggleMatchDetail(eventId, cardEl) {
   if (expandedEventId === eventId) {
     expandedEventId = null;
-    panel.style.display = 'none';
+    const p = document.getElementById('detail-' + eventId);
+    if (p) p.style.display = 'none';
     cardEl.classList.remove('live-match-card--active');
     return;
   }
-
-  // Close any previously open panel
   if (expandedEventId) {
     const prev = document.getElementById('detail-' + expandedEventId);
     if (prev) prev.style.display = 'none';
     const prevCard = document.querySelector(`[data-event-id="${expandedEventId}"]`);
     if (prevCard) prevCard.classList.remove('live-match-card--active');
   }
-
   expandedEventId = eventId;
   cardEl.classList.add('live-match-card--active');
-  panel.style.display = 'block';
-  panel.innerHTML = '<div class="live-detail-loading">Cargando detalles…</div>';
+  renderDetail(eventId);
+}
 
+// Goles + tarjetas desde el scoreboard (robusto via scoringPlay).
+// Asistencias y alineaciones se enriquecen desde la Summary API.
+async function renderDetail(eventId) {
+  const panel = document.getElementById('detail-' + eventId);
+  if (!panel) return;
+  panel.style.display = 'block';
+
+  const ev = liveEventsById[eventId];
+  if (!ev) { panel.innerHTML = '<div class="live-detail-loading">Cargando…</div>'; return; }
+
+  // 1) Render inmediato de goles/tarjetas (sin asistencias aun)
+  panel.innerHTML = renderEventos(ev, {}) +
+                    '<div class="live-detail-loading">Cargando alineaciones…</div>';
+
+  // 2) Enriquecer con la Summary (asistencias + alineaciones)
   try {
-    const r = await fetch(ESPN_SUMMARY + eventId);
-    const data = await r.json();
-    panel.innerHTML = renderMatchDetail(data);
+    const r  = await fetch(ESPN_SUMMARY + eventId);
+    const sd = await r.json();
+    if (expandedEventId !== eventId) return;  // el usuario cambio de panel
+    panel.innerHTML = renderEventos(ev, _mapAsistencias(sd)) + renderLineups(sd);
   } catch(err) {
-    panel.innerHTML = '<div class="live-detail-loading">No se pudo cargar el detalle.</div>';
     console.warn('Summary fetch error:', err);
+    if (expandedEventId === eventId) panel.innerHTML = renderEventos(ev, {});
   }
 }
 
-function renderMatchDetail(data) {
-  const comp = data.header?.competitions?.[0] || {};
-  const homeTeam = (comp.competitors || []).find(c => c.homeAway === 'home') || {};
-  const awayTeam = (comp.competitors || []).find(c => c.homeAway === 'away') || {};
-  const homeAbbr = homeTeam.team?.abbreviation || homeTeam.team?.shortDisplayName || '???';
-  const awayAbbr = awayTeam.team?.abbreviation || awayTeam.team?.shortDisplayName || '???';
+// keyEvents de la Summary -> { "min|goleador": asistente }
+function _mapAsistencias(sd) {
+  const m = {};
+  (sd.keyEvents || []).forEach(e => {
+    if (!e.scoringPlay) return;
+    const players = (e.participants || []).map(p => p.athlete?.displayName).filter(Boolean);
+    if (players.length >= 2) {
+      const min = e.clock?.displayValue || '';
+      m[min + '|' + players[0]] = players[1];
+    }
+  });
+  return m;
+}
 
-  // ── Events timeline — from keyEvents ────────────────────────
-  // keyEvents has team.id, participants[].athlete.displayName, type.type
-  // Goals, yellow/red cards, subs — all in one array with correct team attribution
-  const homeTeamId = homeTeam.team?.id;
-  const awayTeamId = awayTeam.team?.id;
-  const SHOW_TYPES = new Set(['goal','goal---header','yellow-card','red-card','substitution']);
-  const keyEvents  = (data.keyEvents || []).filter(e => SHOW_TYPES.has(e.type?.type));
+function _side(d, homeId, awayId) {
+  const tid = d.team?.id;
+  return tid === homeId ? 'home' : tid === awayId ? 'away' : 'home';
+}
 
-  let eventsHtml = '';
-  if (keyEvents.length) {
-    eventsHtml = keyEvents.map(e => {
-      const typeType = e.type?.type || '';
-      const min      = e.clock?.displayValue || '';
-      const teamId   = e.team?.id;
-      const side     = teamId === homeTeamId ? 'home' : teamId === awayTeamId ? 'away' : 'home';
-      const players  = (e.participants || []).map(p => p.athlete?.displayName || '').filter(Boolean);
-      const p1       = players[0] || '';
-      const p2       = players[1] || '';
+function renderEventos(ev, asistencias) {
+  const comp = ev.competitions?.[0] || {};
+  const home = comp.competitors?.find(c => c.homeAway === 'home') || {};
+  const away = comp.competitors?.find(c => c.homeAway === 'away') || {};
+  const homeId = home.team?.id, awayId = away.team?.id;
+  const details = comp.details || [];
 
-      let icon = '', extra = '';
-      if (typeType === 'goal' || typeType === 'goal---header') {
-        icon = '⚽';
-        if (typeType === 'goal---header') extra += `<span class="live-event-extra">cabeza</span>`;
-        if (p2) extra += `<span class="live-event-extra">🅰 ${p2}</span>`;
-      } else if (typeType === 'yellow-card') {
-        icon = '🟨';
-      } else if (typeType === 'red-card') {
-        icon = '🟥';
-      } else if (typeType === 'substitution') {
-        icon = '↕️';
-        extra = p2 ? `<span class="live-event-sub-out">↓ ${p2}</span>` : '';
-      }
+  const goles    = details.filter(d => d.scoringPlay && !d.shootout);
+  const tarjetas = details.filter(d => d.yellowCard || d.redCard);
 
-      return `<div class="live-event live-event--${side}">
-        <span class="live-event-min">${min}</span>
-        <span class="live-event-icon">${icon}</span>
-        <span class="live-event-player">${p1}</span>
-        ${extra}
-      </div>`;
-    }).join('');
+  let golesHome = 0, golesAway = 0;
+  goles.forEach(d => { (_side(d, homeId, awayId) === 'home') ? golesHome++ : golesAway++; });
+  const scoreHome = parseInt(home.score ?? 0) || 0;
+  const scoreAway = parseInt(away.score ?? 0) || 0;
+  const faltan = (golesHome < scoreHome) || (golesAway < scoreAway);
+
+  const titulo = (t) => `<div style="font-weight:700;color:var(--dorado);font-size:.72rem;margin:.45rem 0 .2rem">${t}</div>`;
+
+  const filaGol = (d) => {
+    const side   = _side(d, homeId, awayId);
+    const min    = d.clock?.displayValue || '';
+    const scorer = (d.athletesInvolved && d.athletesInvolved[0] && d.athletesInvolved[0].displayName) || '';
+    let etq = '';
+    if (d.penaltyKick) etq += '<span class="live-event-extra">pen</span>';
+    if (d.ownGoal)     etq += '<span class="live-event-extra">p.p.</span>';
+    const asist = asistencias[min + '|' + scorer];
+    if (asist) etq += `<span class="live-event-extra">🅰 ${asist}</span>`;
+    return `<div class="live-event live-event--${side}">
+      <span class="live-event-min">${min}</span>
+      <span class="live-event-icon">⚽</span>
+      <span class="live-event-player">${scorer}</span>
+      ${etq}
+    </div>`;
+  };
+
+  const filaTarjeta = (d) => {
+    const side = _side(d, homeId, awayId);
+    const min  = d.clock?.displayValue || '';
+    const who  = (d.athletesInvolved && d.athletesInvolved[0] && d.athletesInvolved[0].displayName) || '';
+    const icon = d.redCard ? '🟥' : '🟨';
+    return `<div class="live-event live-event--${side}">
+      <span class="live-event-min">${min}</span>
+      <span class="live-event-icon">${icon}</span>
+      <span class="live-event-player">${who}</span>
+    </div>`;
+  };
+
+  let html = '';
+  if (goles.length) {
+    html += titulo('Goles') + '<div class="live-events">' + goles.map(filaGol).join('') + '</div>';
   }
+  if (faltan) {
+    html += '<div class="live-events-empty">⏳ Actualizando… (el marcador manda)</div>';
+  } else if (!goles.length) {
+    html += '<div class="live-events-empty">Sin goles aún</div>';
+  }
+  if (tarjetas.length) {
+    html += titulo('Tarjetas') + '<div class="live-events">' + tarjetas.map(filaTarjeta).join('') + '</div>';
+  }
+  return html;
+}
 
-  const evSection = eventsHtml
-    ? `<div class="live-events">${eventsHtml}</div>`
-    : `<div class="live-events-empty">Sin eventos registrados aún</div>`;
-
-  // ── Lineups ──────────────────────────────────────────────────
-  const rosters = data.rosters || [];
+function renderLineups(sd) {
+  const rosters = sd.rosters || [];
   const homeRoster = rosters.find(r => r.homeAway === 'home') || {};
   const awayRoster = rosters.find(r => r.homeAway === 'away') || {};
+  const comp = sd.header?.competitions?.[0] || {};
+  const ht = (comp.competitors || []).find(c => c.homeAway === 'home') || {};
+  const at = (comp.competitors || []).find(c => c.homeAway === 'away') || {};
+  const hAbbr = ht.team?.abbreviation || ht.team?.shortDisplayName || '???';
+  const aAbbr = at.team?.abbreviation || at.team?.shortDisplayName || '???';
 
-  function renderLineup(rosterObj, abbr) {
+  function lineup(rosterObj, abbr) {
     const formation = rosterObj.formation?.name || '';
     const players   = rosterObj.roster || [];
     const starters  = players.filter(p => p.starter);
     const bench     = players.filter(p => !p.starter);
-
     const formLabel = formation ? `<span class="live-formation">(${formation})</span>` : '';
-
-    const renderPlayer = (p) => {
+    const rp = (p) => {
       const name = p.athlete?.shortName || p.athlete?.displayName || '?';
       const num  = p.jersey || '';
-      const subbedOut = p.subbedOut?.didSub;
-      const badge = subbedOut ? '↕️' : '';
-      return `<div class="live-player${subbedOut ? ' live-player--out' : ''}">
+      const out  = p.subbedOut?.didSub;
+      return `<div class="live-player${out ? ' live-player--out' : ''}">
         <span class="live-player-num">${num}</span>
         <span class="live-player-name">${name}</span>
-        ${badge ? `<span class="live-player-badge">${badge}</span>` : ''}
+        ${out ? '<span class="live-player-badge">↕️</span>' : ''}
       </div>`;
     };
-
     if (!starters.length && !bench.length) {
-      return `<div>
-        <div class="live-lineup-header">${abbr} ${formLabel}</div>
-        <div class="live-player" style="color:var(--gris);font-size:.7rem">Sin alineación disponible</div>
-      </div>`;
+      return `<div><div class="live-lineup-header">${abbr} ${formLabel}</div>
+        <div class="live-player" style="color:var(--gris);font-size:.7rem">Sin alineación disponible</div></div>`;
     }
-
-    return `<div>
-      <div class="live-lineup-header">${abbr} ${formLabel}</div>
-      ${starters.map(renderPlayer).join('')}
-      ${bench.length ? `<div class="live-bench-label">Suplentes</div>${bench.map(renderPlayer).join('')}` : ''}
-    </div>`;
+    return `<div><div class="live-lineup-header">${abbr} ${formLabel}</div>
+      ${starters.map(rp).join('')}
+      ${bench.length ? `<div class="live-bench-label">Suplentes</div>${bench.map(rp).join('')}` : ''}</div>`;
   }
 
-  const lineupsHtml = `
-    <div class="live-lineups">
-      ${renderLineup(homeRoster, homeAbbr)}
-      ${renderLineup(awayRoster, awayAbbr)}
-    </div>`;
-
-  return evSection + lineupsHtml;
+  return `<div class="live-lineups">${lineup(homeRoster, hAbbr)}${lineup(awayRoster, aAbbr)}</div>`;
 }
 
 // Fetch inmediato + cada 60 s
