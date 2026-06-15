@@ -281,16 +281,6 @@ def borrar_prediccion():
     return jsonify({"ok": True})
 
 
-# ── Scraper manual ────────────────────────────────────────────────────────
-
-@admin_bp.route("/scrape", methods=["POST"])
-@login_required
-@admin_required
-def scrape():
-    from scraper.runner import scrape_todo
-    resultado = scrape_todo()
-    return jsonify(resultado)
-
 
 # ── Generar cruces 16avos ─────────────────────────────────────────────────
 

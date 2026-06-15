@@ -589,27 +589,25 @@ async function agregarPrediccion(usuarioId) {
 async function scrapeResultados() {
   const btn = document.querySelector('.btn-scrape');
   const st  = document.getElementById('scrape-status');
-  btn.disabled = true;
+  if (btn) btn.disabled = true;
   st.innerHTML = '<span class="status-guardando">⏳ Consultando ESPN...</span>';
   try {
-    const res  = await fetch('/admin/scrape', { method: 'POST' });
-    const data = await res.json();
-    const partes = [];
-    if ((data.resultados?.actualizados ?? data.actualizados ?? 0) > 0)
-      partes.push(`${data.resultados?.actualizados ?? data.actualizados} partido(s)`);
-    if (data.goleadores > 0) partes.push(`${data.goleadores} goleadores`);
-    if (data.tarjetas   > 0) partes.push(`${data.tarjetas} tarjetas`);
-    if (partes.length) {
-      st.innerHTML = `<span class="status-guardado">✓ Actualizado: ${partes.join(' · ')}</span>`;
-      setTimeout(() => location.reload(), 2000);
-    } else {
-      st.innerHTML = '<span class="status-pendiente">Sin nuevos datos</span>';
+    if (!window.EspnSync) {
+      st.innerHTML = '<span class="status-error">✗ Modulo de sync no cargado</span>';
+      return;
     }
-    if (data.errores?.length) console.warn('Errores scraper:', data.errores);
-  } catch {
-    st.innerHTML = '<span class="status-error">✗ Error de conexión</span>';
+    // Sync client-side (el servidor de PythonAnywhere no llega a ESPN)
+    const r = await window.EspnSync.fetchAndPush();
+    if (r && r.actualizados > 0) {
+      st.innerHTML = `<span class="status-guardado">✓ ${r.actualizados} partido(s) actualizado(s)</span>`;
+      setTimeout(() => location.reload(), 1800);
+    } else {
+      st.innerHTML = '<span class="status-pendiente">Sin nuevos datos de ESPN</span>';
+    }
+  } catch (e) {
+    st.innerHTML = '<span class="status-error">✗ Error: ' + e.message + '</span>';
   } finally {
-    btn.disabled = false;
+    if (btn) btn.disabled = false;
   }
 }
 

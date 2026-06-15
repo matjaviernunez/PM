@@ -371,81 +371,18 @@
 // y envía los resultados al backend para actualizar DB y puntajes.
 
 window._rankingSyncActive = true; // evita que el sync global de base.html duplique
-const ESPN_SB      = 'https://site.api.espn.com/apis/site/v2/sports/soccer/fifa.world/scoreboard';
-const ESPN_SUMMARY = 'https://site.api.espn.com/apis/site/v2/sports/soccer/fifa.world/summary?event=';
-const PUSH_URL     = '{{ url_for("ranking.push_scores") }}';
+window.PUSH_SCORES_URL = '{{ url_for("ranking.push_scores") }}';
 const label     = document.getElementById('sync-label');
 const dot       = document.getElementById('sync-dot');
 
-function utcToEct(dateStr) {
-  if (!dateStr) return null;
-  try {
-    const d = new Date(dateStr);
-    // ECT = UTC-5
-    const ect = new Date(d.getTime() - 5 * 3600 * 1000);
-    const yy  = ect.getUTCFullYear();
-    const mm  = String(ect.getUTCMonth() + 1).padStart(2, '0');
-    const dd  = String(ect.getUTCDate()).padStart(2, '0');
-    return `${yy}-${mm}-${dd}`;
-  } catch { return null; }
-}
-
+// Usa el modulo unico espn_sync.js (cargado en base.html)
 async function syncEspn() {
   try {
-    const r    = await fetch(ESPN_SB);
-    const data = await r.json();
-    const events = (data.events || []).filter(e => {
-      const s = e.status?.type?.state;
-      return s === 'in' || s === 'post';
-    });
-
-    if (!events.length) return;
-
-    // Para partidos 'post': usar summary API que siempre tiene el score final definitivo
-    const payloadItems = await Promise.all(events.map(async ev => {
-      const comp  = ev.competitions?.[0] || {};
-      const home  = comp.competitors?.find(c => c.homeAway === 'home') || {};
-      const away  = comp.competitors?.find(c => c.homeAway === 'away') || {};
-      const state = ev.status?.type?.state || '';
-      let homeScore = home.score;
-      let awayScore = away.score;
-
-      if (state === 'post') {
-        try {
-          const sr = await fetch(ESPN_SUMMARY + ev.id);
-          const sd = await sr.json();
-          const sc = sd.header?.competitions?.[0] || {};
-          const sh = (sc.competitors || []).find(c => c.homeAway === 'home') || {};
-          const sa = (sc.competitors || []).find(c => c.homeAway === 'away') || {};
-          if (sh.score != null) homeScore = sh.score;
-          if (sa.score != null) awayScore = sa.score;
-        } catch(_) { /* fallback al score del scoreboard */ }
-      }
-
-      if (homeScore == null || awayScore == null) return null;
-      return {
-        home:       home.team?.abbreviation || '',
-        away:       away.team?.abbreviation || '',
-        home_score: parseInt(homeScore),
-        away_score: parseInt(awayScore),
-        state,
-        fecha_ect:  utcToEct(ev.date || comp.date || ''),
-      };
-    }));
-    const payload = payloadItems.filter(Boolean);
-
-    const resp = await fetch(PUSH_URL, {
-      method:  'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body:    JSON.stringify({ events: payload }),
-    });
-    const result = await resp.json();
-
+    const result = await window.EspnSync.fetchAndPush();
     const now = new Date().toLocaleTimeString('es-MX', {hour:'2-digit', minute:'2-digit', second:'2-digit'});
     if (label) {
-      if (result.actualizados > 0) {
+      if (result && result.actualizados > 0) {
         label.textContent = `✓ Actualizado ${now} · ${result.recalculados} partido(s) recalculado(s)`;
-        // Registrar momento del último cambio de score y recargar
         localStorage.setItem('rank_last_update', Date.now().toString());
         setTimeout(() => window.location.reload(), 1500);
       } else {
@@ -454,7 +391,7 @@ async function syncEspn() {
     }
   } catch (err) {
     console.warn('ESPN sync error:', err);
-    if (label) label.textContent = '● Sin conexión a ESPN';
+    if (label) label.textContent = '● Sin conexion a ESPN';
   }
   if (dot) dot.classList.toggle('sync-dot--pulse');
 }
