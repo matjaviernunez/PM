@@ -143,7 +143,38 @@
     <section class="torneo-section {% if tab_activa == '16avos' %}visible{% endif %}"
              id="sec-16avos">
 
-      {% if not cruces %}
+      {% if not cruces and cruces_proyectados %}
+        <div class="cruces-proy-banner" style="margin:.4rem 0 .8rem;padding:.6rem .8rem;border:1px solid var(--dorado);border-radius:10px;background:rgba(243,156,18,.08);font-size:.82rem;line-height:1.45;color:var(--gris-claro)">
+          📐 <strong style="color:var(--dorado)">Proyección en vivo</strong> — cómo quedarían los cruces si la fase de grupos terminara ahora. Se fijan cuando cierren los grupos.
+        </div>
+        <div class="cruces-list">
+          {% for c in cruces_proyectados %}
+            {% set iso_l = equipos[c.home].iso if c.home in equipos else 'un' %}
+            {% set iso_v = equipos[c.away].iso if c.away in equipos else 'un' %}
+            <div class="cruce-card">
+              <div class="cruce-meta">
+                <span class="cruce-num">M{{ loop.index }}</span>
+                <span>📅 {{ c.fecha }}</span>
+                <span>🕐 {{ c.hora }}</span>
+                <span class="tag-abierto" style="margin-left:auto">Proyectado</span>
+              </div>
+              <div class="cruce-row">
+                <div class="cruce-equipo">
+                  {% if c.home %}<img src="https://flagcdn.com/w80/{{ iso_l }}.png" alt="{{ c.home }}">{% endif %}
+                  <span class="cod">{{ c.home or '?' }}</span>
+                  <span style="display:block;font-size:.6rem;color:var(--gris)">{{ c.home_lbl }}</span>
+                </div>
+                <div class="cruce-marcador"><span class="tbd">vs</span></div>
+                <div class="cruce-equipo cruce-equipo--visita">
+                  {% if c.away %}<img src="https://flagcdn.com/w80/{{ iso_v }}.png" alt="{{ c.away }}">{% endif %}
+                  <span class="cod">{{ c.away or '?' }}</span>
+                  <span style="display:block;font-size:.6rem;color:var(--gris)">{{ c.away_lbl }}</span>
+                </div>
+              </div>
+            </div>
+          {% endfor %}
+        </div>
+      {% elif not cruces %}
         <div class="cruces-empty">
           <p>⚽ Los cruces de 16avos aún no fueron generados.</p>
           {% if current_user.es_admin %}
@@ -510,6 +541,48 @@ function renderLineups(sd) {
 // Fetch inmediato + cada 60 s
 fetchLiveMatches();
 setInterval(fetchLiveMatches, 60000);
+
+// ── Cierre automatico de cruces de 16avos (sin boton) ─────────────
+const CRUCES_FIJADOS = "{{ 'true' if cruces else 'false' }}" === "true";
+(function () {
+  if (CRUCES_FIJADOS) return;
+  const KEY = 'cruces_lock_check';
+  const last = parseInt(localStorage.getItem(KEY) || '0', 10);
+  if (Date.now() - last < 10 * 60 * 1000) return;
+
+  const R32 = 'https://site.api.espn.com/apis/site/v2/sports/soccer/fifa.world/scoreboard?dates=20260628-20260703';
+  const esReal = (ab) => ab && !/\d/.test(ab);  // placeholders traen digito (2A, 3RD)
+
+  (async () => {
+    try {
+      const r = await fetch(R32);
+      const data = await r.json();
+      const partidos = [];
+      (data.events || []).forEach(ev => {
+        const comp = (ev.competitions && ev.competitions[0]) || {};
+        const home = (comp.competitors || []).find(c => c.homeAway === 'home') || {};
+        const away = (comp.competitors || []).find(c => c.homeAway === 'away') || {};
+        const h = home.team && home.team.abbreviation;
+        const a = away.team && away.team.abbreviation;
+        if (!esReal(h) || !esReal(a)) return;
+        const d = new Date(ev.date);
+        const ect = new Date(d.getTime() - 5 * 3600 * 1000);
+        const fecha = `${ect.getUTCFullYear()}-${String(ect.getUTCMonth()+1).padStart(2,'0')}-${String(ect.getUTCDate()).padStart(2,'0')}`;
+        const hora = `${String(ect.getUTCHours()).padStart(2,'0')}:${String(ect.getUTCMinutes()).padStart(2,'0')}`;
+        partidos.push({ home: h, away: a, fecha, hora });
+      });
+      localStorage.setItem(KEY, Date.now().toString());
+      if (partidos.length < 16) return;
+
+      const resp = await fetch('/torneo/cerrar-cruces', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ partidos }),
+      });
+      const out = await resp.json();
+      if (out.ok && out.creados > 0) location.reload();
+    } catch (e) { console.warn('Cierre cruces error:', e); }
+  })();
+})();
 
 </script>
 {% endblock %}

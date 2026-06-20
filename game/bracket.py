@@ -286,3 +286,105 @@ def get_cruces_16avos():
             ORDER BY fecha, hora, id
         """).fetchall()
     return [dict(r) for r in rows]
+
+
+# =====================================================================
+#  CUADRO PROYECTADO DE 16AVOS  (como si los grupos acabaran hoy)
+# =====================================================================
+#
+# Plantilla oficial FIFA 2026 (tomada del cuadro publicado por ESPN).
+# Para cada cruce "ganador vs mejor tercero", el conjunto de grupos
+# candidatos del tercero es el oficial. La asignacion exacta de cada
+# tercero se resuelve por emparejamiento contra esos conjuntos.
+# ---------------------------------------------------------------------
+
+# Conjuntos candidatos de terceros por grupo del ganador (oficial ESPN)
+_CAND_TERCEROS = {
+    "E": set("ABCDF"),
+    "I": set("CDFGH"),
+    "A": set("CEFHI"),
+    "L": set("EHIJK"),
+    "G": set("AEHIJ"),
+    "D": set("BEFIJ"),
+    "B": set("EFGIJ"),
+    "K": set("DEIJL"),
+}
+
+# Plantilla de los 16 partidos: (fecha_ect, hora_ect, local_spec, visita_spec)
+#   spec = ("1", grupo) ganador | ("2", grupo) subcampeon | ("3", grupo_ganador) tercero
+_PLANTILLA_16AVOS = [
+    ("2026-06-28", "14:00", ("2", "A"), ("2", "B")),
+    ("2026-06-29", "12:00", ("1", "C"), ("2", "F")),
+    ("2026-06-29", "15:30", ("1", "E"), ("3", "E")),
+    ("2026-06-29", "20:00", ("1", "F"), ("2", "C")),
+    ("2026-06-30", "12:00", ("2", "E"), ("2", "I")),
+    ("2026-06-30", "16:00", ("1", "I"), ("3", "I")),
+    ("2026-06-30", "20:00", ("1", "A"), ("3", "A")),
+    ("2026-07-01", "11:00", ("1", "L"), ("3", "L")),
+    ("2026-07-01", "15:00", ("1", "G"), ("3", "G")),
+    ("2026-07-01", "19:00", ("1", "D"), ("3", "D")),
+    ("2026-07-02", "14:00", ("1", "H"), ("2", "J")),
+    ("2026-07-02", "18:00", ("2", "K"), ("2", "L")),
+    ("2026-07-02", "22:00", ("1", "B"), ("3", "B")),
+    ("2026-07-03", "13:00", ("2", "D"), ("2", "G")),
+    ("2026-07-03", "17:00", ("1", "J"), ("2", "H")),
+    ("2026-07-03", "20:30", ("1", "K"), ("3", "K")),
+]
+
+
+def _emparejar_terceros(grupos_terceros):
+    """Asigna cada grupo-tercero a un slot de ganador respetando los conjuntos
+    candidatos oficiales. Retorna {grupo_ganador: grupo_tercero} o {} si no hay
+    emparejamiento perfecto."""
+    asign = {}
+
+    def bt(slots, grupos):
+        if not slots:
+            return True
+        # MRV: el slot con menos candidatos disponibles primero
+        slots = sorted(slots, key=lambda s: sum(1 for g in grupos if g in _CAND_TERCEROS[s]))
+        slot = slots[0]
+        for g in sorted(x for x in grupos if x in _CAND_TERCEROS[slot]):
+            asign[slot] = g
+            if bt([s for s in slots if s != slot], [x for x in grupos if x != g]):
+                return True
+            del asign[slot]
+        return False
+
+    return asign if bt(list(_CAND_TERCEROS.keys()), list(grupos_terceros)) else {}
+
+
+def get_cruces_proyectados():
+    """Cuadro de 16avos proyectado con las posiciones actuales de grupos.
+    Retorna lista de 16 dicts: {fecha, hora, home, home_lbl, away, away_lbl}.
+    home/away = codigo de equipo proyectado (o None); *_lbl = etiqueta de slot."""
+    clasi = get_clasificados()
+    tablas = clasi["tablas"]
+    mejores = clasi["mejores_terceros"]
+    grupos_terceros = [t["grupo"] for t in mejores]
+    asign = _emparejar_terceros(grupos_terceros)
+    tercero_equipo = {t["grupo"]: t["equipo"] for t in mejores}
+
+    def eq(grupo, pos):
+        t = tablas.get(grupo)
+        return t[pos]["equipo"] if t and len(t) > pos else None
+
+    def resolver(spec):
+        tipo, g = spec
+        if tipo == "1":
+            return eq(g, 0), "1° " + g
+        if tipo == "2":
+            return eq(g, 1), "2° " + g
+        # tercero asignado al slot del ganador de grupo g
+        gt = asign.get(g)
+        if gt:
+            return tercero_equipo.get(gt), "3° " + gt
+        return None, "3°"
+
+    out = []
+    for fecha, hora, h, a in _PLANTILLA_16AVOS:
+        hc, hl = resolver(h)
+        ac, al = resolver(a)
+        out.append({"fecha": fecha, "hora": hora,
+                    "home": hc, "home_lbl": hl, "away": ac, "away_lbl": al})
+    return out

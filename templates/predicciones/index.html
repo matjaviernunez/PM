@@ -14,17 +14,11 @@
 
 
   <!-- ── Pestañas de fase ────────────────────────────────────────── -->
-  <div class="pred-tabs">
-    <a href="{{ url_for('predicciones.index') }}"
-       class="pred-tab {% if tab_activa == 'grupos' %}pred-tab--activa{% endif %}">
-      ⚽ Grupos
-    </a>
-    {% if fases_elim %}
-    <a href="{{ url_for('predicciones.eliminatorias') }}"
-       class="pred-tab {% if tab_activa == 'eliminatorias' %}pred-tab--activa{% endif %}">
-      ⚔️ Eliminatorias
-    </a>
-    {% endif %}
+  <div class="torneo-tabs-bar">
+    <a class="torneo-tab {% if tab_activa == 'grupos' %}active{% endif %}"
+       href="{{ url_for('predicciones.index') }}">⚽ Grupos</a>
+    <a class="torneo-tab {% if tab_activa == 'eliminatorias' %}active{% endif %}"
+       href="{{ url_for('predicciones.eliminatorias') }}">⚔️ Eliminatorias</a>
   </div>
   <!-- ── Panel de reglas (toggle) ───────────────────────────────── -->
   <div class="rules-bar">

@@ -13,23 +13,17 @@
   </div>
 
   <!-- Pestañas -->
-  <div class="pred-tabs">
-    <a href="{{ url_for('predicciones.index') }}"
-       class="pred-tab {% if tab_activa == 'grupos' %}pred-tab--activa{% endif %}">
-      ⚽ Grupos
-    </a>
-    {% if fases_elim %}
-    <a href="{{ url_for('predicciones.eliminatorias') }}"
-       class="pred-tab {% if tab_activa == 'eliminatorias' %}pred-tab--activa{% endif %}">
-      ⚔️ Eliminatorias
-    </a>
-    {% endif %}
+  <div class="torneo-tabs-bar">
+    <a class="torneo-tab {% if tab_activa == 'grupos' %}active{% endif %}"
+       href="{{ url_for('predicciones.index') }}">⚽ Grupos</a>
+    <a class="torneo-tab {% if tab_activa == 'eliminatorias' %}active{% endif %}"
+       href="{{ url_for('predicciones.eliminatorias') }}">⚔️ Eliminatorias</a>
   </div>
 
   {% if not por_fase %}
     <div class="empty-state" style="padding:4rem 1rem;text-align:center;color:var(--gris)">
       <span style="font-size:3rem;display:block;margin-bottom:1rem">⏳</span>
-      <p>Los partidos de eliminatorias aparecerán aquí cuando se generen.</p>
+      <p>Las eliminatorias se habilitan automáticamente al cerrar la fase de grupos.</p>
     </div>
   {% else %}
 

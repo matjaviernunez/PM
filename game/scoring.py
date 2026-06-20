@@ -1,18 +1,21 @@
 """
 game/scoring.py -- Motor de puntuacion de la polla.
 
-Reglas base (todas las fases, tiempo reglamentario):
+GRUPOS (tiempo reglamentario):
   - Acertar resultado (W/D/L)    -> 1 pt
-  - + Diferencia de goles exacta -> 1 pt adicional (requiere resultado correcto)
-  - + Marcador exacto            -> 2 pts adicionales (requiere diferencia correcta)
-  Maximo base: 4 pts
+  - + Diferencia de goles exacta -> 1 pt (requiere resultado correcto)
+  - + Marcador exacto            -> 2 pts (requiere diferencia correcta)
+  Maximo: 4 pts.
 
-Eliminatorias CON penales (empate en tiempo reglamentario):
-  Los criterios de tiempo reglamentario y el criterio de penales son INDEPENDIENTES:
-  - Ganador en penales (+1p): predice empate Y acierta quien gana en penales
-  - Diferencia correcta en TR (+1p): pred_diff == real_diff (ambos 0 si es empate)
-  - Marcador exacto en TR (+2p): requiere diferencia correcta
-  Maximo base: 4 pts (1 + 1 + 2)
+ELIMINATORIAS:
+  El punto de "acertar resultado" se REEMPLAZA por "acertar quien avanza":
+  - Acertar quien avanza         -> 1 pt
+      (el equipo que predijiste que pasa == el que paso; tu avanzador es el
+       que predijiste ganando en 90'/prorroga, o el ganador de penales que
+       pusiste si predijiste empate)
+  - + Diferencia exacta en TR    -> 1 pt (independiente de quien avanza)
+  - + Marcador exacto en TR      -> 2 pts (requiere diferencia correcta)
+  Maximo: 4 pts. El marcador de la tanda no se puntua, solo quien gana.
 
 Multiplicadores por fase:
   grupos / 16avos            -> x1
@@ -37,39 +40,50 @@ def calcular_puntos(
     multiplicador = MULTIPLICADORES.get(fase, 1)
     puntos = 0
 
-    # Signo del resultado en tiempo reglamentario
+    pred_diff = pred_local - pred_visita
+    real_diff = real_local - real_visita
     pred_res = (pred_local > pred_visita) - (pred_local < pred_visita)
     real_res = (real_local > real_visita) - (real_local < real_visita)
 
-    partido_fue_a_penales = (real_res == 0 and real_pen_local is not None
-                             and real_pen_visita is not None)
-
-    if partido_fue_a_penales:
-        real_gan_pen = 'local' if real_pen_local > real_pen_visita else 'visita'
-
-        # Criterio independiente: ganador via penales
-        # Requiere haber predicho empate Y el ganador correcto en penales
-        pred_empate = (pred_res == 0)
-        if pred_empate and pred_pen_local is not None and pred_pen_visita is not None:
-            pred_gan_pen = 'local' if pred_pen_local > pred_pen_visita else 'visita'
-            if pred_gan_pen == real_gan_pen:
-                puntos += 1  # +1 por acertar quien avanza
-
-        # Criterios independientes: marcador en tiempo reglamentario
-        if (pred_local - pred_visita) == (real_local - real_visita):
-            puntos += 1  # +1 diferencia correcta en TR
-            if pred_local == real_local and pred_visita == real_visita:
-                puntos += 2  # +2 marcador exacto en TR
-    else:
-        # Partido normal (sin penales)
+    if fase == "grupos":
+        # Grupos: resultado (W/D/L) -> diferencia -> marcador exacto
         if pred_res == real_res:
-            puntos += 1  # acierto resultado
-
-            if (pred_local - pred_visita) == (real_local - real_visita):
-                puntos += 1  # diferencia exacta
-
+            puntos += 1
+            if pred_diff == real_diff:
+                puntos += 1
                 if pred_local == real_local and pred_visita == real_visita:
-                    puntos += 2  # marcador exacto
+                    puntos += 2
+        return puntos * multiplicador
+
+    # -- Eliminatorias ----------------------------------------------------
+    # El punto de "acertar resultado" se reemplaza por "acertar quien avanza".
+    # Equipo que el usuario predijo que avanza:
+    if pred_res != 0:
+        pred_avanza = "local" if pred_res > 0 else "visita"
+    elif pred_pen_local is not None and pred_pen_visita is not None:
+        pred_avanza = "local" if pred_pen_local > pred_pen_visita else "visita"
+    else:
+        pred_avanza = None  # predijo empate sin indicar ganador de penales
+
+    # Equipo que realmente avanza:
+    if real_res != 0:
+        real_avanza = "local" if real_res > 0 else "visita"
+    elif real_pen_local is not None and real_pen_visita is not None:
+        real_avanza = "local" if real_pen_local > real_pen_visita else "visita"
+    elif real_pen_ganador in ("local", "visita"):
+        real_avanza = real_pen_ganador
+    else:
+        real_avanza = None  # empate sin penales (no deberia ocurrir en KO)
+
+    # +1 por acertar quien avanza (reemplaza "acertar resultado")
+    if real_avanza is not None and pred_avanza == real_avanza:
+        puntos += 1
+
+    # +1 diferencia exacta y +2 marcador exacto del tiempo reglamentario
+    if pred_diff == real_diff:
+        puntos += 1
+        if pred_local == real_local and pred_visita == real_visita:
+            puntos += 2
 
     return puntos * multiplicador
 
