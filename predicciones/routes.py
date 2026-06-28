@@ -116,10 +116,16 @@ def index():
 def eliminatorias():
     cerrar_partidos_vencidos()
 
+    fase_activa = request.args.get('fase', '')
+    fases_elim = get_fases_eliminatorias_disponibles()
+
+    # Si no se especifica fase o no es válida, usar la primera disponible
+    if fase_activa not in fases_elim and fases_elim:
+        fase_activa = fases_elim[0]
+
     partidos = get_partidos_eliminatorias()
     partido_ids = [p['id'] for p in partidos]
     predicciones = get_predicciones_usuario(current_user.id, partido_ids)
-    fases_elim = get_fases_eliminatorias_disponibles()
 
     # Agrupar partidos por fase
     por_fase = {}
@@ -128,7 +134,7 @@ def eliminatorias():
 
     return render_template(
         'predicciones/eliminatorias.html',
-        tab_activa='eliminatorias',
+        tab_activa=fase_activa,
         por_fase=por_fase,
         predicciones=predicciones,
         equipos=EQUIPOS,

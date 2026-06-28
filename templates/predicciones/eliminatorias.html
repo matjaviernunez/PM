@@ -12,12 +12,16 @@
     </div>
   </div>
 
-  <!-- Pestañas -->
+  <!-- Pestañas dinámicas por fase -->
   <div class="torneo-tabs-bar">
-    <a class="torneo-tab {% if tab_activa == 'grupos' %}active{% endif %}"
+    <a class="torneo-tab"
        href="{{ url_for('predicciones.index') }}">⚽ Grupos</a>
-    <a class="torneo-tab {% if tab_activa == 'eliminatorias' %}active{% endif %}"
-       href="{{ url_for('predicciones.eliminatorias') }}">⚔️ Eliminatorias</a>
+    {% for fase in fases_elim %}
+      <a class="torneo-tab {% if tab_activa == fase %}active{% endif %}"
+         href="{{ url_for('predicciones.eliminatorias', fase=fase) }}">
+        ⚔️ {{ label_fase.get(fase, fase) }}
+      </a>
+    {% endfor %}
   </div>
 
   {% if not por_fase %}
@@ -27,16 +31,16 @@
     </div>
   {% else %}
 
-  {% for fase in fases_elim %}
-    {% if fase in por_fase %}
+  {# Solo mostrar la fase activa #}
+  {% if tab_activa in por_fase %}
     <div class="fase-section">
 
       <div class="fase-header">
-        <span class="fase-label">{{ label_fase.get(fase, fase) }}</span>
+        <span class="fase-label">{{ label_fase.get(tab_activa, tab_activa) }}</span>
       </div>
 
       <div class="partidos-list">
-        {% for partido in por_fase[fase] %}
+        {% for partido in por_fase[tab_activa] %}
           {% set pred = predicciones.get(partido.id) %}
           {% set cerrado = not partido.abierto %}
           {% set iso_l = equipos[partido.equipo_local].iso  if partido.equipo_local  in equipos else 'un' %}
@@ -142,8 +146,7 @@
         {% endfor %}
       </div>
     </div>
-    {% endif %}
-  {% endfor %}
+  {% endif %}
 
   {% endif %}
 

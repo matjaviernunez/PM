@@ -10,8 +10,8 @@
       <button class="btn-scrape" onclick="scrapeResultados()">
         🔄 Actualizar desde ESPN
       </button>
-      <button class="btn-scrape" onclick="importar16avos()" style="background:#1a6b3c;margin-left:.5rem">
-        ⚽ Importar 16avos
+      <button class="btn-scrape" onclick="importarEliminatorias()" style="background:#1a6b3c;margin-left:.5rem">
+        ⚽ Importar Eliminatorias
       </button>
       <a class="btn-scrape" href="{{ url_for('admin.descargar_backup') }}"
          style="background:#2c3e50;color:#fff;text-decoration:none;margin-left:.5rem;display:inline-block">💾 Respaldo</a>
@@ -656,22 +656,33 @@ async function eliminarUsuario(id, nombre) {
   } else { alert(data.error); }
 }
 
-// ── Importar 16avos desde ESPN ──────────────────────────────────
-async function importar16avos() {
+// ── Importar eliminatorias desde ESPN (auto-deteccion de fase) ──
+async function importarEliminatorias() {
   const st = document.getElementById('scrape-status');
   st.innerHTML = '<span class="status-guardando">⏳ Consultando ESPN...</span>';
 
+  // Mapeo fecha ECT → fase
+  const FASE_POR_FECHA = {
+    '2026-06-28':'16avos','2026-06-29':'16avos','2026-06-30':'16avos',
+    '2026-07-01':'16avos','2026-07-02':'16avos','2026-07-03':'16avos',
+    '2026-07-04':'octavos','2026-07-05':'octavos','2026-07-06':'octavos','2026-07-07':'octavos',
+    '2026-07-09':'cuartos','2026-07-10':'cuartos','2026-07-11':'cuartos','2026-07-12':'cuartos',
+    '2026-07-14':'semis','2026-07-15':'semis',
+    '2026-07-18':'3er_puesto',
+    '2026-07-19':'final',
+  };
+
   try {
-    // 1. Fetch scoreboard ESPN (rango 28 jun - 4 jul)
-    const url = 'https://site.api.espn.com/apis/site/v2/sports/soccer/fifa.world/scoreboard?dates=20260628-20260704';
+    // 1. Fetch ESPN con rango completo de eliminatorias
+    const url = 'https://site.api.espn.com/apis/site/v2/sports/soccer/fifa.world/scoreboard?dates=20260628-20260719';
     const resp = await fetch(url);
     if (!resp.ok) throw new Error('ESPN respondio ' + resp.status);
     const espn = await resp.json();
     const events = espn.events || [];
 
-    // 2. Filtrar solo cruces con ambos equipos reales (sin digitos = sin placeholders)
+    // 2. Filtrar equipos reales y asignar fase por fecha ECT
     const esReal = (abbr) => abbr && !/\d/.test(abbr);
-    const partidos = [];
+    const porFase = {};  // { fase: [partido, ...] }
 
     for (const ev of events) {
       const comp = ev.competitions[0];
@@ -684,11 +695,9 @@ async function importar16avos() {
       const aAbbr = away.team.abbreviation;
       if (!esReal(hAbbr) || !esReal(aAbbr)) continue;
 
-      // 3. Convertir fecha UTC -> hora Ecuador (UTC-5)
+      // UTC → ECT (UTC-5)
       const dtUTC = new Date(ev.date);
       if (isNaN(dtUTC.getTime())) continue;
-
-      // Restar 5 horas para ECT
       const dtECT = new Date(dtUTC.getTime() - 5 * 60 * 60 * 1000);
       const fecha = dtECT.getUTCFullYear()
         + '-' + String(dtECT.getUTCMonth() + 1).padStart(2, '0')
@@ -696,39 +705,64 @@ async function importar16avos() {
       const hora = String(dtECT.getUTCHours()).padStart(2, '0')
         + ':' + String(dtECT.getUTCMinutes()).padStart(2, '0');
 
-      partidos.push({ home: hAbbr, away: aAbbr, fecha, hora });
+      const fase = FASE_POR_FECHA[fecha];
+      if (!fase) continue;  // fecha fuera del rango conocido
+
+      if (!porFase[fase]) porFase[fase] = [];
+      porFase[fase].push({ home: hAbbr, away: aAbbr, fecha, hora });
     }
 
-    if (partidos.length === 0) {
+    const fases = Object.keys(porFase);
+    if (fases.length === 0) {
       st.innerHTML = '<span class="status-error">ESPN aun no tiene cruces definidos con equipos reales</span>';
       return;
     }
 
-    // 4. Confirmar antes de enviar
-    const resumen = partidos.map(p => `${p.fecha} ${p.hora} · ${p.home} vs ${p.away}`).join('\n');
-    if (!confirm(`Se encontraron ${partidos.length} cruces reales:\n\n${resumen}\n\n¿Importar?`)) {
+    // 3. Confirmar — resumen agrupado por fase
+    const orden = ['16avos','octavos','cuartos','semis','3er_puesto','final'];
+    const fasesOrden = orden.filter(f => porFase[f]);
+    let resumen = '';
+    let totalPartidos = 0;
+    for (const f of fasesOrden) {
+      const ps = porFase[f];
+      totalPartidos += ps.length;
+      resumen += `\n── ${f.toUpperCase()} (${ps.length}) ──\n`;
+      resumen += ps.map(p => `  ${p.fecha} ${p.hora} · ${p.home} vs ${p.away}`).join('\n');
+    }
+    if (!confirm(`Se encontraron ${totalPartidos} cruces reales en ${fases.length} fase(s):\n${resumen}\n\n¿Importar?`)) {
       st.textContent = '';
       return;
     }
 
-    // 5. Enviar al backend
+    // 4. Enviar al backend fase por fase
     st.innerHTML = '<span class="status-guardando">⏳ Importando...</span>';
-    const res = await fetch('/admin/importar-fase', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ fase: '16avos', partidos }),
-    });
-    const data = await res.json();
+    let totalCreados = 0, totalExistentes = 0;
+    const resultados = [];
 
-    if (data.ok) {
-      let msg = '';
-      if (data.creados > 0) msg += `${data.creados} cruce(s) importado(s)`;
-      if (data.existentes > 0) msg += `${msg ? ' · ' : ''}${data.existentes} ya existian`;
-      st.innerHTML = `<span class="status-guardado">✓ ${msg}</span>`;
-      if (data.creados > 0) setTimeout(() => location.reload(), 2000);
-    } else {
-      st.innerHTML = `<span class="status-error">✗ ${data.error}</span>`;
+    for (const f of fasesOrden) {
+      const res = await fetch('/admin/importar-fase', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ fase: f, partidos: porFase[f] }),
+      });
+      const data = await res.json();
+      if (!data.ok) {
+        resultados.push(`${f}: ✗ ${data.error}`);
+        continue;
+      }
+      totalCreados += data.creados;
+      totalExistentes += data.existentes;
+      if (data.creados > 0) resultados.push(`${f}: ${data.creados} importado(s)`);
+      else resultados.push(`${f}: ya existian`);
     }
+
+    // 5. Mostrar resumen
+    let msg = '';
+    if (totalCreados > 0) msg += `${totalCreados} cruce(s) importado(s)`;
+    if (totalExistentes > 0) msg += `${msg ? ' · ' : ''}${totalExistentes} ya existian`;
+    if (!msg) msg = 'Sin cambios';
+    st.innerHTML = `<span class="status-guardado">✓ ${msg}</span>`;
+    if (totalCreados > 0) setTimeout(() => location.reload(), 2000);
   } catch (e) {
     st.innerHTML = `<span class="status-error">✗ Error: ${e.message}</span>`;
   }

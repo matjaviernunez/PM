@@ -1,5 +1,5 @@
 """
-torneo/routes.py — Página de Torneo: posiciones de grupos + cruces 16avos.
+torneo/routes.py — Página de Torneo: posiciones de grupos + cruces eliminatorias.
 """
 
 from flask import Blueprint, render_template, request, jsonify
@@ -7,35 +7,39 @@ from flask_login import login_required
 from db import get_db
 
 from game.bracket import get_todas_tablas, get_cruces_16avos, get_cruces_proyectados
+from game.models import get_partidos_eliminatorias, get_fases_eliminatorias_disponibles
 from config import GRUPOS, EQUIPOS
 
 torneo_bp = Blueprint("torneo", __name__,
                       template_folder="../templates/torneo")
 
 
+# Etiquetas bonitas para cada fase
+_LABEL_FASE = {
+    "16avos": "16avos",
+    "octavos": "Octavos",
+    "cuartos": "Cuartos",
+    "semis": "Semis",
+    "3er_puesto": "3er Puesto",
+    "final": "Final",
+}
+
+
 @torneo_bp.route("/")
 @login_required
 def index():
-    tablas  = get_todas_tablas()
-    cruces  = get_cruces_16avos()
+    tab = request.args.get("tab", "posiciones")
 
-    return render_template(
-        "torneo/index.html",
-        tablas=tablas,
-        cruces=cruces,
-        cruces_proyectados=get_cruces_proyectados(),
-        grupos=GRUPOS,
-        equipos=EQUIPOS,
-        tab_activa="posiciones",
-    )
-
-
-@torneo_bp.route("/16avos")
-@login_required
-def dieciseisavos():
     tablas = get_todas_tablas()
     cruces = get_cruces_16avos()
 
+    # Fases knockout con partidos en DB
+    fases_ko = get_fases_eliminatorias_disponibles()
+    todos_ko = get_partidos_eliminatorias()
+    partidos_ko = {}
+    for p in todos_ko:
+        partidos_ko.setdefault(p["fase"], []).append(p)
+
     return render_template(
         "torneo/index.html",
         tablas=tablas,
@@ -43,11 +47,14 @@ def dieciseisavos():
         cruces_proyectados=get_cruces_proyectados(),
         grupos=GRUPOS,
         equipos=EQUIPOS,
-        tab_activa="16avos",
+        tab_activa=tab,
+        fases_ko=fases_ko,
+        partidos_ko=partidos_ko,
+        label_fase=_LABEL_FASE,
     )
 
 
-# ── Cierre automatico de cruces de 16avos (sin boton) ──────────────────────
+# -- Cierre automatico de cruces de 16avos (sin boton) ----------
 # El cliente trae de ESPN los cruces reales (equipos ya definidos) y los envia
 # aqui. Candados: (1) la fase de grupos debe estar completa, (2) idempotente,
 # (3) solo acepta codigos de equipos reales. Asi no se puede corromper el cuadro.
