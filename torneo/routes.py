@@ -2,29 +2,15 @@
 torneo/routes.py — Página de Torneo: posiciones de grupos + cruces 16avos.
 """
 
-import json, os
 from flask import Blueprint, render_template, request, jsonify
 from flask_login import login_required
 from db import get_db
 
 from game.bracket import get_todas_tablas, get_cruces_16avos, get_cruces_proyectados
-from config import GRUPOS, BASE_DIR
+from config import GRUPOS, EQUIPOS
 
 torneo_bp = Blueprint("torneo", __name__,
                       template_folder="../templates/torneo")
-
-
-def _equipos_map() -> dict:
-    path = os.path.join(BASE_DIR, "data", "equipos.json")
-    with open(path, encoding="utf-8") as f:
-        data = json.load(f)
-    m = {}
-    for equipos in data["grupos"].values():
-        for e in equipos:
-            m[e["codigo"]] = {"nombre": e["nombre"], "iso": e["iso"]}
-    return m
-
-EQUIPOS = _equipos_map()
 
 
 @torneo_bp.route("/")

@@ -2,7 +2,6 @@
 predicciones/routes.py -- Vista principal de predicciones por fecha.
 """
 
-import json, os
 from datetime import date, datetime, timedelta
 from flask import Blueprint, render_template, request, jsonify
 from flask_login import login_required, current_user
@@ -18,7 +17,7 @@ from game.models import (
     estado_partido,
     ORDEN_ESTADO,
 )
-from config import GRUPOS, BASE_DIR
+from config import GRUPOS, BASE_DIR, EQUIPOS
 
 pred_bp = Blueprint('predicciones', __name__,
                     template_folder='../templates/predicciones')
@@ -42,19 +41,6 @@ LABEL_FASE = {
     '3er_puesto':'3er Puesto',
     'final':     'Final',
 }
-
-
-def _equipos_map() -> dict:
-    path = os.path.join(BASE_DIR, 'data', 'equipos.json')
-    with open(path, encoding='utf-8') as f:
-        data = json.load(f)
-    m = {}
-    for equipos in data['grupos'].values():
-        for e in equipos:
-            m[e['codigo']] = {'nombre': e['nombre'], 'iso': e['iso']}
-    return m
-
-EQUIPOS = _equipos_map()
 
 
 def _formato_fecha(fecha_str: str) -> str:

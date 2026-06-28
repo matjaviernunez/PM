@@ -10,20 +10,7 @@ from functools import wraps
 import json, os
 from db import get_db
 from game.scoring import recalcular_partido
-from game.bracket import generar_cruces_16avos
-from config import GRUPOS, BASE_DIR
-
-def _equipos_map():
-    path = os.path.join(BASE_DIR, "data", "equipos.json")
-    with open(path, encoding="utf-8") as f:
-        data = json.load(f)
-    m = {}
-    for equipos in data["grupos"].values():
-        for e in equipos:
-            m[e["codigo"]] = {"nombre": e["nombre"], "iso": e["iso"]}
-    return m
-
-EQUIPOS = _equipos_map()
+from config import GRUPOS, BASE_DIR, EQUIPOS
 
 admin_bp = Blueprint("admin", __name__, template_folder="../templates/admin")
 
@@ -280,16 +267,6 @@ def borrar_prediccion():
 
     return jsonify({"ok": True})
 
-
-
-# ── Generar cruces 16avos ─────────────────────────────────────────────────
-
-@admin_bp.route("/generar-16avos", methods=["POST"])
-@login_required
-@admin_required
-def generar_16avos():
-    resultado = generar_cruces_16avos()
-    return jsonify(resultado)
 
 
 # ── Goleadores ────────────────────────────────────────────────────────────

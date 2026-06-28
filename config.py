@@ -1,3 +1,4 @@
+import json
 import os
 
 # ── Rutas ──────────────────────────────────────────────────────────────────
@@ -40,6 +41,22 @@ MULTIPLICADORES = {
 }
 
 GRUPOS = list("ABCDEFGHIJKL")  # 12 grupos para 2026
+
+# ── Equipos ───────────────────────────────────────────────────────────────
+
+def get_equipos_map() -> dict:
+    """Carga equipos.json y retorna {codigo: {nombre, iso}}.
+    Fuente unica -- importar desde aqui en vez de duplicar."""
+    path = os.path.join(BASE_DIR, "data", "equipos.json")
+    with open(path, encoding="utf-8") as f:
+        data = json.load(f)
+    m = {}
+    for equipos in data["grupos"].values():
+        for e in equipos:
+            m[e["codigo"]] = {"nombre": e["nombre"], "iso": e["iso"]}
+    return m
+
+EQUIPOS = get_equipos_map()
 
 # ── Admin ──────────────────────────────────────────────────────────────────
 ADMIN_EMAIL = os.environ.get("ADMIN_EMAIL", "javier.ns87@gmail.com")

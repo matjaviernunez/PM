@@ -177,13 +177,7 @@
       {% elif not cruces %}
         <div class="cruces-empty">
           <p>⚽ Los cruces de 16avos aún no fueron generados.</p>
-          {% if current_user.es_admin %}
-            <p style="font-size:.8rem;color:var(--dorado)">
-              Ve al Panel Admin y pulsa "⚽ Generar 16avos" cuando cierren los grupos.
-            </p>
-          {% else %}
-            <p style="font-size:.8rem">Disponible una vez cerrada la fase de grupos.</p>
-          {% endif %}
+          <p style="font-size:.8rem">Se generan automáticamente al cerrar la fase de grupos.</p>
         </div>
       {% else %}
         <div class="cruces-list">
