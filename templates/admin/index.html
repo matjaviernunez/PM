@@ -10,6 +10,9 @@
       <button class="btn-scrape" onclick="scrapeResultados()">
         🔄 Actualizar desde ESPN
       </button>
+      <button class="btn-scrape" onclick="importar16avos()" style="background:#1a6b3c;margin-left:.5rem">
+        ⚽ Importar 16avos
+      </button>
       <a class="btn-scrape" href="{{ url_for('admin.descargar_backup') }}"
          style="background:#2c3e50;color:#fff;text-decoration:none;margin-left:.5rem;display:inline-block">💾 Respaldo</a>
       <span id="scrape-status"></span>
@@ -651,6 +654,84 @@ async function eliminarUsuario(id, nombre) {
     document.getElementById(`user-row-${id}`).remove();
     document.getElementById(`upreds-row-${id}`).remove();
   } else { alert(data.error); }
+}
+
+// ── Importar 16avos desde ESPN ──────────────────────────────────
+async function importar16avos() {
+  const st = document.getElementById('scrape-status');
+  st.innerHTML = '<span class="status-guardando">⏳ Consultando ESPN...</span>';
+
+  try {
+    // 1. Fetch scoreboard ESPN (rango 28 jun - 4 jul)
+    const url = 'https://site.api.espn.com/apis/site/v2/sports/soccer/fifa.world/scoreboard?dates=20260628-20260704';
+    const resp = await fetch(url);
+    if (!resp.ok) throw new Error('ESPN respondio ' + resp.status);
+    const espn = await resp.json();
+    const events = espn.events || [];
+
+    // 2. Filtrar solo cruces con ambos equipos reales (sin digitos = sin placeholders)
+    const esReal = (abbr) => abbr && !/\d/.test(abbr);
+    const partidos = [];
+
+    for (const ev of events) {
+      const comp = ev.competitions[0];
+      const teams = comp.competitors;
+      const home = teams.find(t => t.homeAway === 'home');
+      const away = teams.find(t => t.homeAway === 'away');
+      if (!home || !away) continue;
+
+      const hAbbr = home.team.abbreviation;
+      const aAbbr = away.team.abbreviation;
+      if (!esReal(hAbbr) || !esReal(aAbbr)) continue;
+
+      // 3. Convertir fecha UTC -> hora Ecuador (UTC-5)
+      const dtUTC = new Date(ev.date);
+      if (isNaN(dtUTC.getTime())) continue;
+
+      // Restar 5 horas para ECT
+      const dtECT = new Date(dtUTC.getTime() - 5 * 60 * 60 * 1000);
+      const fecha = dtECT.getUTCFullYear()
+        + '-' + String(dtECT.getUTCMonth() + 1).padStart(2, '0')
+        + '-' + String(dtECT.getUTCDate()).padStart(2, '0');
+      const hora = String(dtECT.getUTCHours()).padStart(2, '0')
+        + ':' + String(dtECT.getUTCMinutes()).padStart(2, '0');
+
+      partidos.push({ home: hAbbr, away: aAbbr, fecha, hora });
+    }
+
+    if (partidos.length === 0) {
+      st.innerHTML = '<span class="status-error">ESPN aun no tiene cruces definidos con equipos reales</span>';
+      return;
+    }
+
+    // 4. Confirmar antes de enviar
+    const resumen = partidos.map(p => `${p.fecha} ${p.hora} · ${p.home} vs ${p.away}`).join('\n');
+    if (!confirm(`Se encontraron ${partidos.length} cruces reales:\n\n${resumen}\n\n¿Importar?`)) {
+      st.textContent = '';
+      return;
+    }
+
+    // 5. Enviar al backend
+    st.innerHTML = '<span class="status-guardando">⏳ Importando...</span>';
+    const res = await fetch('/admin/importar-fase', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ fase: '16avos', partidos }),
+    });
+    const data = await res.json();
+
+    if (data.ok) {
+      let msg = '';
+      if (data.creados > 0) msg += `${data.creados} cruce(s) importado(s)`;
+      if (data.existentes > 0) msg += `${msg ? ' · ' : ''}${data.existentes} ya existian`;
+      st.innerHTML = `<span class="status-guardado">✓ ${msg}</span>`;
+      if (data.creados > 0) setTimeout(() => location.reload(), 2000);
+    } else {
+      st.innerHTML = `<span class="status-error">✗ ${data.error}</span>`;
+    }
+  } catch (e) {
+    st.innerHTML = `<span class="status-error">✗ Error: ${e.message}</span>`;
+  }
 }
 </script>
 {% endblock %}
