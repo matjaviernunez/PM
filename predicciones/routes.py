@@ -127,10 +127,16 @@ def eliminatorias():
     partido_ids = [p['id'] for p in partidos]
     predicciones = get_predicciones_usuario(current_user.id, partido_ids)
 
-    # Agrupar partidos por fase
+    # Agrupar partidos por fase y ordenar finalizados al fondo
+    ahora_ect = datetime.utcnow() - timedelta(hours=5)
     por_fase = {}
     for p in partidos:
         por_fase.setdefault(p['fase'], []).append(p)
+
+    for fase in por_fase:
+        por_fase[fase].sort(
+            key=lambda p: (ORDEN_ESTADO[estado_partido(p, ahora_ect)], p.get('hora', ''))
+        )
 
     return render_template(
         'predicciones/eliminatorias.html',
