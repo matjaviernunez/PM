@@ -67,6 +67,31 @@ def get_fases_eliminatorias_disponibles() -> list[str]:
     return [f for f in fases_orden if f in fases]
 
 
+def get_fase_activa() -> str:
+    """Detecta la fase actual del Mundial por fechas.
+
+    Lógica: la fase activa es la más avanzada que tiene al menos un
+    partido pendiente (sin resultado).  Si todas las fases tienen
+    resultados completos, devuelve la última disponible.
+    Si no hay fases knockout, devuelve 'grupos'.
+    """
+    fases = get_fases_eliminatorias_disponibles()
+    if not fases:
+        return 'grupos'
+
+    with get_db() as conn:
+        for fase in fases:
+            pendientes = conn.execute("""
+                SELECT COUNT(*) FROM partidos
+                WHERE fase = ? AND goles_local IS NULL
+            """, (fase,)).fetchone()[0]
+            if pendientes > 0:
+                return fase
+
+    # Todas completas: devolver la última fase disponible
+    return fases[-1]
+
+
 def guardar_predicciones_lote(usuario_id: int, predicciones: list[dict]) -> dict:
     """
     Guarda multiples predicciones de una vez.

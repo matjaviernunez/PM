@@ -7,7 +7,7 @@ from flask_login import login_required
 from db import get_db
 
 from game.bracket import get_todas_tablas, get_cruces_16avos, get_cruces_proyectados
-from game.models import get_partidos_eliminatorias, get_fases_eliminatorias_disponibles
+from game.models import get_partidos_eliminatorias, get_fases_eliminatorias_disponibles, get_fase_activa
 from config import GRUPOS, EQUIPOS
 
 torneo_bp = Blueprint("torneo", __name__,
@@ -28,7 +28,7 @@ _LABEL_FASE = {
 @torneo_bp.route("/")
 @login_required
 def index():
-    tab = request.args.get("tab", "posiciones")
+    tab = request.args.get("tab") or get_fase_activa()
 
     tablas = get_todas_tablas()
     cruces = get_cruces_16avos()

@@ -3,13 +3,14 @@ predicciones/routes.py -- Vista principal de predicciones por fecha.
 """
 
 from datetime import date, datetime, timedelta
-from flask import Blueprint, render_template, request, jsonify
+from flask import Blueprint, render_template, request, jsonify, redirect, url_for
 from flask_login import login_required, current_user
 
 from game.models import (
     get_todos_partidos_grupos,
     get_partidos_eliminatorias,
     get_fases_eliminatorias_disponibles,
+    get_fase_activa,
     get_predicciones_usuario,
     guardar_prediccion,
     guardar_predicciones_lote,
@@ -59,6 +60,11 @@ def _formato_fecha(fecha_str: str) -> str:
 @login_required
 def index():
     cerrar_partidos_vencidos()
+
+    # Si la fase activa ya no es grupos, redirigir a eliminatorias
+    fase_actual = get_fase_activa()
+    if fase_actual != 'grupos':
+        return redirect(url_for('predicciones.eliminatorias', fase=fase_actual))
 
     # Popup de cambio de posicion al entrar (helper unico en ranking.routes)
     try:
@@ -119,9 +125,11 @@ def eliminatorias():
     fase_activa = request.args.get('fase', '')
     fases_elim = get_fases_eliminatorias_disponibles()
 
-    # Si no se especifica fase o no es válida, usar la primera disponible
-    if fase_activa not in fases_elim and fases_elim:
-        fase_activa = fases_elim[0]
+    # Si no se especifica fase o no es valida, usar la fase activa actual
+    if fase_activa not in fases_elim:
+        fase_activa = get_fase_activa()
+        if fase_activa == 'grupos' and fases_elim:
+            fase_activa = fases_elim[0]
 
     partidos = get_partidos_eliminatorias()
     partido_ids = [p['id'] for p in partidos]
