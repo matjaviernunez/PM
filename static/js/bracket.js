@@ -84,7 +84,7 @@
         if (m) {
           matches[slot.id] = m;
           slotTeams[slot.id] = [m.equipo_local, m.equipo_visita];
-          if (m.goles_local !== null && m.goles_local !== undefined) {
+          if (m.goles_local !== null && m.goles_local !== undefined && m.estado === 'post') {
             var w, l;
             if (m.goles_local > m.goles_visita)      { w = m.equipo_local;  l = m.equipo_visita; }
             else if (m.goles_visita > m.goles_local)  { w = m.equipo_visita; l = m.equipo_local;  }
@@ -108,7 +108,7 @@
     if (tp) {
       matches[THIRD.slot.id] = tp;
       slotTeams[THIRD.slot.id] = [tp.equipo_local, tp.equipo_visita];
-      if (tp.goles_local !== null && tp.goles_local !== undefined) {
+      if (tp.goles_local !== null && tp.goles_local !== undefined && tp.estado === 'post') {
         winners[THIRD.slot.id] = tp.goles_local > tp.goles_visita ? tp.equipo_local
           : tp.goles_visita > tp.goles_local ? tp.equipo_visita
           : tp.penales_ganador === 'local' ? tp.equipo_local : tp.equipo_visita;
