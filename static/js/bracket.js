@@ -134,6 +134,10 @@
     var filterSel = document.getElementById('bracket-from-round');
     var startIdx = filterSel ? parseInt(filterSel.value) || 0 : 0;
 
+    // Ajustar altura del canvas segun rondas visibles
+    var numRounds = ROUNDS.length - startIdx;
+    container.dataset.rounds = numRounds;
+
     // SVG para conectores
     var svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
     svg.id = 'bracket-svg';
@@ -161,18 +165,22 @@
       container.appendChild(col);
     });
 
-    // 3er puesto — solo si semis visibles
+    // 3er puesto — columna propia al nivel de la Final
     if (startIdx <= 3) {
-      var tDiv = document.createElement('div');
-      tDiv.className = 'bkt-third-section';
-      var tLbl = document.createElement('div');
-      tLbl.className = 'bkt-third-label';
-      tLbl.textContent = '3er Puesto';
-      tDiv.appendChild(tLbl);
-      var tGame = buildGame(THIRD.slot, equipos);
-      tGame.classList.add('bkt-third-game');
-      tDiv.appendChild(tGame);
-      container.appendChild(tDiv);
+      var tCol = document.createElement('div');
+      tCol.className = 'bkt-round bkt-round--third';
+      tCol.dataset.round = '3er_puesto';
+
+      var tHdr = document.createElement('div');
+      tHdr.className = 'bkt-round-hdr';
+      tHdr.textContent = '3er Puesto';
+      tCol.appendChild(tHdr);
+
+      var tGames = document.createElement('div');
+      tGames.className = 'bkt-games';
+      tGames.appendChild(buildGame(THIRD.slot, equipos));
+      tCol.appendChild(tGames);
+      container.appendChild(tCol);
     }
 
     // Hint
@@ -276,13 +284,10 @@
     teams[info.pos] = winners[changedId] || null;
     slotTeams[tid] = teams;
 
-    // Si el ganador anterior ya no esta en los equipos, limpiarlo
-    if (winners[tid] && teams.indexOf(winners[tid]) === -1) {
-      delete winners[tid];
-      delete losersMap[tid];
-      propagate(tid);
-    }
-    update3rd();
+    // Siempre resetear predicción downstream cuando un alimentador cambia
+    delete winners[tid];
+    delete losersMap[tid];
+    propagate(tid);
   }
 
   function update3rd() {

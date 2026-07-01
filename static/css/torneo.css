@@ -608,6 +608,10 @@
   display: flex; position: relative;
   min-height: 750px; gap: 0;
 }
+/* Reducir altura cuando se filtran pocas rondas */
+.bkt-canvas[data-rounds="3"] { min-height: 450px; }
+.bkt-canvas[data-rounds="2"] { min-height: 280px; }
+.bkt-canvas[data-rounds="1"] { min-height: 180px; }
 
 .bkt-svg {
   position: absolute; top: 0; left: 0;
@@ -689,16 +693,9 @@
   font-style: italic; font-size: .68rem;
 }
 
-/* 3rd place section */
-.bkt-third-section {
-  margin-top: 1rem; padding: 0 14px;
-}
-.bkt-third-label {
-  font-size: .68rem; font-weight: 700; text-transform: uppercase;
-  color: var(--gris); text-align: center; margin-bottom: .3rem;
-}
-.bkt-third-game {
-  max-width: 155px; margin: 0 auto;
+/* 3rd place column — same level as Final */
+.bkt-round--third {
+  margin-left: 6px;
 }
 
 /* Hint */
