@@ -240,7 +240,7 @@
 .ranking-score-wrap {
   display: flex;
   align-items: center;
-  gap: .6rem;
+  gap: .4rem;
   grid-row: span 2;
 }
 .ranking-total {
@@ -271,7 +271,7 @@
 }
 .desglose-row {
   display: flex;
-  gap: .4rem;
+  gap: .2rem;
 }
 .desglose-num {
   font-size: 1rem;
