@@ -470,6 +470,22 @@
         }
       });
     });
+
+    // Create/recreate Chart.js instance
+    var labels = EVO_DATA.fechas.map(function(f) { return f ? f.slice(5) : ''; });
+    if (chart) chart.destroy();
+    chart = new Chart(ctx.getContext('2d'), {
+      type: 'line',
+      data: { labels: labels, datasets: datasets },
+      options: {
+        responsive: true,
+        plugins: { legend: { display: false } },
+        scales: {
+          x: { ticks: { color: '#aaa', maxRotation: 45 } },
+          y: { ticks: { color: '#aaa' }, beginAtZero: true }
+        }
+      }
+    });
   }
 
   function updateSelector() {
