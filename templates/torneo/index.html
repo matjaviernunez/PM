@@ -45,6 +45,12 @@
         ⚔️ 16avos
       </button>
     {% endif %}
+    {% if fases_ko %}
+      <button class="torneo-tab {% if tab_activa == 'llave' %}active{% endif %}"
+              onclick="mostrarTab('llave')">
+        🏆 Llave
+      </button>
+    {% endif %}
     <button class="torneo-refresh" id="btn-refrescar" onclick="refrescar()">
       🔄 Refrescar
     </button>
@@ -274,6 +280,29 @@
     </section>
     {% endif %}
 
+    <!-- ════════════════════════════════════════════════════════
+         TAB LLAVE — Bracket interactivo
+    ════════════════════════════════════════════════════════ -->
+    {% if fases_ko %}
+    <section class="torneo-section {% if tab_activa == 'llave' %}visible{% endif %}"
+             id="sec-llave">
+      <div class="bkt-wrapper">
+        <div class="bkt-filter">
+          <label for="bracket-from-round">Ver desde:</label>
+          <select id="bracket-from-round" onchange="bracketFilterChange()">
+            <option value="0">16avos de Final</option>
+            <option value="1">Octavos de Final</option>
+            <option value="2">Cuartos de Final</option>
+            <option value="3">Semifinales</option>
+          </select>
+        </div>
+        <div class="bkt-scroll">
+          <div id="bracket-container" class="bkt-canvas"></div>
+        </div>
+      </div>
+    </section>
+    {% endif %}
+
   </div><!-- torneo-content -->
 
 </div><!-- torneo-page -->
@@ -281,6 +310,8 @@
 
 {% block extra_js %}
 <script>
+var PARTIDOS_KO = {{ partidos_ko | tojson }};
+var EQUIPOS_MAP = {{ equipos | tojson }};
 // ── Tab switcher ───────────────────────────────────────────────
 function mostrarTab(nombre) {
   document.querySelectorAll('.torneo-section').forEach(s => s.classList.remove('visible'));
@@ -295,6 +326,11 @@ function mostrarTab(nombre) {
       t.classList.add('active');
     }
   });
+
+  // Inicializar bracket si se abre la tab Llave
+  if (nombre === 'llave' && typeof initBracketView === 'function') {
+    setTimeout(initBracketView, 60);
+  }
 
   sessionStorage.setItem('torneo_tab', nombre);
 }
@@ -595,4 +631,5 @@ const CRUCES_FIJADOS = "{{ 'true' if cruces else 'false' }}" === "true";
 })();
 
 </script>
+<script src="{{ url_for('static', filename='js/bracket.js') }}"></script>
 {% endblock %}

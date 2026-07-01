@@ -38,7 +38,11 @@ def index():
     todos_ko = get_partidos_eliminatorias()
     partidos_ko = {}
     for p in todos_ko:
-        partidos_ko.setdefault(p["fase"], []).append(p)
+        partidos_ko.setdefault(p["fase"], []).append(dict(p))
+
+    # Orden cronológico dentro de cada fase (necesario para mapeo posicional del bracket)
+    for fase in partidos_ko:
+        partidos_ko[fase].sort(key=lambda p: (p.get("fecha", ""), p.get("hora", "")))
 
     return render_template(
         "torneo/index.html",

@@ -579,3 +579,130 @@
   border-top: 1px solid rgba(255,255,255,.06);
   padding-top: .3rem;
 }
+
+
+/* ═══════════════════════════════════════════════════════════════
+   BRACKET — Llave interactiva de eliminatorias
+   ═══════════════════════════════════════════════════════════════ */
+
+.bkt-wrapper { margin-top: .6rem; }
+
+.bkt-filter {
+  display: flex; align-items: center; gap: .5rem;
+  margin-bottom: .6rem; padding: 0 .2rem;
+}
+.bkt-filter label { font-size: .78rem; color: var(--gris-claro); }
+.bkt-filter select {
+  background: var(--card); color: var(--texto);
+  border: 1px solid var(--borde); border-radius: 6px;
+  padding: 4px 8px; font-size: .78rem;
+}
+
+.bkt-scroll {
+  overflow-x: auto; overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
+  padding-bottom: 1rem;
+}
+
+.bkt-canvas {
+  display: flex; position: relative;
+  min-height: 750px; gap: 0;
+}
+
+.bkt-svg {
+  position: absolute; top: 0; left: 0;
+  pointer-events: none; z-index: 1;
+}
+
+.bkt-round {
+  display: flex; flex-direction: column;
+  flex-shrink: 0; min-width: 155px;
+  padding: 0 14px; position: relative; z-index: 2;
+}
+
+.bkt-round-hdr {
+  text-align: center; font-size: .68rem; font-weight: 700;
+  text-transform: uppercase; letter-spacing: .04em;
+  color: var(--dorado); padding: 2px 0 6px;
+  position: sticky; top: 0; z-index: 3;
+}
+
+.bkt-games {
+  display: flex; flex-direction: column;
+  justify-content: space-around; flex: 1;
+}
+
+.bkt-game {
+  background: var(--card); border: 1px solid var(--borde);
+  border-radius: 6px; margin: 2px 0;
+  min-width: 130px; overflow: hidden;
+}
+
+.bkt-game-hdr {
+  font-size: .6rem; color: var(--gris);
+  padding: 2px 8px; border-bottom: 1px solid var(--borde);
+  white-space: nowrap;
+}
+
+.bkt-team {
+  display: flex; align-items: center; gap: 5px;
+  padding: 3px 8px; cursor: pointer;
+  font-size: .75rem; color: var(--texto);
+  transition: background .12s;
+}
+.bkt-team:hover:not(.bkt-team--locked):not(.bkt-team--empty) {
+  background: rgba(255,255,255,.06);
+}
+
+.bkt-team img {
+  width: 18px; height: 13px;
+  object-fit: cover; border-radius: 2px; flex-shrink: 0;
+}
+
+.bkt-code { font-weight: 600; }
+
+.bkt-check { margin-left: auto; font-size: .6rem; }
+
+/* Selected winner */
+.bkt-team--selected {
+  background: rgba(46,204,113,.12);
+}
+.bkt-team--selected .bkt-code {
+  color: #2ecc71;
+}
+
+/* Locked (real result) */
+.bkt-team--locked { cursor: default; }
+.bkt-team--locked.bkt-team--selected {
+  background: rgba(243,156,18,.12);
+}
+.bkt-team--locked.bkt-team--selected .bkt-code {
+  color: var(--dorado);
+}
+.bkt-team--locked:not(.bkt-team--selected) {
+  opacity: .4;
+}
+
+/* Empty slot */
+.bkt-team--empty {
+  color: var(--gris); cursor: default;
+  font-style: italic; font-size: .68rem;
+}
+
+/* 3rd place section */
+.bkt-third-section {
+  margin-top: 1rem; padding: 0 14px;
+}
+.bkt-third-label {
+  font-size: .68rem; font-weight: 700; text-transform: uppercase;
+  color: var(--gris); text-align: center; margin-bottom: .3rem;
+}
+.bkt-third-game {
+  max-width: 155px; margin: 0 auto;
+}
+
+/* Hint */
+.bkt-hint {
+  text-align: center; font-size: .7rem; color: var(--gris);
+  margin-top: .6rem; padding: 0 1rem;
+}
