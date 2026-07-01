@@ -68,18 +68,18 @@
           <!-- Puntos totales + desglose por fase -->
           <div class="ranking-score-wrap">
             <div class="ranking-total">
-              <span class="ranking-pts">{{ jugador.total }}</span>
+              <span class="ranking-pts{% if i == 0 %} ranking-pts--oro{% elif i == 1 %} ranking-pts--plata{% elif i == 2 %} ranking-pts--bronce{% endif %}">{{ jugador.total }}</span>
               <span class="ranking-pts-label">pts</span>
             </div>
             <div class="ranking-desglose">
               <div class="desglose-row">
                 {% for fase in ['grupos', '16avos', 'octavos'] %}
-                  <span class="desglose-num desglose--{{ fase }}">{{ jugador.por_fase.get(fase, 0) }}</span>
+                  <span class="desglose-num" style="color:{{ {'grupos':'#3498db','16avos':'#2ecc71','octavos':'#f39c12'}[fase] }}">{{ jugador.por_fase.get(fase, 0) }}</span>
                 {% endfor %}
               </div>
               <div class="desglose-row">
                 {% for fase in ['cuartos', 'semis', 'final'] %}
-                  <span class="desglose-num desglose--{{ fase }}">{{ jugador.por_fase.get(fase, 0) }}</span>
+                  <span class="desglose-num" style="color:{{ {'cuartos':'#e67e22','semis':'#e74c3c','final':'#9b59b6'}[fase] }}">{{ jugador.por_fase.get(fase, 0) }}</span>
                 {% endfor %}
               </div>
             </div>

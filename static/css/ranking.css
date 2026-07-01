@@ -274,11 +274,15 @@
   gap: .4rem;
 }
 .desglose-num {
-  font-size: .7rem;
+  font-size: 1rem;
   font-weight: 700;
-  min-width: 1.4rem;
+  min-width: 1.6rem;
   text-align: center;
+  line-height: 1.1;
 }
+.ranking-pts--oro    { color: #FFD700 !important; }
+.ranking-pts--plata  { color: #C0C0C0 !important; }
+.ranking-pts--bronce { color: #CD7F32 !important; }
 .desglose--grupos   { color: #3498db; }
 .desglose--16avos   { color: #2ecc71; }
 .desglose--octavos  { color: #f39c12; }
