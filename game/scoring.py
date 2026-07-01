@@ -222,3 +222,71 @@ def get_ranking(liga_id: int = None) -> list[dict]:
                                     x['nickname']))
 
     return ranking
+
+
+# -- Evolución de puntos por liga (multi-jugador) --------------------------
+
+def get_evolucion_liga(liga_id: int = None) -> dict:
+    """
+    Retorna {fechas: [...], jugadores: [{id, nickname, datos: [acum...]}]}
+    con la evolución acumulada de puntos por fecha para todos los usuarios
+    de una liga (o todos si liga_id es None).
+    """
+    with get_db() as conn:
+        if liga_id:
+            usuarios = conn.execute("""
+                SELECT u.id, u.nickname
+                FROM usuarios u
+                JOIN usuario_liga ul ON ul.usuario_id = u.id
+                WHERE ul.liga_id = ?
+                ORDER BY u.nickname
+            """, (liga_id,)).fetchall()
+        else:
+            usuarios = conn.execute(
+                'SELECT id, nickname FROM usuarios ORDER BY nickname'
+            ).fetchall()
+
+        if not usuarios:
+            return {'fechas': [], 'jugadores': []}
+
+        user_ids = [u['id'] for u in usuarios]
+        placeholders = ','.join('?' * len(user_ids))
+
+        rows = conn.execute(f"""
+            SELECT pr.usuario_id, pa.fecha, SUM(pr.puntos_obtenidos) AS pts_dia
+            FROM predicciones pr
+            JOIN partidos pa ON pa.id = pr.partido_id
+            WHERE pr.usuario_id IN ({placeholders})
+              AND pa.abierto = 0
+              AND pr.puntos_obtenidos IS NOT NULL
+            GROUP BY pr.usuario_id, pa.fecha
+            ORDER BY pa.fecha
+        """, user_ids).fetchall()
+
+        # Recopilar todas las fechas únicas
+        fechas_set = set()
+        pts_por_user = {}  # {user_id: {fecha: pts_dia}}
+        for r in rows:
+            fechas_set.add(r['fecha'])
+            pts_por_user.setdefault(r['usuario_id'], {})[r['fecha']] = r['pts_dia'] or 0
+
+        fechas = sorted(fechas_set)
+
+        # Construir series acumuladas
+        jugadores = []
+        for u in usuarios:
+            uid = u['id']
+            user_pts = pts_por_user.get(uid, {})
+            acum = 0
+            datos = []
+            for f in fechas:
+                acum += user_pts.get(f, 0)
+                datos.append(acum)
+            jugadores.append({
+                'id': uid,
+                'nickname': u['nickname'],
+                'datos': datos,
+                'total': acum,
+            })
+
+        return {'fechas': fechas, 'jugadores': jugadores}

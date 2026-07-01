@@ -592,3 +592,62 @@
 .pos-delta      { display: block; font-size: .6rem; font-weight: 700; line-height: 1; }
 .pos-delta--up  { color: #2ecc71; }
 .pos-delta--down{ color: #e74c3c; }
+
+/* Evolución multi-jugador */
+.evo-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .3rem .8rem;
+  margin-top: .5rem;
+  font-size: .75rem;
+}
+.evo-legend-item {
+  display: flex;
+  align-items: center;
+  gap: .25rem;
+  color: rgba(255,255,255,.7);
+}
+.evo-dot {
+  width: 8px; height: 8px;
+  border-radius: 2px;
+  display: inline-block;
+  flex-shrink: 0;
+}
+.evo-selector-wrap {
+  margin-top: .7rem;
+}
+.evo-selector-label {
+  font-size: .72rem;
+  color: var(--gris);
+  display: block;
+  margin-bottom: .25rem;
+}
+.evo-selector {
+  width: 100%;
+  min-height: 70px;
+  background: rgba(255,255,255,.04);
+  border: 1px solid rgba(255,255,255,.1);
+  border-radius: 8px;
+  color: var(--blanco);
+  font-size: .78rem;
+  padding: .3rem;
+}
+.evo-selector option { background: var(--azul-oscuro); padding: 2px 4px; }
+.evo-selector option:checked { background: rgba(240,176,0,.2); }
+.evo-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .3rem;
+  margin-top: .4rem;
+}
+.evo-chip {
+  font-size: .7rem;
+  font-weight: 600;
+  padding: .2rem .5rem;
+  border: 1px solid;
+  border-radius: 12px;
+  cursor: pointer;
+  background: rgba(255,255,255,.03);
+  transition: opacity .2s;
+}
+.evo-chip:hover { opacity: .7; }

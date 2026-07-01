@@ -10,7 +10,7 @@ import json, os
 from flask import Blueprint, render_template, request, jsonify, Response, abort, session
 from flask_login import login_required, current_user
 
-from game.scoring import get_ranking, recalcular_partido
+from game.scoring import get_ranking, recalcular_partido, get_evolucion_liga
 from db import get_db
 from config import FASES, BASE_DIR
 
@@ -303,6 +303,10 @@ def index():
 
     tabla       = get_ranking(liga_id=liga_id)
     equipos_iso = _equipos_iso()
+    evolucion   = get_evolucion_liga(liga_id=liga_id)
+
+    # Top 3 ids por puntaje (para selección por defecto en el gráfico)
+    top3_ids = [j['usuario_id'] for j in tabla[:3]]
 
     return render_template(
         "ranking/index.html",
@@ -318,6 +322,8 @@ def index():
         sorpresa_stats=[dict(r) for r in sorpresa_stats],
         decepcion_stats=[dict(r) for r in decepcion_stats],
         equipos_iso=equipos_iso,
+        evolucion=evolucion,
+        top3_ids=top3_ids,
     )
 
 

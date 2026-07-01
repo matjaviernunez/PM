@@ -178,6 +178,28 @@
       </div>
     </div>
 
+    <!-- Evolución de puntos (multi-jugador) -->
+    {% if evolucion and evolucion.fechas %}
+    <div class="stats-card">
+      <h2 class="stats-title">📈 Evolución de puntos</h2>
+      <p class="stats-sub">Compara tu progreso con el de tu liga</p>
+      <canvas id="evoLigaChart" height="160"></canvas>
+      <div id="evoLegend" class="evo-legend"></div>
+      <div class="evo-selector-wrap">
+        <label class="evo-selector-label" for="evoSelector">Agregar jugadores:</label>
+        <select id="evoSelector" class="evo-selector" multiple>
+          {% for j in evolucion.jugadores %}
+            <option value="{{ j.id }}"
+              {% if j.id == current_user.id or j.id in top3_ids %}selected{% endif %}>
+              {{ j.nickname }} ({{ j.total }} pts)
+            </option>
+          {% endfor %}
+        </select>
+      </div>
+      <div id="evoChips" class="evo-chips"></div>
+    </div>
+    {% endif %}
+
     <!-- Campeón favorito -->
     <div class="stats-card">
       <h2 class="stats-title">🏆 ¿Quién va a ganar?</h2>
@@ -376,90 +398,209 @@
 {% endblock %}
 
 {% block extra_js %}
+{% if evolucion and evolucion.fechas %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<script>
+(function() {
+  var EVO_DATA = {{ evolucion | tojson }};
+  var TOP3 = {{ top3_ids | tojson }};
+  var MY_ID = {{ current_user.id }};
+  var COLORS = [
+    '#f0b000','#00bcd4','#4caf50','#e74c3c','#9b59b6',
+    '#e91e63','#ff9800','#03a9f4','#8bc34a','#ff5722',
+    '#607d8b','#795548','#cddc39','#009688','#673ab7',
+    '#ffc107','#2196f3','#f44336','#4caf50','#ff6f00'
+  ];
+
+  // IDs seleccionados por defecto: top3 + usuario actual
+  var selected = TOP3.slice();
+  if (selected.indexOf(MY_ID) === -1) selected.push(MY_ID);
+
+  var chart = null;
+
+  function buildChart() {
+    var ctx = document.getElementById('evoLigaChart');
+    if (!ctx) return;
+
+    var datasets = [];
+    var legendHtml = '';
+    var chipsHtml = '';
+    var colorIdx = 0;
+
+    selected.forEach(function(uid) {
+      var j = null;
+      for (var i = 0; i < EVO_DATA.jugadores.length; i++) {
+        if (EVO_DATA.jugadores[i].id === uid) { j = EVO_DATA.jugadores[i]; break; }
+      }
+      if (!j) return;
+
+      var color = COLORS[colorIdx % COLORS.length];
+      var isMe = (uid === MY_ID);
+      colorIdx++;
+
+      datasets.push({
+        label: j.nickname,
+        data: j.datos,
+        borderColor: color,
+        borderWidth: 1.8,
+        borderDash: isMe ? [] : [5, 3],
+        pointRadius: 0,
+        fill: false,
+        tension: 0.3,
+      });
+
+      var label = isMe ? '★ ' + j.nickname : j.nickname;
+      legendHtml += '<span class="evo-legend-item"><span class="evo-dot" style="background:' + color + '"></span>' + label + '</span>';
+      chipsHtml += '<span class="evo-chip" style="border-color:' + color + ';color:' + color + '" data-uid="' + uid + '">' + label + ' ✕</span>';
+    });
+
+    document.getElementById('evoLegend').innerHTML = legendHtml;
+    document.getElementById('evoChips').innerHTML = chipsHtml;
+
+    // Bind chip remove
+    document.querySelectorAll('.evo-chip').forEach(function(chip) {
+      chip.addEventListener('click', function() {
+        var uid = parseInt(this.dataset.uid);
+        var idx = selected.indexOf(uid);
+        if (idx > -1 && uid !== MY_ID) {
+          selected.splice(idx, 1);
+          updateSelector();
+          buildChart();
+        }
+      });
+    });
+  }
+
+  function updateSelector() {
+    var sel = document.getElementById('evoSelector');
+    if (!sel) return;
+    for (var i = 0; i < sel.options.length; i++) {
+      sel.options[i].selected = selected.indexOf(parseInt(sel.options[i].value)) > -1;
+    }
+  }
+
+  // Selector change handler
+  var sel = document.getElementById('evoSelector');
+  if (sel) {
+    sel.addEventListener('change', function() {
+      selected = [];
+      for (var i = 0; i < this.options.length; i++) {
+        if (this.options[i].selected) selected.push(parseInt(this.options[i].value));
+      }
+      if (selected.indexOf(MY_ID) === -1) selected.push(MY_ID);
+      buildChart();
+    });
+  }
+
+  buildChart();
+})();
+</script>
+{% endif %}
 <script>
 // ── Sincronización cliente → servidor ────────────────────────────────
 // El cliente fetchea ESPN (sin pasar por proxy de PythonAnywhere)
 // y envía los resultados al backend para actualizar DB y puntajes.
 
-window._rankingSyncActive = true; // evita que el sync global de base.html duplique
-window.PUSH_SCORES_URL = '{{ url_for("ranking.push_scores") }}';
-const label     = document.getElementById('sync-label');
-const dot       = document.getElementById('sync-dot');
-
-// Usa el modulo unico espn_sync.js (cargado en base.html)
-async function syncEspn() {
-  try {
-    const result = await window.EspnSync.fetchAndPush();
-    const now = new Date().toLocaleTimeString('es-MX', {hour:'2-digit', minute:'2-digit', second:'2-digit'});
-    if (label) {
-      if (result && result.actualizados > 0) {
-        label.textContent = `✓ Actualizado ${now} · ${result.recalculados} partido(s) recalculado(s)`;
-        localStorage.setItem('rank_last_update', Date.now().toString());
-        setTimeout(() => window.location.reload(), 1500);
-      } else {
-        label.textContent = `● Sin cambios · ${now}`;
-      }
-    }
-  } catch (err) {
-    console.warn('ESPN sync error:', err);
-    if (label) label.textContent = '● Sin conexion a ESPN';
-  }
-  if (dot) dot.classList.toggle('sync-dot--pulse');
-}
-
-// Ejecutar inmediatamente al cargar y luego cada 60 s
-syncEspn();
-setInterval(syncEspn, 60000);
-
-// ── Flechas de posición ──────────────────────────────────────────
-// Compara la posición actual con la guardada en localStorage del
-// render anterior (la page recarga cuando hay cambio de score).
 (function() {
-  const KEY   = 'ranking_pos_{{ liga_id or "all" }}';
-  const cards = document.querySelectorAll('.ranking-card[data-uid]');
-  if (!cards.length) return;
+  const SCOREBOARD_URL = 'https://site.api.espn.com/apis/site/v2/sports/soccer/fifa.world/scoreboard';
+  const PUSH_URL = '/ranking/push-scores';
 
-  // Estado guardado del render anterior: posiciones Y deltas por jugador.
-  // El delta solo se recalcula cuando la posicion cambia; si no, PERSISTE.
-  let store = { pos: {}, delta: {} };
-  try {
-    const raw = JSON.parse(localStorage.getItem(KEY) || '{}');
-    if (raw && raw.pos) store = { pos: raw.pos || {}, delta: raw.delta || {} };
-  } catch {}
+  async function syncESPN() {
+    const label = document.getElementById('sync-label');
+    try {
+      const resp = await fetch(SCOREBOARD_URL);
+      if (!resp.ok) throw new Error('ESPN ' + resp.status);
+      const data = await resp.json();
 
-  cards.forEach(card => {
-    const uid     = card.dataset.uid;
-    const currPos = parseInt(card.dataset.pos);
-    const prevPos = store.pos[uid];
+      const events = (data.events || []).map(ev => {
+        const comp = ev.competitions?.[0];
+        if (!comp) return null;
+        const teams = comp.competitors || [];
+        const home = teams.find(c => c.homeAway === 'home');
+        const away = teams.find(c => c.homeAway === 'away');
+        if (!home || !away) return null;
 
-    if (prevPos != null && prevPos !== currPos) {
-      store.delta[uid] = prevPos - currPos; // positivo = subio
-    }
-    store.pos[uid] = currPos;
+        // Estado: pre / in / post
+        const state = comp.status?.type?.state || '';
 
-    const d  = store.delta[uid] || 0;
-    const el = card.querySelector('.pos-delta');
-    if (el && d) {
-      if (d > 0) {
-        el.textContent = `▲${d}`;
-        el.className   = 'pos-delta pos-delta--up';
-      } else {
-        el.textContent = `▼${Math.abs(d)}`;
-        el.className   = 'pos-delta pos-delta--down';
+        // Fecha del partido en ECT (YYYY-MM-DD)
+        let fecha_ect = '';
+        if (comp.date) {
+          try {
+            const d = new Date(comp.date);
+            d.setHours(d.getHours() - 5); // UTC-5
+            fecha_ect = d.toISOString().slice(0, 10);
+          } catch(e) {}
+        }
+
+        // Penales de la tanda (shootout)
+        let pen_home = null, pen_away = null;
+        if (home.shootoutScore !== undefined) pen_home = parseInt(home.shootoutScore);
+        if (away.shootoutScore !== undefined) pen_away = parseInt(away.shootoutScore);
+
+        return {
+          home: home.team?.abbreviation || '',
+          away: away.team?.abbreviation || '',
+          home_score: home.score ?? null,
+          away_score: away.score ?? null,
+          pen_home: isNaN(pen_home) ? null : pen_home,
+          pen_away: isNaN(pen_away) ? null : pen_away,
+          state: state,
+          fecha_ect: fecha_ect,
+        };
+      }).filter(Boolean);
+
+      if (!events.length) {
+        if (label) label.textContent = 'Sin eventos ESPN';
+        return;
       }
-    }
-  });
 
-  // Guardar posiciones + deltas para el proximo render.
-  // Las flechas persisten hasta que la posicion del jugador vuelva a cambiar.
-  localStorage.setItem(KEY, JSON.stringify(store));
+      const pushResp = await fetch(PUSH_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ events }),
+      });
+      const result = await pushResp.json();
+      const now = new Date().toLocaleTimeString('es-EC');
+
+      if (result.ok) {
+        if (label) {
+          if (result.recalculados > 0) {
+            label.textContent = result.actualizados + ' actualizado(s), ' + result.recalculados + ' recalculado(s) · ' + now;
+          } else {
+            label.textContent = 'Sin cambios · ' + now;
+          }
+        }
+        // Mostrar popup de posición si cambió
+        if (result.recalculados > 0) {
+          setTimeout(() => location.reload(), 1500);
+        }
+      }
+    } catch (err) {
+      const label = document.getElementById('sync-label');
+      if (label) label.textContent = 'Error sync: ' + err.message;
+    }
+  }
+
+  // Ejecutar al cargar
+  syncESPN();
+  // Repetir cada 60s
+  setInterval(syncESPN, 60000);
 })();
 
-// Contador visual
-let countdown = 60;
-setInterval(() => {
-  countdown--;
-  if (countdown <= 0) countdown = 60;
+// Popup de posición
+(function() {
+  const popup = document.getElementById('pos-popup');
+  if (popup) {
+    setTimeout(() => popup.classList.add('show'), 300);
+    setTimeout(() => { popup.classList.remove('show'); popup.remove(); }, 6000);
+    popup.addEventListener('click', () => { popup.classList.remove('show'); popup.remove(); });
+  }
+})();
+
+// Reloj en vivo
+setInterval(function() {
+  var label = document.getElementById('sync-label');
   if (label && !label.textContent.includes('recalculado')) {
     // Solo actualizar el contador si no hay un mensaje de update activo
   }
