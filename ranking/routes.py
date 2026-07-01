@@ -291,9 +291,15 @@ def index():
             GROUP BY equipo_decepcion ORDER BY votos DESC LIMIT 8
         """).fetchall()
 
-    liga_id = request.args.get("liga", type=int)
-    if liga_id is None:
+    liga_param = request.args.get("liga", type=int)
+    if liga_param is None:
+        # Primera visita sin parámetro: usar liga de referencia del usuario
         liga_id = _liga_referencia(current_user)
+    elif liga_param == 0:
+        # "Todas las ligas": sin filtro
+        liga_id = None
+    else:
+        liga_id = liga_param
 
     tabla       = get_ranking(liga_id=liga_id)
     equipos_iso = _equipos_iso()

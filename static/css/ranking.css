@@ -236,10 +236,15 @@
   margin-top: .1rem;
 }
 
-/* Puntos totales */
+/* Puntos totales + desglose */
+.ranking-score-wrap {
+  display: flex;
+  align-items: center;
+  gap: .6rem;
+  grid-row: span 2;
+}
 .ranking-total {
   text-align: right;
-  grid-row: span 2;
   display: flex;
   flex-direction: column;
   align-items: flex-end;
@@ -257,6 +262,29 @@
   color: var(--gris);
   font-weight: 600;
 }
+
+/* Desglose numérico por fase */
+.ranking-desglose {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.desglose-row {
+  display: flex;
+  gap: .4rem;
+}
+.desglose-num {
+  font-size: .7rem;
+  font-weight: 700;
+  min-width: 1.4rem;
+  text-align: center;
+}
+.desglose--grupos   { color: #3498db; }
+.desglose--16avos   { color: #2ecc71; }
+.desglose--octavos  { color: #f39c12; }
+.desglose--cuartos  { color: #e67e22; }
+.desglose--semis    { color: #e74c3c; }
+.desglose--final    { color: #9b59b6; }
 
 /* Barras de fases */
 .ranking-fases {
@@ -426,7 +454,7 @@
   color: var(--gris);
 }
 .empty-state span { font-size: 3rem; display: block; margin-bottom: 1rem; }
- 
+
 /* ── Scoring card (redesign) ──────────────────────────────────── */
 .sc-criteria {
   display: flex;

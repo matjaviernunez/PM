@@ -20,7 +20,7 @@
       <div class="filtro-select-wrap">
         <span class="filtro-select-icon">🏆</span>
         <select class="filtro-select" onchange="window.location.href=this.value">
-          <option value="{{ url_for('ranking.index') }}" {% if not liga_id %}selected{% endif %}>
+          <option value="{{ url_for('ranking.index', liga=0) }}" {% if not liga_id %}selected{% endif %}>
             Todas las ligas
           </option>
           {% for l in ligas %}
@@ -65,10 +65,24 @@
             {% endif %}
           </div>
 
-          <!-- Puntos totales -->
-          <div class="ranking-total">
-            <span class="ranking-pts">{{ jugador.total }}</span>
-            <span class="ranking-pts-label">pts</span>
+          <!-- Puntos totales + desglose por fase -->
+          <div class="ranking-score-wrap">
+            <div class="ranking-total">
+              <span class="ranking-pts">{{ jugador.total }}</span>
+              <span class="ranking-pts-label">pts</span>
+            </div>
+            <div class="ranking-desglose">
+              <div class="desglose-row">
+                {% for fase in ['grupos', '16avos', 'octavos'] %}
+                  <span class="desglose-num desglose--{{ fase }}">{{ jugador.por_fase.get(fase, 0) }}</span>
+                {% endfor %}
+              </div>
+              <div class="desglose-row">
+                {% for fase in ['cuartos', 'semis', 'final'] %}
+                  <span class="desglose-num desglose--{{ fase }}">{{ jugador.por_fase.get(fase, 0) }}</span>
+                {% endfor %}
+              </div>
+            </div>
           </div>
 
           <!-- Desglose por fase (barras) -->

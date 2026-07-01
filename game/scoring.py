@@ -191,6 +191,18 @@ def get_ranking(liga_id: int = None) -> list[dict]:
                   )
             """, (u['id'],)).fetchone()['n']
 
+            # Tiebreaker: % de partidos con puntos y cantidad de predicciones
+            stats = conn.execute("""
+                SELECT COUNT(*) as total_pred,
+                       SUM(CASE WHEN puntos_obtenidos > 0 THEN 1 ELSE 0 END) as con_puntos
+                FROM predicciones
+                WHERE usuario_id = ?
+                  AND puntos_obtenidos IS NOT NULL
+            """, (u['id'],)).fetchone()
+            total_pred = stats['total_pred'] or 0
+            con_puntos = stats['con_puntos'] or 0
+            pct_puntos = (con_puntos / total_pred * 100) if total_pred > 0 else 0.0
+
             ranking.append({
                 'usuario_id':       u['id'],
                 'nickname':         u['nickname'],
@@ -200,8 +212,13 @@ def get_ranking(liga_id: int = None) -> list[dict]:
                 'total':            total,
                 'por_fase':         por_fase,
                 'exactos':          exactos,
+                'pct_puntos':       pct_puntos,
+                'total_pred':       total_pred,
             })
 
-        ranking.sort(key=lambda x: (-x['total'], -x['exactos'], x['nickname']))
+        # Desempate: total desc, exactos desc, % con puntos desc, predicciones desc
+        ranking.sort(key=lambda x: (-x['total'], -x['exactos'],
+                                    -x['pct_puntos'], -x['total_pred'],
+                                    x['nickname']))
 
     return ranking
