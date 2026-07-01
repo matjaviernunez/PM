@@ -81,7 +81,7 @@ def index():
 
     for fecha in por_fecha:
         por_fecha[fecha].sort(
-            key=lambda p: (ORDEN_ESTADO[estado_partido(p, ahora_ect)], p.get('hora', ''))
+            key=lambda p: (ORDEN_ESTADO[estado_partido(p, ahora_ect)], p.get('fecha', ''), p.get('hora', ''))
         )
 
     # Fechas con TODOS los partidos finalizados van al fondo de la lista
@@ -135,7 +135,7 @@ def eliminatorias():
 
     for fase in por_fase:
         por_fase[fase].sort(
-            key=lambda p: (ORDEN_ESTADO[estado_partido(p, ahora_ect)], p.get('hora', ''))
+            key=lambda p: (ORDEN_ESTADO[estado_partido(p, ahora_ect)], p.get('fecha', ''), p.get('hora', ''))
         )
 
     return render_template(
