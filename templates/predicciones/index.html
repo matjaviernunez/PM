@@ -27,7 +27,7 @@
         {% endif %}
       {% endfor %}
     </div>
-    {% if fases_elim | select('in', ['cuartos','semis','3er_puesto','final']) | list %}
+    {% if 'cuartos' in fases_elim or 'semis' in fases_elim or '3er_puesto' in fases_elim or 'final' in fases_elim %}
     <div class="torneo-tabs-row">
       {% for fase in ['cuartos', 'semis', '3er_puesto', 'final'] %}
         {% if fase in fases_elim %}
@@ -298,8 +298,7 @@ function toggleReglas() {
   const arrow = document.getElementById('rules-arrow');
   const open  = panel.style.display !== 'none';
   panel.style.display = open ? 'none' : 'block';
-  if (arrow) arrow.style.transform = open ? 'rotate(0deg)' : 'rotate(180deg)';
-}
-
+  if (arrow) arrow.style.transform = open ? 'rotate(0deg)' : 'rotate(180deg)';}
 </script>
 {% endblock %}
+}
