@@ -80,7 +80,27 @@
     ROUNDS.forEach(function (round) {
       var phase = ko[round.phase] || [];
       round.slots.forEach(function (slot) {
-        var m = phase[slot.ci];
+        var m;
+        if (slot.from) {
+          // Octavos+: buscar partido por equipos de los ganadores alimentadores
+          // en vez de por índice cronológico (ci), que no respeta el árbol.
+          var exp0 = winners[slot.from[0]];
+          var exp1 = winners[slot.from[1]];
+          m = null;
+          if (exp0 && exp1) {
+            for (var pi = 0; pi < phase.length; pi++) {
+              var pm = phase[pi];
+              if ((pm.equipo_local === exp0 && pm.equipo_visita === exp1) ||
+                  (pm.equipo_local === exp1 && pm.equipo_visita === exp0)) {
+                m = pm;
+                break;
+              }
+            }
+          }
+        } else {
+          // 16avos: usar mapeo manual por ci
+          m = phase[slot.ci];
+        }
         if (m) {
           matches[slot.id] = m;
           slotTeams[slot.id] = [m.equipo_local, m.equipo_visita];

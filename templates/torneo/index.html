@@ -26,34 +26,49 @@
     <div class="live-matches" id="live-matches"></div>
   </div>
 
-  <!-- ── Tabs + Refrescar ──────────────────────────────────────── -->
+  <!-- ── Tabs (2 filas) ─────────────────────────────────────────── -->
   <div class="torneo-tabs-bar">
-    <button class="torneo-tab {% if tab_activa == 'posiciones' %}active{% endif %}"
-            onclick="mostrarTab('posiciones')">
-      📊 Grupos
-    </button>
-    {% for fase in fases_ko %}
-      <button class="torneo-tab {% if tab_activa == fase %}active{% endif %}"
-              onclick="mostrarTab('{{ fase }}')">
-        ⚔️ {{ label_fase.get(fase, fase) }}
+    <div class="torneo-tabs-row">
+      <button class="torneo-tab {% if tab_activa == 'posiciones' %}active{% endif %}"
+              onclick="mostrarTab('posiciones')">
+        ⚽ Grupos
       </button>
-    {% endfor %}
-    {# Si no hay fases ko pero hay proyecciones de 16avos, mostrar tab 16avos #}
-    {% if '16avos' not in fases_ko and cruces_proyectados %}
+      {% if '16avos' in fases_ko %}
       <button class="torneo-tab {% if tab_activa == '16avos' %}active{% endif %}"
               onclick="mostrarTab('16avos')">
         ⚔️ 16avos
       </button>
-    {% endif %}
-    {% if fases_ko %}
+      {% elif cruces_proyectados %}
+      <button class="torneo-tab {% if tab_activa == '16avos' %}active{% endif %}"
+              onclick="mostrarTab('16avos')">
+        ⚔️ 16avos
+      </button>
+      {% endif %}
+      {% if 'octavos' in fases_ko %}
+      <button class="torneo-tab {% if tab_activa == 'octavos' %}active{% endif %}"
+              onclick="mostrarTab('octavos')">
+        ⚔️ Octavos
+      </button>
+      {% endif %}
+    </div>
+    {% if 'cuartos' in fases_ko or 'semis' in fases_ko or 'final' in fases_ko or fases_ko %}
+    <div class="torneo-tabs-row">
+      {% for fase in ['cuartos', 'semis', '3er_puesto', 'final'] %}
+        {% if fase in fases_ko %}
+        <button class="torneo-tab {% if tab_activa == fase %}active{% endif %}"
+                onclick="mostrarTab('{{ fase }}')">
+          ⚔️ {{ label_fase.get(fase, fase) }}
+        </button>
+        {% endif %}
+      {% endfor %}
+      {% if fases_ko %}
       <button class="torneo-tab {% if tab_activa == 'llave' %}active{% endif %}"
               onclick="mostrarTab('llave')">
         🏆 Llave
       </button>
+      {% endif %}
+    </div>
     {% endif %}
-    <button class="torneo-refresh" id="btn-refrescar" onclick="refrescar()">
-      🔄 Refrescar
-    </button>
   </div>
 
   <!-- ════════════════════════════════════════════════════════════

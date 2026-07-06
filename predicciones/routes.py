@@ -35,10 +35,10 @@ NOMBRES_MESES = {
 }
 
 LABEL_FASE = {
-    '16avos':    '16avos de Final',
-    'octavos':   'Octavos de Final',
-    'cuartos':   'Cuartos de Final',
-    'semis':     'Semifinales',
+    '16avos':    '16avos',
+    'octavos':   'Octavos',
+    'cuartos':   'Cuartos',
+    'semis':     'Semis',
     '3er_puesto':'3er Puesto',
     'final':     'Final',
 }

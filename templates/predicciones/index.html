@@ -13,16 +13,32 @@
   </div>
 
 
-  <!-- ── Pestañas de fase ────────────────────────────────────────── -->
+  <!-- ── Pestañas de fase (2 filas) ───────────────────────────────── -->
   <div class="torneo-tabs-bar">
-    <a class="torneo-tab active"
-       href="{{ url_for('predicciones.index') }}">⚽ Grupos</a>
-    {% for fase in fases_elim %}
-      <a class="torneo-tab"
-         href="{{ url_for('predicciones.eliminatorias', fase=fase) }}">
-        ⚔️ {{ label_fase.get(fase, fase) }}
-      </a>
-    {% endfor %}
+    <div class="torneo-tabs-row">
+      <a class="torneo-tab active"
+         href="{{ url_for('predicciones.index') }}">⚽ Grupos</a>
+      {% for fase in ['16avos', 'octavos'] %}
+        {% if fase in fases_elim %}
+        <a class="torneo-tab"
+           href="{{ url_for('predicciones.eliminatorias', fase=fase) }}">
+          ⚔️ {{ label_fase.get(fase, fase) }}
+        </a>
+        {% endif %}
+      {% endfor %}
+    </div>
+    {% if fases_elim | select('in', ['cuartos','semis','3er_puesto','final']) | list %}
+    <div class="torneo-tabs-row">
+      {% for fase in ['cuartos', 'semis', '3er_puesto', 'final'] %}
+        {% if fase in fases_elim %}
+        <a class="torneo-tab"
+           href="{{ url_for('predicciones.eliminatorias', fase=fase) }}">
+          ⚔️ {{ label_fase.get(fase, fase) }}
+        </a>
+        {% endif %}
+      {% endfor %}
+    </div>
+    {% endif %}
   </div>
   <!-- ── Panel de reglas (toggle) ───────────────────────────────── -->
   <div class="rules-bar">

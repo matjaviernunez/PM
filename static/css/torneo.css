@@ -60,10 +60,10 @@
   text-transform: uppercase;
 }
 
-/* ── Barra de tabs + refrescar ───────────────────────────────── */
+/* ── Barra de tabs (2 filas) ─────────────────────────────────── */
 .torneo-tabs-bar {
   display: flex;
-  align-items: center;
+  flex-direction: column;
   gap: 0;
   padding: .75rem 1rem .5rem;
   border-bottom: 1px solid rgba(255,255,255,.08);
@@ -71,6 +71,10 @@
   position: sticky;
   top: 0;
   z-index: 10;
+}
+.torneo-tabs-row {
+  display: flex;
+  gap: 0;
 }
 .torneo-tab {
   flex: 1;
@@ -93,20 +97,6 @@
   color: var(--dorado);
   border-bottom-color: var(--dorado);
 }
-.torneo-refresh {
-  margin-left: auto;
-  background: none;
-  border: 1px solid rgba(255,255,255,.2);
-  border-radius: 8px;
-  color: var(--gris-claro);
-  font-size: .78rem;
-  padding: .35rem .7rem;
-  cursor: pointer;
-  transition: background .2s, color .2s;
-  white-space: nowrap;
-}
-.torneo-refresh:hover { background: rgba(255,255,255,.08); color: var(--blanco); }
-.torneo-refresh:disabled { opacity: .5; cursor: default; }
 
 /* ── Tab content ─────────────────────────────────────────────── */
 .torneo-content {
